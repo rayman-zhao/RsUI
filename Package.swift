@@ -52,5 +52,11 @@ let package = Package(
             ],
             linkerSettings: GUILinkerSettings,
         ),
+        .testTarget(
+            name: "RsUITests",
+            dependencies: [
+                "RsUI",
+            ]
+        ),
     ]
 )
