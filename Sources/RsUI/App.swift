@@ -9,9 +9,8 @@ open class App: SwiftApplication {
     }
 
     public init(_ group: String, _ product: String, _ bundle: Bundle) {
+        super.init() // Need to let WinUI application initialize first to get the App.current instance.
         App.context = AppContext(group, product, bundle)
-        
-        super.init()
     }
     
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {

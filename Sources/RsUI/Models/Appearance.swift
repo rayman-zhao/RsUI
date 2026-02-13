@@ -51,8 +51,10 @@ public struct Appearance: Preferable {
         }
     }
 
-    public var theme: Theme = .dark
+    public var theme: Theme
     public var language: Language = .en_US
     
-    public init() {}
+    public init() {
+        theme = Application.current?.requestedTheme == .dark ? .dark : .light
+    }
 }
