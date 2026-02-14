@@ -1,4 +1,5 @@
 import Foundation
+import UWP
 import WinUI
 import RsHelper
 
@@ -7,6 +8,10 @@ public struct Appearance: Preferable {
         case dark = "Dark"
         case light = "Light"
         case auto = "Auto"
+
+        init(_ theme: WinUI.ApplicationTheme?) {
+            self = (theme == .dark) ? .dark : .light
+        }
 
         public var isDark: Bool {
             switch self {
@@ -30,6 +35,10 @@ public struct Appearance: Preferable {
     public enum Language: String, CaseIterable, Codable {
         case en_US
         case zh_CN
+        
+        init(_ lang: String?) {
+            self = (lang == "zh-Hans-CN") ? .zh_CN : .en_US
+        }
 
         var displayName: String {
             switch self {
@@ -52,9 +61,10 @@ public struct Appearance: Preferable {
     }
 
     public var theme: Theme
-    public var language: Language = .en_US
+    public var language: Language
     
     public init() {
-        theme = Application.current?.requestedTheme == .dark ? .dark : .light
+        theme = Theme(Application.current?.requestedTheme)
+        language = Language(ApplicationLanguages.languages.first)
     }
 }
