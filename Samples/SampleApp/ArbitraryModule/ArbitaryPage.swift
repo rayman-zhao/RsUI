@@ -4,6 +4,7 @@ import UWP
 import WindowsFoundation
 import Observation
 import RsUI
+import RsHelper
 
 fileprivate func tr(_ keyAndValue: String) -> String {
     return App.context.tr(keyAndValue, "ArbitaryPage")
@@ -24,8 +25,9 @@ final class ArbitaryPage: AppPage {
         setupUI()
         startObserving()
     }
-
-
+    deinit {
+        log.info("ArbitaryPage deinit")
+    }
 
     private func setupUI() {
         root.children.clear()

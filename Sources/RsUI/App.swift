@@ -8,13 +8,13 @@ open class App: SwiftApplication {
     let group: String
     let product: String
     let bundle: Bundle
-    let modules: [Module.Type]
+    let modules: [any Module]
 
     public required convenience init() {
         self.init("SwiftWorks", "RsUI", .main, [])
     }
 
-    public init(_ group: String, _ product: String, _ bundle: Bundle, _ modules: [Module.Type]) {
+    public init(_ group: String, _ product: String, _ bundle: Bundle, _ modules: [any Module]) {
         self.group = group
         self.product = product
         self.bundle = bundle
@@ -25,12 +25,14 @@ open class App: SwiftApplication {
     
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
         // Need to init context after super.init() because some WinUI APIs require the application to be initialized
-        App.context = AppContext(group, product, bundle)
-        
-        AppShared.allModuleTypes = modules
+        App.context = AppContext(group, product, bundle, modules)
 
         let mainWindow = MainWindow()
         try! mainWindow.activate()
     }
+
+    override open func onShutdown() {
+        App.context = nil
+     }
 }
 

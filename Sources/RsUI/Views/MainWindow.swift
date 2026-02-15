@@ -67,8 +67,7 @@ class MainWindow: Window, @unchecked Sendable {
         )
         
         // 自动注册所有在 ModuleRegistry 中定义的模块
-        for moduleType in AppShared.allModuleTypes {
-            let module = moduleType.init()
+        for module in App.context.modules {
             AppShared.moduleManager.register(module, context: context)
         }
     }

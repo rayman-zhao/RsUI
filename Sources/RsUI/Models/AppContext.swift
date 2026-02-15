@@ -23,7 +23,9 @@ public class AppContext {
         }
     }
 
-    init(_ group: String, _ product: String, _ bundle: Bundle) {
+    public let modules: [any Module]
+
+    init(_ group: String, _ product: String, _ bundle: Bundle, _ modules: [any Module]) {
         productGroup = group
         productName = product
         productSupportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(productGroup)/\(productName)/")!
@@ -32,6 +34,8 @@ public class AppContext {
 
         theme = preferences.load(for: Theme.self)
         language = preferences.load(for: Language.self)
+
+        self.modules = modules
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {

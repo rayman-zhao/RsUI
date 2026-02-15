@@ -5,5 +5,4 @@ import WinUI
 
 public enum AppShared {
     public static let moduleManager = ModuleManager()
-    public static var allModuleTypes: [Module.Type] = []
 }
