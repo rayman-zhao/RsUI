@@ -1,6 +1,10 @@
 import Foundation
 import RsHelper
 
+public enum AppShared {
+    public static let moduleManager = ModuleManager()
+}
+
 /// 模块管理器，负责模块的生命周期和注册
 public final class ModuleManager: @unchecked Sendable {    
     private var modules: [String: Module] = [:]

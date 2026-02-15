@@ -2,7 +2,7 @@ import Foundation
 import WinUI
 import RsHelper
 
-public enum Theme: String, RawValuePreferable {
+public enum AppTheme: String, RawValuePreferable {
     case dark = "Dark"
     case light = "Light"
     case auto = "Auto"

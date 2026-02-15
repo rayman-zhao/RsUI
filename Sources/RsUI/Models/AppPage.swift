@@ -11,8 +11,8 @@ public protocol AppPage: AnyObject {
 /// 页面初始化时需要的依赖项集合
 public struct PageContext: @unchecked Sendable {
     let viewModel: MainWindowViewModel
-    public let currentTheme: Theme
-    public let currentLanguage: Language
+    public let currentTheme: AppTheme
+    public let currentLanguage: AppLanguage
     public let navigationActions: NavigationActions
     public let windowHandle: WinSDK.HWND?
 }

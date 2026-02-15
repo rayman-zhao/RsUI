@@ -306,7 +306,7 @@ class MainWindow: Window, @unchecked Sendable {
     // MARK: - 主题管理
     
     /// 应用主题到整个应用和所有页面
-    private func applyTheme(_ theme: Theme) {
+    private func applyTheme(_ theme: AppTheme) {
         let appTheme = theme.applicationTheme
         WinUI.Application.current?.requestedTheme = appTheme
         updateTitleBarButtonColors(for: appTheme)
@@ -372,7 +372,7 @@ class MainWindow: Window, @unchecked Sendable {
     }
     
     /// 处理语言变更事件
-    private func handleLanguageChanged(_: Language) {
+    private func handleLanguageChanged(_: AppLanguage) {
         refreshLocalizationUI()
         // 更新搜索框的 placeholder 文本
         if let searchBox = searchBox {
@@ -382,11 +382,11 @@ class MainWindow: Window, @unchecked Sendable {
         updateThemeToggleAppearance(for: App.context.theme)
     }
 
-    private func themeDisplayName(for theme: Theme) -> String {
+    private func themeDisplayName(for theme: AppTheme) -> String {
         return App.context.tr(theme.isDark ? "darkMode" : "lightMode")
     }
 
-    private func updateThemeToggleAppearance(for theme: Theme) {
+    private func updateThemeToggleAppearance(for theme: AppTheme) {
         guard let icon = themeToggleIcon, let label = themeToggleLabel else { return }
         let isDark = theme.isDark
         icon.glyph = isDark ? "\u{E706}" : "\u{E708}"  // 太阳或月亮

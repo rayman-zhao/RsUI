@@ -2,7 +2,7 @@ import Foundation
 import UWP
 import RsHelper
 
-public enum Language: String, CaseIterable, RawValuePreferable {
+public enum AppLanguage: String, CaseIterable, RawValuePreferable {
     case en_US
     case zh_CN
     

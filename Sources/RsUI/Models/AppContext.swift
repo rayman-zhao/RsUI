@@ -10,13 +10,13 @@ public class AppContext {
     public let resourcesBundle: Bundle
     public let preferences: Preferences
 
-    public var theme: Theme {
+    public var theme: AppTheme {
         didSet {
             guard oldValue != theme else { return }
             preferences.save(theme)
         }
     }
-    public var language: Language {
+    public var language: AppLanguage {
         didSet {
             guard oldValue != language else { return }
             preferences.save(language)
@@ -32,8 +32,8 @@ public class AppContext {
         resourcesBundle = bundle
         preferences = JsonPreferences.makeAppStandard(group: productGroup, product: productName)
 
-        theme = preferences.load(for: Theme.self)
-        language = preferences.load(for: Language.self)
+        theme = preferences.load(for: AppTheme.self)
+        language = preferences.load(for: AppLanguage.self)
 
         self.modules = modules
     }

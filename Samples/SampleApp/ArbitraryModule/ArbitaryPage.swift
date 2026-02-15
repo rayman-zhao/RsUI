@@ -14,8 +14,8 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 final class ArbitaryPage: AppPage {
     private let root = WinUI.Grid()
     private var mainContainer: WinUI.StackPanel!
-    private var currentTheme: Theme = .light
-    private var currentLanguage: RsUI.Language = .en_US
+    private var currentTheme: AppTheme = .light
+    private var currentLanguage: AppLanguage = .en_US
 
     var rootView: WinUI.UIElement { root }
 
@@ -263,12 +263,12 @@ final class ArbitaryPage: AppPage {
         }
     }    
 
-    func applyTheme(_ theme: Theme) {
+    func applyTheme(_ theme: AppTheme) {
         self.currentTheme = theme
         setupUI()
     }
 
-    func updateLocalization(language: RsUI.Language) {
+    func updateLocalization(language: AppLanguage) {
         self.currentLanguage = language
         setupUI()
     }

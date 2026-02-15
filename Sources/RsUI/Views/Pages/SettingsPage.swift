@@ -28,7 +28,7 @@ class SettingsPage: AppPage {
     private var personalizationCard: WinUI.Border?
     private var lightThemeItem: WinUI.ComboBoxItem?
     private var darkThemeItem: WinUI.ComboBoxItem?
-    private var languageItems: [(language: Language, item: WinUI.ComboBoxItem)] = []
+    private var languageItems: [(language: AppLanguage, item: WinUI.ComboBoxItem)] = []
     private var isUpdatingThemeUI = false
     private var isUpdatingLanguageUI = false
     private var toggleRows: [ToggleRowBinding] = []
@@ -82,7 +82,7 @@ class SettingsPage: AppPage {
     // MARK: - UI 初始化
     
     /// 初始化用户界面，包括主题和语言选择器
-    private func setupUI(initialLanguage: Language, initialTheme: Theme) {
+    private func setupUI(initialLanguage: AppLanguage, initialTheme: AppTheme) {
         
         // 清空根网格
         while root.children.count > 0 {
@@ -150,7 +150,7 @@ class SettingsPage: AppPage {
         try? WinUI.Grid.setRow(scrollViewer, 0)
     }
     /// 创建设置项容器（标签+描述+控件）
-    private func buildPersonalizationCard(initialLanguage: Language, initialTheme: Theme) -> WinUI.Border {
+    private func buildPersonalizationCard(initialLanguage: AppLanguage, initialTheme: AppTheme) -> WinUI.Border {
         toggleRows.removeAll()
         personalizationDividers.removeAll()
 
@@ -357,7 +357,7 @@ class SettingsPage: AppPage {
     }
 
     /// 根据当前本地化配置重新构建主题下拉项
-    private func configureThemeItems(selectedTheme: Theme) {
+    private func configureThemeItems(selectedTheme: AppTheme) {
         guard let combo = themeComboBox else { return }
         guard let items = ensureItemsCollection(for: combo) else { return }
 
@@ -380,7 +380,7 @@ class SettingsPage: AppPage {
     }
 
     /// 根据目标语言重建语言下拉项
-    private func configureLanguageItems(selectedLanguage: Language, displayLanguage: Language) {
+    private func configureLanguageItems(selectedLanguage: AppLanguage, displayLanguage: AppLanguage) {
         guard let combo = languageComboBox else { return }
         guard let items = ensureItemsCollection(for: combo) else { return }
 
@@ -388,7 +388,7 @@ class SettingsPage: AppPage {
         defer { isUpdatingLanguageUI = false }
 
         if languageItems.isEmpty {
-            for language in Language.allCases {
+            for language in AppLanguage.allCases {
                 let item = WinUI.ComboBoxItem()
                 items.append(item)
                 languageItems.append((language: language, item: item))
@@ -419,7 +419,7 @@ class SettingsPage: AppPage {
     }
 
     /// 更新现有语言项的显示文本
-    private func refreshLanguageItemLabels(selectedLanguage: Language, displayLanguage: Language) {
+    private func refreshLanguageItemLabels(selectedLanguage: AppLanguage, displayLanguage: AppLanguage) {
         guard let combo = languageComboBox else {
             configureLanguageItems(selectedLanguage: selectedLanguage, displayLanguage: displayLanguage)
             return
@@ -448,7 +448,7 @@ class SettingsPage: AppPage {
     private func applyThemeSelection() {
         guard let combo = themeComboBox else { return }
         let selectedIndex = combo.selectedIndex
-        let theme: Theme = selectedIndex == 1 ? .dark : .light
+        let theme: AppTheme = selectedIndex == 1 ? .dark : .light
         guard theme != App.context.theme else { return }
 
         App.context.theme = theme
@@ -472,7 +472,7 @@ class SettingsPage: AppPage {
 
     // MARK: - AppPage 协议实现
     
-    func applyTheme(_ theme: Theme) {
+    func applyTheme(_ theme: AppTheme) {
         root.requestedTheme = theme.elementTheme
         // 更新主题 ComboBox 的选中状态
         configureThemeItems(selectedTheme: theme)
@@ -480,7 +480,7 @@ class SettingsPage: AppPage {
     }
 
     /// 更新页面的本地化文本
-    func updateLocalization(language: Language) {
+    func updateLocalization(language: AppLanguage) {
         titleBlock.text = tr("title")
         personalizationLabel.text = tr("personalizationSection")
         themeTitleLabel?.text = tr("theme")
@@ -506,7 +506,7 @@ class SettingsPage: AppPage {
         }
     }
 
-    private func updateCardAppearance(for theme: Theme) {
+    private func updateCardAppearance(for theme: AppTheme) {
         let isDark = theme.isDark
 
         let appBackground = isDark

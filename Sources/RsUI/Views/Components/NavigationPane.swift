@@ -60,7 +60,7 @@ final class NavigationPane {
         navigationView.isPaneOpen.toggle()
     }
 
-    func applyTheme(_ theme: Theme) {
+    func applyTheme(_ theme: AppTheme) {
         let elementTheme: WinUI.ElementTheme = theme.elementTheme
         navigationView.requestedTheme = elementTheme
         rootFrame.requestedTheme = elementTheme
