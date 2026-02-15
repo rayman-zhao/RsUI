@@ -51,7 +51,7 @@ class MainWindow: Window, @unchecked Sendable {
         setupModules()
         setupUI()
         registerViewModelCallbacks()
-        applyTheme(App.context.appearance.theme)
+        applyTheme(App.context.theme)
         refreshLocalizationUI()
     }
 
@@ -77,8 +77,8 @@ class MainWindow: Window, @unchecked Sendable {
     private var pageContext: PageContext {
         return PageContext(
             viewModel: viewModel,
-            currentTheme: App.context.appearance.theme,
-            currentLanguage: App.context.appearance.language,
+            currentTheme: App.context.theme,
+            currentLanguage: App.context.language,
             navigationActions: makeNavigationActions(),
             windowHandle: self._windowHandle
         )
@@ -118,7 +118,7 @@ class MainWindow: Window, @unchecked Sendable {
         
         // 设置任务栏图标
         if let appWindow = self.appWindow {
-            if let iconPath = App.context.moduleBundle.path(forResource: "GalleryIcon", ofType: "ico") {
+            if let iconPath = App.context.resourcesBundle.path(forResource: "GalleryIcon", ofType: "ico") {
                 do {
                     try appWindow.setIcon(iconPath)
                 } catch {
@@ -173,7 +173,7 @@ class MainWindow: Window, @unchecked Sendable {
         titleBar.isBackButtonVisible = false
         titleBar.isPaneToggleButtonVisible = false
 
-        if let iconPath = App.context.moduleBundle.path(forResource: "GalleryIcon", ofType: "ico") {
+        if let iconPath = App.context.resourcesBundle.path(forResource: "GalleryIcon", ofType: "ico") {
             let bitmap = BitmapImage()
             bitmap.uriSource = Uri(iconPath)
 
@@ -218,18 +218,15 @@ class MainWindow: Window, @unchecked Sendable {
         let themeLabel = TextBlock()
         themeLabel.verticalAlignment = .center
         themeLabel.fontSize = 13
-        themeLabel.text = themeDisplayName(for: App.context.appearance.theme)
+        themeLabel.text = themeDisplayName(for: App.context.theme)
         themeToggleLabel = themeLabel
 
         themeContent.children.append(themeIcon)
         themeContent.children.append(themeLabel)
         themeButton.content = themeContent
 
-        themeButton.click.addHandler { [weak self] _, _ in
-            guard self != nil else { return }
-            
-            App.context.appearance.theme.toggle()
-            App.context.preferences.save(App.context.appearance)
+        themeButton.click.addHandler { _, _ in
+            App.context.theme.toggle()
         }
 
         // 添加用户头像
@@ -244,7 +241,7 @@ class MainWindow: Window, @unchecked Sendable {
         rightButtonsPanel.children.append(profilePicture)
 
         titleBar.rightHeader = rightButtonsPanel
-        updateThemeToggleAppearance(for: App.context.appearance.theme)
+        updateThemeToggleAppearance(for: App.context.theme)
 
         titleBar.backRequested.addHandler { [weak self] _, _ in
             guard let self = self, let navigationPane = self.navigationPane else { return }
@@ -267,8 +264,8 @@ class MainWindow: Window, @unchecked Sendable {
                 guard let self = self else {
                     return PageContext(
                         viewModel: viewModel,
-                        currentTheme: App.context.appearance.theme,
-                        currentLanguage: App.context.appearance.language,
+                        currentTheme: App.context.theme,
+                        currentLanguage: App.context.language,
                         navigationActions: NavigationActions.noop,
                         windowHandle: nil
                     )
@@ -292,15 +289,17 @@ class MainWindow: Window, @unchecked Sendable {
     }
     
     /// 注册 ViewModel 的回调处理
-    private func registerViewModelCallbacks() {
+    private func registerViewModelCallbacks() { 
         let env = Observations {
-            App.context.appearance
+            (App.context.theme, App.context.language)
         }
-        Task { @MainActor in
-            for await appearance in env {
-                /// ToDo: Need optimize for single change
-                self.applyTheme(appearance.theme)
-                self.handleLanguageChanged(appearance.language)
+        Task { [weak self] in
+            for await ctx in env {
+                guard let self else { break }
+                await MainActor.run {
+                    self.applyTheme(ctx.0)
+                    self.handleLanguageChanged(ctx.1)
+                }
             }
         }
     }
@@ -308,7 +307,7 @@ class MainWindow: Window, @unchecked Sendable {
     // MARK: - 主题管理
     
     /// 应用主题到整个应用和所有页面
-    private func applyTheme(_ theme: Appearance.Theme) {
+    private func applyTheme(_ theme: Theme) {
         let appTheme = theme.applicationTheme
         WinUI.Application.current?.requestedTheme = appTheme
         updateTitleBarButtonColors(for: appTheme)
@@ -374,21 +373,21 @@ class MainWindow: Window, @unchecked Sendable {
     }
     
     /// 处理语言变更事件
-    private func handleLanguageChanged(_: Appearance.Language) {
+    private func handleLanguageChanged(_: Language) {
         refreshLocalizationUI()
         // 更新搜索框的 placeholder 文本
         if let searchBox = searchBox {
             searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
         }
         // 更新主题按钮的文本（语言改变时需要重新翻译）
-        updateThemeToggleAppearance(for: App.context.appearance.theme)
+        updateThemeToggleAppearance(for: App.context.theme)
     }
 
-    private func themeDisplayName(for theme: Appearance.Theme) -> String {
+    private func themeDisplayName(for theme: Theme) -> String {
         return App.context.tr(theme.isDark ? "darkMode" : "lightMode")
     }
 
-    private func updateThemeToggleAppearance(for theme: Appearance.Theme) {
+    private func updateThemeToggleAppearance(for theme: Theme) {
         guard let icon = themeToggleIcon, let label = themeToggleLabel else { return }
         let isDark = theme.isDark
         icon.glyph = isDark ? "\u{E706}" : "\u{E708}"  // 太阳或月亮

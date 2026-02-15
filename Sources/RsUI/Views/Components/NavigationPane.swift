@@ -41,7 +41,7 @@ final class NavigationPane {
         configureNavigationView()
         
         // 立即应用初始状态
-        applyTheme(App.context.appearance.theme)
+        applyTheme(App.context.theme)
         refreshLocalizationUI()
         
         startObserving()
@@ -60,7 +60,7 @@ final class NavigationPane {
         navigationView.isPaneOpen.toggle()
     }
 
-    func applyTheme(_ theme: Appearance.Theme) {
+    func applyTheme(_ theme: Theme) {
         let elementTheme: WinUI.ElementTheme = theme.elementTheme
         navigationView.requestedTheme = elementTheme
         rootFrame.requestedTheme = elementTheme
@@ -73,13 +73,15 @@ final class NavigationPane {
 
     private func startObserving() {
         let env = Observations {
-            App.context.appearance
+            (App.context.theme, App.context.language)
         }
-        Task { @MainActor [weak self] in
-            for await appearance in env {
-                guard let self = self else { break }
-                self.applyTheme(appearance.theme)
-                self.refreshLocalizationUI()
+        Task { [weak self] in
+            for await ctx in env {
+                guard let self else { break }
+                await MainActor.run {
+                    self.applyTheme(ctx.0)
+                    self.refreshLocalizationUI()
+                }
             }
         }
     }

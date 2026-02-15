@@ -13,8 +13,8 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 final class ArbitaryPage: AppPage {
     private let root = WinUI.Grid()
     private var mainContainer: WinUI.StackPanel!
-    private var currentTheme: Appearance.Theme = .light
-    private var currentLanguage: Appearance.Language = .en_US
+    private var currentTheme: Theme = .light
+    private var currentLanguage: RsUI.Language = .en_US
 
     var rootView: WinUI.UIElement { root }
 
@@ -248,23 +248,25 @@ final class ArbitaryPage: AppPage {
 
     private func startObserving() {
         let env = Observations {
-            App.context.appearance
+            (App.context.theme, App.context.language)
         }
-        Task { @MainActor [weak self] in
-            for await appearance in env {
-                guard let self = self else { break }
-                self.applyTheme(appearance.theme)
-                self.updateLocalization(language: appearance.language)
+        Task { [weak self] in
+            for await ctx in env {
+                guard let self else { break }
+                await MainActor.run {
+                    self.applyTheme(ctx.0)
+                    self.updateLocalization(language: ctx.1)
+                }
             }
         }
     }    
 
-    func applyTheme(_ theme: Appearance.Theme) {
+    func applyTheme(_ theme: Theme) {
         self.currentTheme = theme
         setupUI()
     }
 
-    func updateLocalization(language: Appearance.Language) {
+    func updateLocalization(language: RsUI.Language) {
         self.currentLanguage = language
         setupUI()
     }
