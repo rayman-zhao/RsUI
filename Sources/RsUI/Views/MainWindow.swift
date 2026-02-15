@@ -60,9 +60,6 @@ class MainWindow: Window, @unchecked Sendable {
         // 模块上下文是模块和主引用的通信桥梁，通过提供navigationActions来供各个模块在NavigationPane中注册自己的导航节点
         let context: ModuleContext = ModuleContext(
             navigationActions: makeNavigationActions(),
-            registerSettingsSection: { section in
-                AppShared.moduleManager.addSettingsSection(section)
-            },
             windowHandle: self._windowHandle
         )
         

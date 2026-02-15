@@ -22,16 +22,12 @@ public protocol Module {
 public struct ModuleContext {
     /// 导航操作接口
     public let navigationActions: NavigationActions
-    
-    /// 注册设置项的回调
-    let registerSettingsSection: @Sendable (SettingsSection) -> Void
 
     /// 窗口句柄
     public let windowHandle: WinSDK.HWND?
     
-    init(navigationActions: NavigationActions, registerSettingsSection: @escaping @Sendable (SettingsSection) -> Void, windowHandle: WinSDK.HWND?) {
+    init(navigationActions: NavigationActions, windowHandle: WinSDK.HWND?) {
         self.navigationActions = navigationActions
-        self.registerSettingsSection = registerSettingsSection
         self.windowHandle = windowHandle
     }
 
@@ -39,21 +35,5 @@ public struct ModuleContext {
     @discardableResult
     public func registerNavigation(node: NavigationNode, parentId: String? = nil, section: NavigationSection = .menu) -> Bool {
         navigationActions.addNode(node, parentId, section)
-    }
-}
-
-/// 表示设置页面中的一个分段内容
-struct SettingsSection: Sendable {
-    /// 分段标题的本地化 Key
-    let titleKey: String
-    /// 分段所属的模块 ID
-    let moduleId: String
-    /// 构建分段视图的工厂闭包
-    let makeView: @Sendable (PageContext) -> WinUI.UIElement
-    
-    init(titleKey: String, moduleId: String, makeView: @escaping @Sendable (PageContext) -> WinUI.UIElement) {
-        self.titleKey = titleKey
-        self.moduleId = moduleId
-        self.makeView = makeView
     }
 }
