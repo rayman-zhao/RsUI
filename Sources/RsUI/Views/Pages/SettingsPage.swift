@@ -138,7 +138,7 @@ class SettingsPage: AppPage {
         moduleContainer.spacing = 16
         self.moduleSectionsContainer = moduleContainer
         
-        for module in AppShared.moduleManager.initializedModules {
+        for module in App.context.modules {
             if let sectionView = module.makeSettingsSection() {
                 moduleContainer.children.append(sectionView)
             }
