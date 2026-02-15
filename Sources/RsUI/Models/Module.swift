@@ -7,33 +7,11 @@ import WinSDK
 public protocol Module {
     /// 模块的唯一标识符
     var id: String { get }
-    
-    /// 默认初始化方法
-    init()
 
     /// 初始化模块
     /// - Parameter context: 模块上下文，提供导航和设置注册等功能
-    func initialize(context: ModuleContext)
+    func initialize(context: WindowContext)
 
-    func makeSettingsSection() -> WinUI.UIElement?
-}
-
-/// 模块初始化时提供的上下文信息
-public struct ModuleContext {
-    /// 导航操作接口
-    public let navigationActions: NavigationActions
-
-    /// 窗口句柄
-    public let windowHandle: WinSDK.HWND?
-    
-    init(navigationActions: NavigationActions, windowHandle: WinSDK.HWND?) {
-        self.navigationActions = navigationActions
-        self.windowHandle = windowHandle
-    }
-
-    /// 注册导航节点
-    @discardableResult
-    public func registerNavigation(node: NavigationNode, parentId: String? = nil, section: NavigationSection = .menu) -> Bool {
-        navigationActions.addNode(node, parentId, section)
-    }
+    func makeNavigationViewItems() -> [NavigationViewItem]
+    func makeSettingsSection() -> UIElement?
 }

@@ -58,7 +58,7 @@ class MainWindow: Window, @unchecked Sendable {
     /// 初始化并注册应用模块
     private func setupModules() {
         // 模块上下文是模块和主引用的通信桥梁，通过提供navigationActions来供各个模块在NavigationPane中注册自己的导航节点
-        let context: ModuleContext = ModuleContext(
+        let context = WindowContext(
             navigationActions: makeNavigationActions(),
             windowHandle: self._windowHandle
         )
