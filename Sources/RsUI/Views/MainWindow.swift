@@ -114,7 +114,7 @@ class MainWindow: Window, @unchecked Sendable {
         
         // 设置任务栏图标
         if let appWindow = self.appWindow {
-            if let iconPath = App.context.resourcesBundle.path(forResource: "GalleryIcon", ofType: "ico") {
+            if let iconPath = App.context.bundle.path(forResource: "GalleryIcon", ofType: "ico") {
                 do {
                     try appWindow.setIcon(iconPath)
                 } catch {
@@ -169,7 +169,7 @@ class MainWindow: Window, @unchecked Sendable {
         titleBar.isBackButtonVisible = false
         titleBar.isPaneToggleButtonVisible = false
 
-        if let iconPath = App.context.resourcesBundle.path(forResource: "GalleryIcon", ofType: "ico") {
+        if let iconPath = App.context.bundle.path(forResource: "GalleryIcon", ofType: "ico") {
             let bitmap = BitmapImage()
             bitmap.uriSource = Uri(iconPath)
 
