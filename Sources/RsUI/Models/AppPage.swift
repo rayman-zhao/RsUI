@@ -6,6 +6,12 @@ import WinSDK
 public protocol AppPage: AnyObject {
     /// 页面的根视图元素，将被附加到框架中
     var rootView: WinUI.UIElement { get }
+
+    func onAppearanceChanged()
+}
+
+extension AppPage {
+    func onAppearanceChanged() {}
 }
 
 /// 页面初始化时需要的依赖项集合

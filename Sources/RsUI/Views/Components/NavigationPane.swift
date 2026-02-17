@@ -81,6 +81,10 @@ final class NavigationPane {
                 await MainActor.run {
                     self.applyTheme(ctx.0)
                     self.refreshLocalizationUI()
+
+                    for page in self.pageCache.values {
+                        page.onAppearanceChanged()
+                    }
                 }
             }
         }

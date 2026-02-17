@@ -1,32 +1,20 @@
 import Foundation
-import WinUI
 import UWP
-import WindowsFoundation
-import Observation
+import WinUI
 import RsUI
-import RsHelper
-
-fileprivate func tr(_ keyAndValue: String) -> String {
-    return App.context.tr(keyAndValue, "ArbitaryPage")
-}
 
 /// 演示页面，只有展示各种静态信息，表示使用自定义的NavigationViewItem可以工作正常
 final class ArbitaryPage: AppPage {
     private let root = WinUI.Grid()
-    private var mainContainer: WinUI.StackPanel!
-    private var currentTheme: AppTheme = .light
-    private var currentLanguage: AppLanguage = .en_US
 
     var rootView: WinUI.UIElement { root }
 
-    init(context: PageContext) {
-        self.currentTheme = context.currentTheme
-        self.currentLanguage = context.currentLanguage
+    func onAppearanceChanged() {
         setupUI()
-        startObserving()
     }
-    deinit {
-        log.info("ArbitaryPage deinit")
+
+    init(context: PageContext) {
+        setupUI()
     }
 
     private func setupUI() {
@@ -34,7 +22,7 @@ final class ArbitaryPage: AppPage {
         root.padding = Thickness(left: 40, top: 32, right: 40, bottom: 32)
         
         // 主容器
-        mainContainer = StackPanel()
+        let mainContainer = StackPanel()
         mainContainer.spacing = 24
         mainContainer.horizontalAlignment = .stretch
         mainContainer.verticalAlignment = .top
@@ -50,7 +38,7 @@ final class ArbitaryPage: AppPage {
         let subtitleBlock = TextBlock()
         subtitleBlock.text = "A demonstration page with various UI components"
         subtitleBlock.fontSize = 14
-        subtitleBlock.foreground = SolidColorBrush(currentTheme.isDark ? 
+        subtitleBlock.foreground = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 255, r: 180, g: 180, b: 180) : 
             UWP.Color(a: 255, r: 100, g: 100, b: 100))
         subtitleBlock.margin = Thickness(left: 0, top: -16, right: 0, bottom: 0)
@@ -79,7 +67,7 @@ final class ArbitaryPage: AppPage {
         let border = Border()
         border.height = 1
         border.horizontalAlignment = .stretch
-        border.background = SolidColorBrush(currentTheme.isDark ? 
+        border.background = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 40, r: 255, g: 255, b: 255) : 
             UWP.Color(a: 40, r: 0, g: 0, b: 0))
         return border
@@ -87,7 +75,7 @@ final class ArbitaryPage: AppPage {
     
     private func createInfoSection() -> UIElement {
         let card = Border()
-        card.background = SolidColorBrush(currentTheme.isDark ? 
+        card.background = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 255, r: 40, g: 40, b: 40) : 
             UWP.Color(a: 255, r: 250, g: 250, b: 250))
         card.cornerRadius = CornerRadius(topLeft: 8, topRight: 8, bottomRight: 8, bottomLeft: 8)
@@ -106,8 +94,8 @@ final class ArbitaryPage: AppPage {
         // 信息项
         stack.children.append(createInfoItem("Module ID:", "arbitrary"))
         stack.children.append(createInfoItem("Status:", "Active"))
-        stack.children.append(createInfoItem("Theme:", currentTheme == .dark ? "Dark" : "Light"))
-        stack.children.append(createInfoItem("Language:", currentLanguage == .en_US ? "English" : "简体中文"))
+        stack.children.append(createInfoItem("Theme:", App.context.theme == .dark ? "Dark" : "Light"))
+        stack.children.append(createInfoItem("Language:", App.context.language == .en_US ? "English" : "简体中文"))
         
         card.child = stack
         return card
@@ -126,7 +114,7 @@ final class ArbitaryPage: AppPage {
         
         let labelBlock = TextBlock()
         labelBlock.text = label
-        labelBlock.foreground = SolidColorBrush(currentTheme.isDark ? 
+        labelBlock.foreground = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 255, r: 160, g: 160, b: 160) : 
             UWP.Color(a: 255, r: 120, g: 120, b: 120))
         try? Grid.setColumn(labelBlock, 0)
@@ -191,7 +179,7 @@ final class ArbitaryPage: AppPage {
         grid.columnSpacing = 16
         grid.margin = Thickness(left: 0, top: 8, right: 0, bottom: 0)
         
-        for i in 0..<3 {
+        for _ in 0..<3 {
             let col = ColumnDefinition()
             col.width = GridLength(value: 1, gridUnitType: .star)
             grid.columnDefinitions.append(col)
@@ -214,7 +202,7 @@ final class ArbitaryPage: AppPage {
     
     private func createStatCard(icon: String, title: String, value: String) -> Border {
         let card = Border()
-        card.background = SolidColorBrush(currentTheme.isDark ? 
+        card.background = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 255, r: 45, g: 45, b: 45) : 
             UWP.Color(a: 255, r: 248, g: 248, b: 250))
         card.cornerRadius = CornerRadius(topLeft: 8, topRight: 8, bottomRight: 8, bottomLeft: 8)
@@ -231,7 +219,7 @@ final class ArbitaryPage: AppPage {
         let titleBlock = TextBlock()
         titleBlock.text = title
         titleBlock.fontSize = 12
-        titleBlock.foreground = SolidColorBrush(currentTheme.isDark ? 
+        titleBlock.foreground = SolidColorBrush(App.context.theme.isDark ? 
             UWP.Color(a: 255, r: 160, g: 160, b: 160) : 
             UWP.Color(a: 255, r: 120, g: 120, b: 120))
         stack.children.append(titleBlock)
@@ -244,32 +232,5 @@ final class ArbitaryPage: AppPage {
         
         card.child = stack
         return card
-    }
-
-
-
-    private func startObserving() {
-        let env = Observations {
-            (App.context.theme, App.context.language)
-        }
-        Task { [weak self] in
-            for await ctx in env {
-                guard let self else { break }
-                await MainActor.run {
-                    self.applyTheme(ctx.0)
-                    self.updateLocalization(language: ctx.1)
-                }
-            }
-        }
-    }    
-
-    func applyTheme(_ theme: AppTheme) {
-        self.currentTheme = theme
-        setupUI()
-    }
-
-    func updateLocalization(language: AppLanguage) {
-        self.currentLanguage = language
-        setupUI()
     }
 }
