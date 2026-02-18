@@ -1,7 +1,12 @@
 import Foundation
+import UWP
 import WinUI
 import RsUI
 import RsHelper
+
+fileprivate func tr(_ keyAndValue: String) -> String {
+    return App.context.tr(keyAndValue, "SettingsPage")
+}
 
 final class ArbitaryModule: Module {
     let id = "arbitrary"
@@ -35,9 +40,19 @@ final class ArbitaryModule: Module {
     }
 
     func makeSettingsSection() -> UIElement? {
-        let tb = TextBlock()
-        tb.text = "Arbitrary Module Settings"
-        return tb
+        let toggle = WinUI.ToggleSwitch()
+        toggle.isOn = true
+        toggle.onContent = tr("toggleOn")
+        toggle.offContent = tr("toggleOff")
+
+        let metadataRow = buildSettingsRow(
+                iconGlyph: "\u{E70A}",
+                title: tr("metadataTitle"),
+                description: tr("metadataDescription"),
+                control: toggle
+            )
+
+        return buildSettingsCard(title: "Arbitrary Settings", content: [metadataRow])
     }
 
     /// 根据节点生成可复用的内容视图（含动作按钮和图标）

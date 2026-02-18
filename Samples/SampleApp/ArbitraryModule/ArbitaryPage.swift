@@ -6,7 +6,6 @@ import RsUI
 /// 演示页面，只有展示各种静态信息，表示使用自定义的NavigationViewItem可以工作正常
 final class ArbitaryPage: AppPage {
     private let root = WinUI.Grid()
-
     var rootView: WinUI.UIElement { root }
 
     func onAppearanceChanged() {
