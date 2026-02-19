@@ -1,9 +1,8 @@
 import Foundation
 import Observation
-import WinAppSDK
 import WindowsFoundation
-import WinUI
 import UWP
+import WinUI
 import WinSDK
 import RsHelper
 
@@ -34,7 +33,6 @@ class MainWindow: Window, @unchecked Sendable {
     private var hasAppliedInitialWindowSize = false
 
     /// UI 主要组件
-    private var rootGrid: Grid!
     private var titleBar: TitleBar!
     private var searchBox: AutoSuggestBox!
     
@@ -48,8 +46,8 @@ class MainWindow: Window, @unchecked Sendable {
         self._windowHandle = WinSDK.GetActiveWindow()
         
         setupWindow()
-        setupModules()
-        setupUI()
+        setupModules()      
+        setupContent()
         applyAppearance()
 
         startObserving()
@@ -124,32 +122,48 @@ class MainWindow: Window, @unchecked Sendable {
         // 应用保存的窗口大小（保持当前位置，不改变 Z 顺序）
         applyWindowSize()
     }
+
     /// 初始化主要的 UI 布局
-    private func setupUI() {
-        rootGrid = Grid()
-        rootGrid.name = "RootGrid"
-        
+    private func setupContent() {
+        let root = Grid()
+
         // 设置行定义
         let titleRowDef = RowDefinition()
         titleRowDef.height = GridLength(value: 1, gridUnitType: .auto)
-        rootGrid.rowDefinitions.append(titleRowDef)
+        root.rowDefinitions.append(titleRowDef)
         
         let contentRowDef = RowDefinition()
         contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
-        rootGrid.rowDefinitions.append(contentRowDef)
+        root.rowDefinitions.append(contentRowDef)
         
-        self.content = rootGrid
+        self.searchBox = buildSearchBox()
+        self.titleBar = buildTitleBar(searchBox)
+        root.children.append(titleBar)
+        try? Grid.setRow(titleBar, 0)
+        try? setTitleBar(titleBar)
 
-        setupTitleBar()
-        setupNavigationPane()
+        self.navigationPane = buildNavigationPane()
+        root.children.append(navigationPane.rootView)
+        try? Grid.setRow(navigationPane.rootView, 1)
+
+        self.content = root
+    }
+
+    private func buildSearchBox() -> AutoSuggestBox {
+        let box = AutoSuggestBox()
+        box.width = 360
+        box.height = 32
+        box.minWidth = 280
+        box.verticalAlignment = .center
+
+        return box
     }
     
-    /// 配置标题栏
-    private func setupTitleBar() {
-        titleBar = TitleBar()
-        titleBar.height = 48
-        titleBar.isBackButtonVisible = false
-        titleBar.isPaneToggleButtonVisible = true
+    private func buildTitleBar(_ searchBox: AutoSuggestBox) -> TitleBar {
+        let bar = TitleBar()
+        bar.height = 48
+        bar.isBackButtonVisible = false
+        bar.isPaneToggleButtonVisible = true
 
         if let iconPath = App.context.bundle.path(forResource: App.context.productName, ofType: "ico") {
             let bitmap = BitmapImage()
@@ -157,31 +171,24 @@ class MainWindow: Window, @unchecked Sendable {
 
             let iconSource = ImageIconSource()
             iconSource.imageSource = bitmap
-            titleBar.iconSource = iconSource
+            bar.iconSource = iconSource
         }
 
-        searchBox = AutoSuggestBox()
-        searchBox.width = 360
-        searchBox.height = 32
-        searchBox.minWidth = 280
-        searchBox.verticalAlignment = .center
-        titleBar.content = searchBox
+        bar.content = searchBox
 
-        titleBar.backRequested.addHandler { [weak self] _, _ in
-            guard let self = self, let navigationPane = self.navigationPane else { return }
-            navigationPane.goBack()
-            self.titleBar?.isBackButtonEnabled = navigationPane.canGoBack
-        }
+        // bar.backRequested.addHandler { [weak self] _, _ in
+            // guard let self = self, let navigationPane = self.navigationPane else { return }
+            // navigationPane.goBack()
+            // titleBar.isBackButtonEnabled = navigationPane.canGoBack
+        // }
 
-        rootGrid.children.append(titleBar)
-        try? Grid.setRow(titleBar, 0)
-        try? setTitleBar(titleBar)
+        return bar
     }
     
     /// 配置导航视图组件
-    private func setupNavigationPane() {
+    private func buildNavigationPane() -> NavigationPane {
         let viewModel = self.viewModel
-        navigationPane = NavigationPane(
+        return NavigationPane(
             viewModel: viewModel,
             makePageContext: { [weak self] in
                 guard let self = self else {
@@ -201,11 +208,6 @@ class MainWindow: Window, @unchecked Sendable {
                 self.titleBar?.isBackButtonEnabled = canGoBack
             }
         )
-
-        rootGrid.children.append(navigationPane.rootView)
-        try? Grid.setRow(navigationPane.rootView, 1)
-        let canGoBack = navigationPane.canGoBack
-        titleBar?.isBackButtonEnabled = canGoBack
     }
 
     private func startObserving() { 
