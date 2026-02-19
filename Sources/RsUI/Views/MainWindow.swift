@@ -155,7 +155,7 @@ class MainWindow: Window, @unchecked Sendable {
         titleBar.isBackButtonVisible = false
         titleBar.isPaneToggleButtonVisible = false
 
-        if let iconPath = App.context.bundle.path(forResource: "GalleryIcon", ofType: "ico") {
+        if let iconPath = App.context.bundle.path(forResource: App.context.productName, ofType: "ico") {
             let bitmap = BitmapImage()
             bitmap.uriSource = Uri(iconPath)
 
