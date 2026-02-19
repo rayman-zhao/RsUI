@@ -7,6 +7,7 @@ let GUILinkerSettings: [LinkerSetting] = [
     // Update the entry point to point to the generated swift function, this lets us keep the same main method
     // for debug/release
     .unsafeFlags(["-Xlinker", "/ENTRY:mainCRTStartup"], .when(configuration: .release)),
+    .unsafeFlags(["-Xlinker", "Samples/Assets/SampleApp.res"]),
 ]
 
 let package = Package(

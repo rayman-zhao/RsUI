@@ -108,17 +108,6 @@ class MainWindow: Window, @unchecked Sendable {
         appWindowTitleBar = self.appWindow?.titleBar
         appWindowTitleBar?.extendsContentIntoTitleBar = true
         appWindowTitleBar?.preferredHeightOption = .tall
-        
-        // 设置任务栏图标
-        if let appWindow = self.appWindow {
-            if let iconPath = App.context.bundle.path(forResource: "GalleryIcon", ofType: "ico") {
-                do {
-                    try appWindow.setIcon(iconPath)
-                } catch {
-                    debugPrint("Failed to set app icon: \(error)")
-                }
-            }
-        }
 
         // 确保窗口句柄已激活后再应用尺寸
         self.activated.addHandler { [weak self] _, _ in
@@ -319,10 +308,6 @@ class MainWindow: Window, @unchecked Sendable {
         if let searchBox = searchBox {
             searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
         }
-    }
-
-    private func themeDisplayName(for theme: AppTheme) -> String {
-        return App.context.tr(theme.isDark ? "darkMode" : "lightMode")
     }
     
     // MARK: - 窗口大小管理
