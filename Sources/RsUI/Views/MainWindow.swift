@@ -24,7 +24,6 @@ struct MainWindowPreferences: Preferable {
 /// 主窗口类，管理整个应用的导航和 UI 布局
 class MainWindow: Window, @unchecked Sendable {
     // MARK: - 属性
-    
     private let viewModel: MainWindowViewModel
 
     private var navigationPane: NavigationPane!
@@ -184,25 +183,6 @@ class MainWindow: Window, @unchecked Sendable {
         searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
         self.searchBox = searchBox
         titleBar.content = searchBox
-
-        // 创建右侧按钮容器
-        let rightButtonsPanel = StackPanel()
-        rightButtonsPanel.orientation = .horizontal
-        rightButtonsPanel.verticalAlignment = .center
-        rightButtonsPanel.spacing = 10
-        rightButtonsPanel.margin = Thickness(left: 0, top: 0, right: 12, bottom: 0)
-
-        // 添加用户头像
-        let profilePicture = PersonPicture()
-        profilePicture.width = 32
-        profilePicture.height = 32
-        profilePicture.verticalAlignment = .center
-        profilePicture.horizontalAlignment = .center
-        profilePicture.margin = Thickness(left: 0, top: 0, right: 6, bottom: 0)
-
-        rightButtonsPanel.children.append(profilePicture)
-
-        titleBar.rightHeader = rightButtonsPanel
 
         titleBar.backRequested.addHandler { [weak self] _, _ in
             guard let self = self, let navigationPane = self.navigationPane else { return }
