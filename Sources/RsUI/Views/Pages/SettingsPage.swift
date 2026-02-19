@@ -12,7 +12,7 @@ class SettingsPage: AppPage {
     private let root = WinUI.Grid()
     var rootView: WinUI.UIElement { root }
 
-    func onAppearenceChange() {
+    func onAppearanceChanged() {
         setupUI()
     }
 

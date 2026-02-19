@@ -16,6 +16,8 @@ struct NavigationCatalogTests {
         func applyTheme(_ theme: AppTheme) {}
 
         func updateLocalization(language: AppLanguage) {}
+
+        func onAppearanceChanged() {}
     }
 
     /// 测试：验证 firstSelectableDescendant() 能否在多层级导航树中找到可选择的叶子节点

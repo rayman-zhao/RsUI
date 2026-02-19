@@ -10,10 +10,6 @@ public protocol AppPage: AnyObject {
     func onAppearanceChanged()
 }
 
-extension AppPage {
-    func onAppearanceChanged() {}
-}
-
 /// 页面初始化时需要的依赖项集合
 public struct PageContext: @unchecked Sendable {
     let viewModel: MainWindowViewModel
