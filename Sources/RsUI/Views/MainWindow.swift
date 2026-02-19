@@ -34,8 +34,6 @@ class MainWindow: Window, @unchecked Sendable {
     /// UI 主要组件
     private var rootGrid: Grid!
     private var titleBar: TitleBar!
-    private var themeToggleIcon: FontIcon?
-    private var themeToggleLabel: TextBlock?
     private var searchBox: AutoSuggestBox?
     
     private var _windowHandle: WinSDK.HWND?
@@ -194,37 +192,6 @@ class MainWindow: Window, @unchecked Sendable {
         rightButtonsPanel.spacing = 10
         rightButtonsPanel.margin = Thickness(left: 0, top: 0, right: 12, bottom: 0)
 
-        // 添加主题切换按钮
-        let themeButton = Button()
-        themeButton.minWidth = 88
-        themeButton.height = 32
-        themeButton.verticalAlignment = .center
-        themeButton.horizontalAlignment = .center
-
-        let themeContent = StackPanel()
-        themeContent.orientation = .horizontal
-        themeContent.spacing = 6
-        themeContent.verticalAlignment = .center
-
-        let themeIcon = FontIcon()
-        themeIcon.fontSize = 14
-        themeIcon.glyph = "\u{E708}"  // 月亮图标
-        themeToggleIcon = themeIcon
-
-        let themeLabel = TextBlock()
-        themeLabel.verticalAlignment = .center
-        themeLabel.fontSize = 13
-        themeLabel.text = themeDisplayName(for: App.context.theme)
-        themeToggleLabel = themeLabel
-
-        themeContent.children.append(themeIcon)
-        themeContent.children.append(themeLabel)
-        themeButton.content = themeContent
-
-        themeButton.click.addHandler { _, _ in
-            App.context.theme.toggle()
-        }
-
         // 添加用户头像
         let profilePicture = PersonPicture()
         profilePicture.width = 32
@@ -233,11 +200,9 @@ class MainWindow: Window, @unchecked Sendable {
         profilePicture.horizontalAlignment = .center
         profilePicture.margin = Thickness(left: 0, top: 0, right: 6, bottom: 0)
 
-        rightButtonsPanel.children.append(themeButton)
         rightButtonsPanel.children.append(profilePicture)
 
         titleBar.rightHeader = rightButtonsPanel
-        updateThemeToggleAppearance(for: App.context.theme)
 
         titleBar.backRequested.addHandler { [weak self] _, _ in
             guard let self = self, let navigationPane = self.navigationPane else { return }
@@ -311,7 +276,6 @@ class MainWindow: Window, @unchecked Sendable {
         let elementTheme = theme.elementTheme
         rootGrid?.requestedTheme = elementTheme
         titleBar?.requestedTheme = elementTheme
-        updateThemeToggleAppearance(for: theme)
     }
 
 
@@ -375,19 +339,10 @@ class MainWindow: Window, @unchecked Sendable {
         if let searchBox = searchBox {
             searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
         }
-        // 更新主题按钮的文本（语言改变时需要重新翻译）
-        updateThemeToggleAppearance(for: App.context.theme)
     }
 
     private func themeDisplayName(for theme: AppTheme) -> String {
         return App.context.tr(theme.isDark ? "darkMode" : "lightMode")
-    }
-
-    private func updateThemeToggleAppearance(for theme: AppTheme) {
-        guard let icon = themeToggleIcon, let label = themeToggleLabel else { return }
-        let isDark = theme.isDark
-        icon.glyph = isDark ? "\u{E706}" : "\u{E708}"  // 太阳或月亮
-        label.text = App.context.tr(isDark ? "darkMode" : "lightMode")
     }
     
     // MARK: - 窗口大小管理
