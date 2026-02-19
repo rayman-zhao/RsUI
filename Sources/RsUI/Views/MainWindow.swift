@@ -7,6 +7,10 @@ import UWP
 import WinSDK
 import RsHelper
 
+fileprivate func tr(_ keyAndValue: String) -> String {
+    return App.context.tr(keyAndValue)
+}
+
 /// 主窗口界面配置，包含窗口尺寸、位置和状态
 struct MainWindowPreferences: Preferable {
     /// 窗口宽度
@@ -27,13 +31,12 @@ class MainWindow: Window, @unchecked Sendable {
     private let viewModel: MainWindowViewModel
 
     private var navigationPane: NavigationPane!
-    private var appWindowTitleBar: WinAppSDK.AppWindowTitleBar?
     private var hasAppliedInitialWindowSize = false
 
     /// UI 主要组件
     private var rootGrid: Grid!
     private var titleBar: TitleBar!
-    private var searchBox: AutoSuggestBox?
+    private var searchBox: AutoSuggestBox!
     
     private var _windowHandle: WinSDK.HWND?
 
@@ -47,9 +50,9 @@ class MainWindow: Window, @unchecked Sendable {
         setupWindow()
         setupModules()
         setupUI()
-        registerViewModelCallbacks()
-        applyTheme(App.context.theme)
-        refreshLocalizationUI()
+        applyAppearance()
+
+        startObserving()
     }
 
     /// 初始化并注册应用模块
@@ -97,17 +100,12 @@ class MainWindow: Window, @unchecked Sendable {
     
     /// 配置窗口基本属性
     private func setupWindow() {
-        self.title = "Ruslan"
         self.extendsContentIntoTitleBar = true
         
         // 设置 Mica 背景
         let micaBackdrop = MicaBackdrop()
         micaBackdrop.kind = .base
         self.systemBackdrop = micaBackdrop
-
-        appWindowTitleBar = self.appWindow?.titleBar
-        appWindowTitleBar?.extendsContentIntoTitleBar = true
-        appWindowTitleBar?.preferredHeightOption = .tall
 
         // 确保窗口句柄已激活后再应用尺寸
         self.activated.addHandler { [weak self] _, _ in
@@ -150,10 +148,8 @@ class MainWindow: Window, @unchecked Sendable {
     private func setupTitleBar() {
         titleBar = TitleBar()
         titleBar.height = 48
-        titleBar.title = "WinUI Gallery"
-        titleBar.subtitle = "Preview"
         titleBar.isBackButtonVisible = false
-        titleBar.isPaneToggleButtonVisible = false
+        titleBar.isPaneToggleButtonVisible = true
 
         if let iconPath = App.context.bundle.path(forResource: App.context.productName, ofType: "ico") {
             let bitmap = BitmapImage()
@@ -164,19 +160,16 @@ class MainWindow: Window, @unchecked Sendable {
             titleBar.iconSource = iconSource
         }
 
-        let searchBox = AutoSuggestBox()
+        searchBox = AutoSuggestBox()
         searchBox.width = 360
         searchBox.height = 32
         searchBox.minWidth = 280
         searchBox.verticalAlignment = .center
-        searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
-        self.searchBox = searchBox
         titleBar.content = searchBox
 
         titleBar.backRequested.addHandler { [weak self] _, _ in
             guard let self = self, let navigationPane = self.navigationPane else { return }
             navigationPane.goBack()
-            self.titleBar?.isBackButtonVisible = navigationPane.canGoBack
             self.titleBar?.isBackButtonEnabled = navigationPane.canGoBack
         }
 
@@ -204,9 +197,7 @@ class MainWindow: Window, @unchecked Sendable {
             },
             selectionChanged: { [weak self] _, title in
                 guard let self = self else { return }
-                self.updateTitle(with: title)
                 let canGoBack = self.navigationPane?.canGoBack ?? false
-                self.titleBar?.isBackButtonVisible = canGoBack
                 self.titleBar?.isBackButtonEnabled = canGoBack
             }
         )
@@ -214,100 +205,31 @@ class MainWindow: Window, @unchecked Sendable {
         rootGrid.children.append(navigationPane.rootView)
         try? Grid.setRow(navigationPane.rootView, 1)
         let canGoBack = navigationPane.canGoBack
-        titleBar?.isBackButtonVisible = canGoBack
         titleBar?.isBackButtonEnabled = canGoBack
     }
-    
-    /// 注册 ViewModel 的回调处理
-    private func registerViewModelCallbacks() { 
+
+    private func startObserving() { 
         let env = Observations {
             (App.context.theme, App.context.language)
         }
         Task { [weak self] in
-            for await ctx in env {
+            for await _ in env {
                 guard let self else { break }
                 await MainActor.run {
-                    self.applyTheme(ctx.0)
-                    self.handleLanguageChanged(ctx.1)
+                    self.applyAppearance()
                 }
             }
         }
     }
 
-    // MARK: - 主题管理
-    
-    /// 应用主题到整个应用和所有页面
-    private func applyTheme(_ theme: AppTheme) {
-        let appTheme = theme.applicationTheme
-        WinUI.Application.current?.requestedTheme = appTheme
-        updateTitleBarButtonColors(for: appTheme)
-
-        let elementTheme = theme.elementTheme
-        rootGrid?.requestedTheme = elementTheme
-        titleBar?.requestedTheme = elementTheme
-    }
-
-
-    // MARK: - 本地化管理
-    
-    /// 刷新所有 UI 元素的本地化文本
-    private func refreshLocalizationUI() {
-        updateTitle(with: navigationPane?.currentTitle ?? "Ruslan")
-    }
-
-    /// 根据文本更新窗口标题
-    private func updateTitle(with title: String) {
-        titleBar?.title = title
-        self.title = title
-    }
-
-    /// 根据主题更新标题栏按钮颜色，确保深色模式下对比度合适
-    private func updateTitleBarButtonColors(for theme: WinUI.ApplicationTheme) {
-        guard let titleBar = appWindowTitleBar else { return }
-
-        let isDark = theme == .dark
-        titleBar.preferredTheme = isDark ? .dark : .light
-        titleBar.backgroundColor = nil
-        titleBar.inactiveBackgroundColor = nil
-
-        if isDark {
-            let white = UWP.Color(a: 255, r: 255, g: 255, b: 255)
-            let hover = UWP.Color(a: 255, r: 60, g: 60, b: 68)
-            let pressed = UWP.Color(a: 255, r: 80, g: 80, b: 92)
-            let inactive = UWP.Color(a: 255, r: 180, g: 180, b: 188)
-
-            titleBar.buttonForegroundColor = white
-            titleBar.buttonHoverForegroundColor = white
-            titleBar.buttonPressedForegroundColor = white
-            titleBar.buttonInactiveForegroundColor = inactive
-            titleBar.buttonBackgroundColor = UWP.Color(a: 0, r: 0, g: 0, b: 0)
-            titleBar.buttonHoverBackgroundColor = hover
-            titleBar.buttonPressedBackgroundColor = pressed
-            titleBar.buttonInactiveBackgroundColor = UWP.Color(a: 0, r: 0, g: 0, b: 0)
-        } else {
-            let black = UWP.Color(a: 255, r: 30, g: 30, b: 34)
-            let hover = UWP.Color(a: 255, r: 230, g: 232, b: 238)
-            let pressed = UWP.Color(a: 255, r: 210, g: 212, b: 220)
-            let inactive = UWP.Color(a: 255, r: 120, g: 120, b: 126)
-
-            titleBar.buttonForegroundColor = black
-            titleBar.buttonHoverForegroundColor = black
-            titleBar.buttonPressedForegroundColor = black
-            titleBar.buttonInactiveForegroundColor = inactive
-            titleBar.buttonBackgroundColor = UWP.Color(a: 0, r: 0, g: 0, b: 0)
-            titleBar.buttonHoverBackgroundColor = hover
-            titleBar.buttonPressedBackgroundColor = pressed
-            titleBar.buttonInactiveBackgroundColor = UWP.Color(a: 0, r: 0, g: 0, b: 0)
+    private func applyAppearance() {
+        let theme = App.context.theme.applicationTheme
+        if WinUI.Application.current.requestedTheme != theme {
+            WinUI.Application.current.requestedTheme = theme
         }
-    }
-    
-    /// 处理语言变更事件
-    private func handleLanguageChanged(_: AppLanguage) {
-        refreshLocalizationUI()
-        // 更新搜索框的 placeholder 文本
-        if let searchBox = searchBox {
-            searchBox.placeholderText = App.context.tr("searchControlsAndSamples")
-        }
+
+        titleBar.title = tr(App.context.productName)
+        searchBox.placeholderText = tr("searchControlsAndSamples")
     }
     
     // MARK: - 窗口大小管理

@@ -35,19 +35,19 @@
         }
       }
     },
-    "dynamicChildSample" : {
+    "SampleApp" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dynamic Child"
+            "value" : "SampleApp"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "动态子项"
+            "value" : "示例程序"
           }
         }
       }
