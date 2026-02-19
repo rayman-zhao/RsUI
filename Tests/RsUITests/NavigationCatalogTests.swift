@@ -13,9 +13,9 @@ struct NavigationCatalogTests {
         private let root = WinUI.Grid()
         var rootView: WinUI.UIElement { root }
 
-        func applyTheme(_ theme: Appearance.Theme) {}
+        func applyTheme(_ theme: AppTheme) {}
 
-        func updateLocalization(language: Appearance.Language) {}
+        func updateLocalization(language: AppLanguage) {}
     }
 
     /// 测试：验证 firstSelectableDescendant() 能否在多层级导航树中找到可选择的叶子节点

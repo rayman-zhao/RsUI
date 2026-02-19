@@ -13,5 +13,5 @@ public protocol Module {
     func initialize(context: WindowContext)
 
     func makeNavigationViewItems() -> [NavigationViewItem]
-    func makeSettingsSection() -> UIElement?
+    func makeSettingsCard() -> UIElement?
 }

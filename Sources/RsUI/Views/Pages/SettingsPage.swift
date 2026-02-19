@@ -25,17 +25,8 @@ class SettingsPage: AppPage {
     
     /// 初始化用户界面，包括主题和语言选择器
     private func setupUI() {
-        // let isDark = App.context.theme.isDark
-        // let appBackground = isDark
-        //     ? WinUI.SolidColorBrush(UWP.Color(a: 255, r: 18, g: 21, b: 28))
-        //     : WinUI.SolidColorBrush(UWP.Color(a: 255, r: 244, g: 246, b: 250))
-        // let titleForeground = WinUI.SolidColorBrush(isDark
-        //     ? UWP.Color(a: 255, r: 232, g: 234, b: 242)
-        //     : UWP.Color(a: 255, r: 23, g: 26, b: 32))
-
         root.children.clear()
         // ??? root.requestedTheme = App.context.theme.elementTheme
-        //root.background = appBackground
 
         // 主滚动视图
         let scrollViewer = WinUI.ScrollViewer()
@@ -52,7 +43,6 @@ class SettingsPage: AppPage {
         titleBlock.text = tr("title")
         titleBlock.fontSize = 32
         titleBlock.fontWeight = UWP.FontWeights.semiBold
-        //titleBlock.foreground = titleForeground
         titleBlock.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 8)
         mainStackPanel.children.append(titleBlock)
 
@@ -60,7 +50,7 @@ class SettingsPage: AppPage {
         mainStackPanel.children.append(card)
         
         for module in App.context.modules {
-            if let card = module.makeSettingsSection() {
+            if let card = module.makeSettingsCard() {
                 mainStackPanel.children.append(card)
             }
         }

@@ -3,9 +3,6 @@ import WinUI
 
 public func buildSettingsCard(title: String, content: [WinUI.UIElement]) -> WinUI.StackPanel {
     let isDark = App.context.theme.isDark
-    // let titleForeground = WinUI.SolidColorBrush(isDark
-    //         ? UWP.Color(a: 255, r: 232, g: 234, b: 242)
-    //         : UWP.Color(a: 255, r: 23, g: 26, b: 32))
     let cardBrush = isDark
         ? WinUI.SolidColorBrush(UWP.Color(a: 255, r: 33, g: 37, b: 45))
         : WinUI.SolidColorBrush(UWP.Color(a: 255, r: 255, g: 255, b: 255))
@@ -18,7 +15,6 @@ public func buildSettingsCard(title: String, content: [WinUI.UIElement]) -> WinU
     card.spacing = 0
 
     let label = WinUI.TextBlock()
-    //label.foreground = titleForeground
     label.text = title
     label.fontSize = 20
     label.fontWeight = UWP.FontWeights.semiBold

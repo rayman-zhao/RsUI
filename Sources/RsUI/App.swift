@@ -35,4 +35,3 @@ open class App: SwiftApplication {
         App.context = nil
      }
 }
-

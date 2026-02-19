@@ -39,7 +39,7 @@ final class ArbitaryModule: Module {
         return [makeNavItemContent()]
     }
 
-    func makeSettingsSection() -> UIElement? {
+    func makeSettingsCard() -> UIElement? {
         let toggle = WinUI.ToggleSwitch()
         toggle.isOn = true
         toggle.onContent = tr("toggleOn")

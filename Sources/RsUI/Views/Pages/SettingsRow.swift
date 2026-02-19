@@ -3,9 +3,6 @@ import WinUI
 
 public func buildSettingsRow(iconGlyph: String, title: String, description: String, control: WinUI.UIElement) -> WinUI.Grid {
     let isDark = App.context.theme.isDark
-    // let titleForeground = WinUI.SolidColorBrush(isDark``
-    //         ? UWP.Color(a: 255, r: 232, g: 234, b: 242)
-    //         : UWP.Color(a: 255, r: 23, g: 26, b: 32))
     let secondaryForeground = WinUI.SolidColorBrush(isDark
             ? UWP.Color(a: 255, r: 169, g: 173, b: 189)
             : UWP.Color(a: 255, r: 96, g: 104, b: 112))
@@ -54,7 +51,6 @@ public func buildSettingsRow(iconGlyph: String, title: String, description: Stri
 
     let titleLabel = WinUI.TextBlock()
     titleLabel.text = title
-    //titleLabel.foreground = titleForeground
     titleLabel.fontSize = 16
     titleLabel.fontWeight = UWP.FontWeights.semiBold
     titleLabel.margin = WinUI.Thickness(left: 16, top: 2, right: 12, bottom: 4)
