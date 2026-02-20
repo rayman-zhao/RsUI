@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WinUI
 import RsHelper
 
 @Observable
@@ -10,6 +11,7 @@ public class AppContext {
     public var theme: AppTheme {
         didSet {
             guard oldValue != theme else { return }
+            Application.current.requestedTheme = theme.applicationTheme
             preferences.save(theme)
         }
     }
@@ -32,6 +34,10 @@ public class AppContext {
     
         self.bundle = bundle
         self.modules = modules
+
+        if Application.current.requestedTheme != theme.applicationTheme {
+            Application.current.requestedTheme = theme.applicationTheme
+        }
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {
