@@ -99,6 +99,7 @@ class MainWindow: Window, @unchecked Sendable {
     /// 配置窗口基本属性
     private func setupWindow() {
         self.extendsContentIntoTitleBar = true
+        self.appWindow.titleBar.preferredHeightOption = .tall
         
         // 设置 Mica 背景
         let micaBackdrop = MicaBackdrop()
@@ -225,10 +226,8 @@ class MainWindow: Window, @unchecked Sendable {
     }
 
     private func applyAppearance() {
-        let theme = App.context.theme.applicationTheme
-        if WinUI.Application.current.requestedTheme != theme {
-            WinUI.Application.current.requestedTheme = theme
-        }
+        // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
+        self.appWindow.titleBar.preferredTheme = App.context.theme.titleBarTheme
 
         titleBar.title = tr(App.context.productName)
         searchBox.placeholderText = tr("searchControlsAndSamples")

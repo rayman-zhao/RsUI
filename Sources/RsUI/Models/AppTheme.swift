@@ -1,4 +1,5 @@
 import Foundation
+import WinAppSDK
 import WinUI
 import RsHelper
 
@@ -8,7 +9,7 @@ public enum AppTheme: String, RawValuePreferable {
     case auto = "Auto"
 
     public init() {
-        self = (Application.current?.requestedTheme == .dark) ? .dark : .light
+        self = (Application.current.requestedTheme == .dark) ? .dark : .light
     }
     
     public var isDark: Bool {
@@ -24,6 +25,9 @@ public enum AppTheme: String, RawValuePreferable {
     var elementTheme: WinUI.ElementTheme {
         return isDark ? .dark : .light
     }
+    var titleBarTheme: WinAppSDK.TitleBarTheme {
+        return isDark ? .dark : .light
+    } 
 
     mutating func toggle() {
         self = isDark ? .light : .dark
