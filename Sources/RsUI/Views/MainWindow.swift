@@ -230,7 +230,8 @@ class MainWindow: Window, @unchecked Sendable {
         // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
         self.appWindow.titleBar.preferredTheme = App.context.theme.titleBarTheme
 
-        titleBar.title = tr(App.context.productName)
+        self.title = tr(App.context.productName)
+        titleBar.title = self.title
         searchBox?.placeholderText = tr("searchControlsAndSamples")
     }
     
