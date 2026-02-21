@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import WindowsFoundation
 import UWP
+import WinAppSDK
 import WinUI
 import WinSDK
 import RsHelper
@@ -11,7 +12,7 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 }
 
 /// 主窗口界面配置，包含窗口尺寸、位置和状态
-struct MainWindowPreferences: Preferable {
+fileprivate struct MainWindowPreferences: Preferable {
     /// 窗口宽度
     var windowWidth: Int = 1280
     /// 窗口高度
@@ -22,6 +23,15 @@ struct MainWindowPreferences: Preferable {
     var windowY: Int = 100
     /// 窗口是否最大化
     var isMaximized: Bool = false
+
+    var rectInt32: RectInt32 {
+        return RectInt32(
+            x: Int32(windowX),
+            y: Int32(windowY),
+            width: Int32(windowWidth),
+            height: Int32(windowHeight)
+        )
+    }
 }
 
 /// 主窗口类，管理整个应用的导航和 UI 布局
@@ -33,6 +43,7 @@ class MainWindow: Window, @unchecked Sendable {
     private var hasAppliedInitialWindowSize = false
 
     /// UI 主要组件
+    private lazy var preference = App.context.preferences.load(for: MainWindowPreferences.self)
     private lazy var searchBox: AutoSuggestBox? = {
         // let box = AutoSuggestBox()
         // box.width = 360
@@ -139,22 +150,17 @@ class MainWindow: Window, @unchecked Sendable {
         micaBackdrop.kind = .base
         self.systemBackdrop = micaBackdrop
 
-        // 确保窗口句柄已激活后再应用尺寸
-        self.activated.addHandler { [weak self] _, _ in
-            guard let self = self else { return }
-            self._windowHandle = WinSDK.GetActiveWindow()
-            guard !self.hasAppliedInitialWindowSize else { return }
-            self.hasAppliedInitialWindowSize = true
-            self.applyWindowSize()
+        self.sizeChanged.addHandler { [weak self] _, _ in
+            self?.trackWindowSize()
         }
-        
-        // 注册窗口关闭事件以保存窗口大小
         self.closed.addHandler { [weak self] _, _ in
-            self?.saveWindowSize()
+            guard let self else { return }
+            
+            // TODO: appWindow.changed事件不工作，此处窗口最大化时记录有缺陷。其实也可以不保存，恢复窗口在中间即可。
+            self.trackWindowPosition()
+            App.context.preferences.save(self.preference)
         }
-
-        // 应用保存的窗口大小（保持当前位置，不改变 Z 顺序）
-        applyWindowSize()
+        restoreWindowRect()
     }
 
     /// 初始化主要的 UI 布局
@@ -228,67 +234,37 @@ class MainWindow: Window, @unchecked Sendable {
         searchBox?.placeholderText = tr("searchControlsAndSamples")
     }
     
-    // MARK: - 窗口大小管理
-    
-    /// 应用保存的窗口大小、位置和状态
-    private func applyWindowSize() {
-        let prefs = App.context.preferences.load(for: MainWindowPreferences.self)
-        guard prefs.windowWidth > 0, prefs.windowHeight > 0 else { return }
+    private func restoreWindowRect() {
+        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
+        else { return }
 
-        let hwnd = WinSDK.GetActiveWindow()
-        guard hwnd != nil else { return }
-
-        let width = Int32(prefs.windowWidth)
-        let height = Int32(prefs.windowHeight)
-        let x = Int32(prefs.windowX)
-        let y = Int32(prefs.windowY)
-        
-        _ = WinSDK.SetWindowPos(
-            hwnd,
-            WinSDK.HWND(bitPattern: -2), // HWND_NOTOPMOST to keep Z-order
-            x,
-            y,
-            width,
-            height,
-            WinSDK.UINT(0x0010 | 0x0004) // SWP_NOACTIVATE | SWP_NOZORDER
-        )
-        
-        // 如果上次是最大化状态，恢复最大化
-        if prefs.isMaximized {
-            _ = WinSDK.ShowWindow(hwnd, 3) // SW_MAXIMIZE
+        let maximized = preference.isMaximized //moveAndResize will cause pref changed in event, so need to reserve here
+        try? hwnd.moveAndResize(preference.rectInt32)
+        if maximized {
+            try? presenter.maximize()
         }
     }
     
-    /// 保存当前窗口大小、位置和状态
-    private func saveWindowSize() {
-        let hwnd = WinSDK.GetActiveWindow()
-        guard hwnd != nil else { return }
+    private func trackWindowSize() {
+        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
+        else { return }
 
-        var rect = WinSDK.RECT()
-        guard WinSDK.GetWindowRect(hwnd, &rect) else { return }
+        if presenter.state == .restored {
+            self.preference.windowWidth = Int(hwnd.size.width)
+            self.preference.windowHeight = Int(hwnd.size.height)
+            self.preference.isMaximized = false
+        } else if presenter.state == .maximized {
+            self.preference.isMaximized = true
+        }
+    }
 
-        let width = Double(rect.right - rect.left)
-        let height = Double(rect.bottom - rect.top)
-        let x = Double(rect.left)
-        let y = Double(rect.top)
-        
-        guard width > 0, height > 0 else { return }
-        
-        // 检查窗口是否最大化
-        let placement = UnsafeMutablePointer<WinSDK.WINDOWPLACEMENT>.allocate(capacity: 1)
-        defer { placement.deallocate() }
-        placement.pointee.length = UInt32(MemoryLayout<WinSDK.WINDOWPLACEMENT>.size)
-        
-        let isMaximized = WinSDK.GetWindowPlacement(hwnd, placement) ? 
-            placement.pointee.showCmd == 3 : false // SW_MAXIMIZE = 3
-        
-        var prefs = MainWindowPreferences()
-        prefs.windowWidth = Int(width)
-        prefs.windowHeight = Int(height)
-        prefs.windowX = Int(x)
-        prefs.windowY = Int(y)
-        prefs.isMaximized = isMaximized
-        
-        App.context.preferences.save(prefs)
+    private func trackWindowPosition() {
+        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
+        else { return }
+
+        if presenter.state == .restored {
+            self.preference.windowX = Int(hwnd.position.x)
+            self.preference.windowY = Int(hwnd.position.y)
+        }
     }
 }
