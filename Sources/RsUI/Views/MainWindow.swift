@@ -27,21 +27,19 @@ struct MainWindowPreferences: Preferable {
 /// 主窗口类，管理整个应用的导航和 UI 布局
 class MainWindow: Window, @unchecked Sendable {
     // MARK: - 属性
-    private let viewModel: MainWindowViewModel
+    private let viewModel = MainWindowViewModel()
 
     private var navigationPane: NavigationPane!
     private var hasAppliedInitialWindowSize = false
 
     /// UI 主要组件
     private var titleBar: TitleBar!
-    private var searchBox: AutoSuggestBox!
+    private let searchBox: AutoSuggestBox? = nil
     
     private var _windowHandle: WinSDK.HWND?
 
     // MARK: - 初始化
-    
     override init() {
-        self.viewModel = MainWindowViewModel()
         super.init()
         self._windowHandle = WinSDK.GetActiveWindow()
         
@@ -137,7 +135,7 @@ class MainWindow: Window, @unchecked Sendable {
         contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
         root.rowDefinitions.append(contentRowDef)
         
-        self.searchBox = buildSearchBox()
+        //self.searchBox = buildSearchBox()
         self.titleBar = buildTitleBar(searchBox)
         root.children.append(titleBar)
         try? Grid.setRow(titleBar, 0)
@@ -160,7 +158,7 @@ class MainWindow: Window, @unchecked Sendable {
         return box
     }
     
-    private func buildTitleBar(_ searchBox: AutoSuggestBox) -> TitleBar {
+    private func buildTitleBar(_ searchBox: AutoSuggestBox?) -> TitleBar {
         let bar = TitleBar()
         bar.height = 48
         bar.isBackButtonVisible = false
@@ -175,7 +173,9 @@ class MainWindow: Window, @unchecked Sendable {
             bar.iconSource = iconSource
         }
 
+        if let searchBox {
         bar.content = searchBox
+        }
 
         // bar.backRequested.addHandler { [weak self] _, _ in
             // guard let self = self, let navigationPane = self.navigationPane else { return }
@@ -230,7 +230,7 @@ class MainWindow: Window, @unchecked Sendable {
         self.appWindow.titleBar.preferredTheme = App.context.theme.titleBarTheme
 
         titleBar.title = tr(App.context.productName)
-        searchBox.placeholderText = tr("searchControlsAndSamples")
+        searchBox?.placeholderText = tr("searchControlsAndSamples")
     }
     
     // MARK: - 窗口大小管理
