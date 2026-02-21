@@ -82,12 +82,9 @@ class MainWindow: Window, @unchecked Sendable {
         return bar
     } ()
     
-    private var _windowHandle: WinSDK.HWND?
-
     // MARK: - 初始化
     override init() {
         super.init()
-        self._windowHandle = WinSDK.GetActiveWindow()
         
         setupWindow()
         setupModules()      
@@ -101,8 +98,7 @@ class MainWindow: Window, @unchecked Sendable {
     private func setupModules() {
         // 模块上下文是模块和主引用的通信桥梁，通过提供navigationActions来供各个模块在NavigationPane中注册自己的导航节点
         let context = WindowContext(
-            navigationActions: makeNavigationActions(),
-            windowHandle: self._windowHandle
+            navigationActions: makeNavigationActions()
         )
         
         // 自动注册所有在 ModuleRegistry 中定义的模块
@@ -117,8 +113,7 @@ class MainWindow: Window, @unchecked Sendable {
             viewModel: viewModel,
             currentTheme: App.context.theme,
             currentLanguage: App.context.language,
-            navigationActions: makeNavigationActions(),
-            windowHandle: self._windowHandle
+            navigationActions: makeNavigationActions()
         )
     }
     
@@ -198,8 +193,7 @@ class MainWindow: Window, @unchecked Sendable {
                         viewModel: viewModel,
                         currentTheme: App.context.theme,
                         currentLanguage: App.context.language,
-                        navigationActions: NavigationActions.noop,
-                        windowHandle: nil
+                        navigationActions: NavigationActions.noop
                     )
                 }
                 return self.pageContext

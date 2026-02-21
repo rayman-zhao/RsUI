@@ -11,7 +11,7 @@ public class WindowContext {
     /// 窗口句柄
     public let windowHandle: WinSDK.HWND?
     
-    init(navigationActions: NavigationActions, windowHandle: WinSDK.HWND?) {
+    init(navigationActions: NavigationActions, windowHandle: WinSDK.HWND? = nil) {
         self.navigationActions = navigationActions
         self.windowHandle = windowHandle
     }

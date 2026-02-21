@@ -16,7 +16,7 @@ public struct PageContext: @unchecked Sendable {
     public let currentTheme: AppTheme
     public let currentLanguage: AppLanguage
     public let navigationActions: NavigationActions
-    public let windowHandle: WinSDK.HWND?
+    public let windowHandle: WinSDK.HWND? = nil
 }
 
 /// 提供给页面的导航操作封装
