@@ -33,8 +33,43 @@ class MainWindow: Window, @unchecked Sendable {
     private var hasAppliedInitialWindowSize = false
 
     /// UI 主要组件
-    private var titleBar: TitleBar!
-    private let searchBox: AutoSuggestBox? = nil
+    private lazy var searchBox: AutoSuggestBox? = {
+        // let box = AutoSuggestBox()
+        // box.width = 360
+        // box.height = 32
+        // box.minWidth = 280
+        // box.verticalAlignment = .center
+
+        // return box
+        return nil
+    } ()
+    private lazy var titleBar = {
+        let bar = TitleBar()
+        bar.height = 48
+        bar.isBackButtonVisible = false
+        bar.isPaneToggleButtonVisible = true
+
+        if let iconPath = App.context.bundle.path(forResource: App.context.productName, ofType: "ico") {
+            let bitmap = BitmapImage()
+            bitmap.uriSource = Uri(iconPath)
+
+            let iconSource = ImageIconSource()
+            iconSource.imageSource = bitmap
+            bar.iconSource = iconSource
+        }
+
+        if let searchBox {
+            bar.content = searchBox
+        }
+
+        // bar.backRequested.addHandler { [weak self] _, _ in
+            // guard let self = self, let navigationPane = self.navigationPane else { return }
+            // navigationPane.goBack()
+            // titleBar.isBackButtonEnabled = navigationPane.canGoBack
+        // }
+
+        return bar
+    } ()
     
     private var _windowHandle: WinSDK.HWND?
 
@@ -135,8 +170,6 @@ class MainWindow: Window, @unchecked Sendable {
         contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
         root.rowDefinitions.append(contentRowDef)
         
-        //self.searchBox = buildSearchBox()
-        self.titleBar = buildTitleBar(searchBox)
         root.children.append(titleBar)
         try? Grid.setRow(titleBar, 0)
         try? setTitleBar(titleBar)
@@ -146,44 +179,6 @@ class MainWindow: Window, @unchecked Sendable {
         try? Grid.setRow(navigationPane.rootView, 1)
 
         self.content = root
-    }
-
-    private func buildSearchBox() -> AutoSuggestBox {
-        let box = AutoSuggestBox()
-        box.width = 360
-        box.height = 32
-        box.minWidth = 280
-        box.verticalAlignment = .center
-
-        return box
-    }
-    
-    private func buildTitleBar(_ searchBox: AutoSuggestBox?) -> TitleBar {
-        let bar = TitleBar()
-        bar.height = 48
-        bar.isBackButtonVisible = false
-        bar.isPaneToggleButtonVisible = true
-
-        if let iconPath = App.context.bundle.path(forResource: App.context.productName, ofType: "ico") {
-            let bitmap = BitmapImage()
-            bitmap.uriSource = Uri(iconPath)
-
-            let iconSource = ImageIconSource()
-            iconSource.imageSource = bitmap
-            bar.iconSource = iconSource
-        }
-
-        if let searchBox {
-        bar.content = searchBox
-        }
-
-        // bar.backRequested.addHandler { [weak self] _, _ in
-            // guard let self = self, let navigationPane = self.navigationPane else { return }
-            // navigationPane.goBack()
-            // titleBar.isBackButtonEnabled = navigationPane.canGoBack
-        // }
-
-        return bar
     }
     
     /// 配置导航视图组件
@@ -206,7 +201,7 @@ class MainWindow: Window, @unchecked Sendable {
             selectionChanged: { [weak self] _, title in
                 guard let self = self else { return }
                 let canGoBack = self.navigationPane?.canGoBack ?? false
-                self.titleBar?.isBackButtonEnabled = canGoBack
+                self.titleBar.isBackButtonEnabled = canGoBack
             }
         )
     }
