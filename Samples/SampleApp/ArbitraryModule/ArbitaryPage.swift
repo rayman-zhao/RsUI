@@ -12,7 +12,7 @@ final class ArbitaryPage: AppPage {
         setupUI()
     }
 
-    init(context: PageContext) {
+    init() {
         setupUI()
     }
 

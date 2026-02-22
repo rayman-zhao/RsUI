@@ -73,38 +73,43 @@ class MainWindow: Window, @unchecked Sendable {
             bar.content = searchBox
         }
 
-        // bar.backRequested.addHandler { [weak self] _, _ in
-            // guard let self = self, let navigationPane = self.navigationPane else { return }
-            // navigationPane.goBack()
-            // titleBar.isBackButtonEnabled = navigationPane.canGoBack
-        // }
+        bar.paneToggleRequested.addHandler { [weak self] _, _ in
+            guard let self else { return }
+            self.navigationView.isPaneOpen.toggle()
+        }
 
         return bar
     } ()
-    
+    private lazy var navigationContentFrame = Frame()
+    private lazy var navigationView = {
+        let nav = NavigationView()
+        nav.paneDisplayMode = .left
+        nav.isSettingsVisible = true
+        nav.isBackButtonVisible = .collapsed
+        nav.isPaneToggleButtonVisible = false
+        nav.paneDisplayMode = .auto
+        nav.compactModeThresholdWidth = 0
+        //nav.openPaneLength = Double(pref.sidebarWidth)
+        //nav.expandedModeThresholdWidth = 800
+
+        let scrollViewer = ScrollViewer()
+        scrollViewer.content = navigationContentFrame
+        nav.content = scrollViewer
+
+        return nav
+    } ()
+
     // MARK: - 初始化
     override init() {
         super.init()
-        
+
         setupWindow()
-        setupModules()      
         setupContent()
         applyAppearance()
-
         startObserving()
-    }
 
-    /// 初始化并注册应用模块
-    private func setupModules() {
-        // 模块上下文是模块和主引用的通信桥梁，通过提供navigationActions来供各个模块在NavigationPane中注册自己的导航节点
-        let context = WindowContext(
-            navigationActions: makeNavigationActions()
-        )
-        
-        // 自动注册所有在 ModuleRegistry 中定义的模块
-        for module in App.context.modules {
-            module.initialize(context: context)
-        }
+        //setupModules()
+        // navigationPane.rebuildNavigation()
     }
 
     /// 构建页面初始化所需的上下文
@@ -139,7 +144,7 @@ class MainWindow: Window, @unchecked Sendable {
     private func setupWindow() {
         self.extendsContentIntoTitleBar = true
         self.appWindow.titleBar.preferredHeightOption = .tall
-        
+                
         // 设置 Mica 背景
         let micaBackdrop = MicaBackdrop()
         micaBackdrop.kind = .base
@@ -175,13 +180,35 @@ class MainWindow: Window, @unchecked Sendable {
         try? Grid.setRow(titleBar, 0)
         try? setTitleBar(titleBar)
 
-        self.navigationPane = buildNavigationPane()
-        root.children.append(navigationPane.rootView)
-        try? Grid.setRow(navigationPane.rootView, 1)
+        let context = WindowContext()
+        for module in App.context.modules {
+            for item in module.registerNavigationViewItems(in: context) {
+                navigationView.menuItems.append(item)
+            }
+        }
+        navigationView.selectionChanged.addHandler { [weak self] view, args in
+            guard let self, let view, let args else { return }
+
+            if args.isSettingsSelected {
+                view.header = App.context.tr("title", "SettingsPage")
+                let page = SettingsPage()
+                self.navigationContentFrame.content = page.rootView
+            } else if let item = args.selectedItem as? NavigationViewItem, let tag = item.tag {
+                for module in App.context.modules {
+                    if let target = module.makeNavigationTarget(for: tag) {
+                        view.header = target.header
+                        self.navigationContentFrame.content = target.page.rootView
+                        break
+                    }
+                }
+            }
+        }
+        root.children.append(navigationView)
+        try? Grid.setRow(navigationView, 1)
 
         self.content = root
     }
-    
+
     /// 配置导航视图组件
     private func buildNavigationPane() -> NavigationPane {
         let viewModel = self.viewModel
@@ -239,7 +266,7 @@ class MainWindow: Window, @unchecked Sendable {
             try? presenter.maximize()
         }
     }
-    
+
     private func trackWindowSize() {
         guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
         else { return }

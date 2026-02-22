@@ -1,4 +1,5 @@
 import Foundation
+import WindowsFoundation
 import UWP
 import WinUI
 import RsUI
@@ -17,46 +18,8 @@ final class ArbitaryModule: Module {
     deinit {
         log.info("ArbitaryModule deinit")
     }
-    
-    func initialize(context: WindowContext) {
-        let items = makeNavigationViewItems()
-        for item in items {
-            context.registerNavigation(node: .leaf(
-                id: "arbitrary",
-                labelKey: "arbitrary_module_title",
-                literalLabel: "Arbitrary",
-                pageFactory: { ArbitaryPage(context: $0) },
-                createNavigationViewItem: {
-                    // 初始化在注册模块的时候调用，要求完成创建NavigationViewItem
-                    return item
-                },
-                useCustomItem: true
-            ))
-        }
-    }
 
-    func makeNavigationViewItems() -> [NavigationViewItem] {
-        return [makeNavItemContent()]
-    }
-
-    func makeSettingsCard() -> UIElement? {
-        let toggle = WinUI.ToggleSwitch()
-        toggle.isOn = true
-        toggle.onContent = tr("toggleOn")
-        toggle.offContent = tr("toggleOff")
-
-        let metadataRow = buildSettingsRow(
-                iconGlyph: "\u{E70A}",
-                title: tr("metadataTitle"),
-                description: tr("metadataDescription"),
-                control: toggle
-            )
-
-        return buildSettingsCard(title: "Arbitrary Settings", content: [metadataRow])
-    }
-
-    /// 根据节点生成可复用的内容视图（含动作按钮和图标）
-    private func makeNavItemContent() -> NavigationViewItem {
+    func registerNavigationViewItems(in context: WindowContext) -> [NavigationViewItem] {
         let navigationViewItem = NavigationViewItem()
         let grid = Grid()
         grid.horizontalAlignment = .stretch
@@ -81,6 +44,29 @@ final class ArbitaryModule: Module {
         icon.fontSize = 16
         navigationViewItem.icon = icon
 
-        return navigationViewItem
+        navigationViewItem.tag = Uri("rs://\(id)")
+
+        return [navigationViewItem]
+    }
+
+    func makeNavigationTarget(for selectedItemTag: Any) -> (header: String, page: AppPage)? {
+        guard let tag = selectedItemTag as? Uri, tag.host == self.id else { return nil }
+        return ("Arbitrary Page", ArbitaryPage())
+    }
+
+    func makeSettingsCard() -> UIElement? {
+        let toggle = WinUI.ToggleSwitch()
+        toggle.isOn = true
+        toggle.onContent = tr("toggleOn")
+        toggle.offContent = tr("toggleOff")
+
+        let metadataRow = buildSettingsRow(
+                iconGlyph: "\u{E70A}",
+                title: tr("metadataTitle"),
+                description: tr("metadataDescription"),
+                control: toggle
+            )
+
+        return buildSettingsCard(title: "Arbitrary Settings", content: [metadataRow])
     }
 }

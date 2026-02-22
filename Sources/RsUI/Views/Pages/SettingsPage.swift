@@ -19,6 +19,9 @@ class SettingsPage: AppPage {
     init(context: PageContext) {
         setupUI()
     }
+    init() {
+        setupUI()
+    }
     deinit {
         print("###SettingsPage deinit")
     }
@@ -26,25 +29,11 @@ class SettingsPage: AppPage {
     /// 初始化用户界面，包括主题和语言选择器
     private func setupUI() {
         root.children.clear()
-        // ??? root.requestedTheme = App.context.theme.elementTheme
-
-        // 主滚动视图
-        let scrollViewer = WinUI.ScrollViewer()
-        scrollViewer.verticalScrollMode = .enabled
-        scrollViewer.horizontalScrollMode = .disabled
         
         let mainStackPanel = WinUI.StackPanel()
         mainStackPanel.orientation = .vertical
         mainStackPanel.spacing = 16
         mainStackPanel.padding = WinUI.Thickness(left: 32, top: 40, right: 32, bottom: 0)
-        
-        // 设置内容标题
-        let titleBlock = WinUI.TextBlock()
-        titleBlock.text = tr("title")
-        titleBlock.fontSize = 32
-        titleBlock.fontWeight = UWP.FontWeights.semiBold
-        titleBlock.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 8)
-        mainStackPanel.children.append(titleBlock)
 
         let card = buildPersonalizationCard()
         mainStackPanel.children.append(card)
@@ -55,9 +44,7 @@ class SettingsPage: AppPage {
             }
         }
 
-        scrollViewer.content = mainStackPanel
-        root.children.append(scrollViewer)
-        // ??? try? WinUI.Grid.setRow(scrollViewer, 0)
+        root.children.append(mainStackPanel)
     }
 
     private func buildPersonalizationCard() -> WinUI.StackPanel {
