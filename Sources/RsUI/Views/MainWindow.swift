@@ -24,7 +24,7 @@ fileprivate struct MainWindowPreferences: Preferable {
     /// 窗口是否最大化
     var isMaximized: Bool = false
 
-    var rectInt32: RectInt32 {
+    var windowRect: RectInt32 {
         return RectInt32(
             x: Int32(windowX),
             y: Int32(windowY),
@@ -234,7 +234,7 @@ class MainWindow: Window, @unchecked Sendable {
         else { return }
 
         let maximized = preference.isMaximized //moveAndResize will cause pref changed in event, so need to reserve here
-        try? hwnd.moveAndResize(preference.rectInt32)
+        try? hwnd.moveAndResize(preference.windowRect)
         if maximized {
             try? presenter.maximize()
         }
