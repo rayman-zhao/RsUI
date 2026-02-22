@@ -108,8 +108,9 @@ class MainWindow: Window, @unchecked Sendable {
         applyAppearance()
         startObserving()
 
-        //setupModules()
-        // navigationPane.rebuildNavigation()
+        if navigationView.menuItems.count > 0 {
+            navigationView.selectedItem = navigationView.menuItems[0]
+        }
     }
 
     /// 构建页面初始化所需的上下文
