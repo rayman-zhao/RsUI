@@ -16,9 +16,6 @@ class SettingsPage: AppPage {
         setupUI()
     }
 
-    init(context: PageContext) {
-        setupUI()
-    }
     init() {
         setupUI()
     }

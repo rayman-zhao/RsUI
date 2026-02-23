@@ -39,9 +39,6 @@ class MainWindow: Window, @unchecked Sendable {
     // MARK: - 属性
     private let viewModel = MainWindowViewModel()
 
-    private var navigationPane: NavigationPane!
-    private var hasAppliedInitialWindowSize = false
-
     /// UI 主要组件
     private lazy var preference = App.context.preferences.load(for: MainWindowPreferences.self)
     private lazy var searchBox: AutoSuggestBox? = {
@@ -112,35 +109,7 @@ class MainWindow: Window, @unchecked Sendable {
             navigationView.selectedItem = navigationView.menuItems[0]
         }
     }
-
-    /// 构建页面初始化所需的上下文
-    private var pageContext: PageContext {
-        return PageContext(
-            viewModel: viewModel,
-            currentTheme: App.context.theme,
-            currentLanguage: App.context.language,
-            navigationActions: makeNavigationActions()
-        )
-    }
-    
-    private func makeNavigationActions() -> NavigationActions {
-        return NavigationActions(
-            addNode: { node, parentId, section in
-                NavigationCatalog.addNode(node, toParent: parentId, in: section)
-            },
-            removeNode: { nodeId, section in
-                NavigationCatalog.removeNode(withId: nodeId, in: section)
-            },
-            rebuild: { [weak self] in
-                DispatchQueue.main.async { [weak self] in
-                    self?.navigationPane?.rebuildNavigation()
-                }
-            }
-        )
-    }
-    
-    // MARK: - UI 设置
-    
+ 
     /// 配置窗口基本属性
     private func setupWindow() {
         self.extendsContentIntoTitleBar = true
@@ -208,30 +177,6 @@ class MainWindow: Window, @unchecked Sendable {
         try? Grid.setRow(navigationView, 1)
 
         self.content = root
-    }
-
-    /// 配置导航视图组件
-    private func buildNavigationPane() -> NavigationPane {
-        let viewModel = self.viewModel
-        return NavigationPane(
-            viewModel: viewModel,
-            makePageContext: { [weak self] in
-                guard let self = self else {
-                    return PageContext(
-                        viewModel: viewModel,
-                        currentTheme: App.context.theme,
-                        currentLanguage: App.context.language,
-                        navigationActions: NavigationActions.noop
-                    )
-                }
-                return self.pageContext
-            },
-            selectionChanged: { [weak self] _, title in
-                guard let self = self else { return }
-                let canGoBack = self.navigationPane?.canGoBack ?? false
-                self.titleBar.isBackButtonEnabled = canGoBack
-            }
-        )
     }
 
     private func startObserving() { 
