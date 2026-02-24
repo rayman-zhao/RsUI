@@ -102,6 +102,7 @@ class MainWindow: Window, @unchecked Sendable {
 
         setupWindow()
         setupContent()
+        setupModules()
 
         startObserving()
     }
@@ -167,6 +168,13 @@ class MainWindow: Window, @unchecked Sendable {
         try? Grid.setRow(navigationView, 1)
 
         self.content = root
+    }
+
+    private func setupModules() {
+        let context = WindowContext()
+        for module in App.context.modules {
+            module.register(in: context)
+        }
     }
 
     private func startObserving() { 

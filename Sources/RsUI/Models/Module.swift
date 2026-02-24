@@ -7,6 +7,8 @@ public protocol Module {
     /// 模块的唯一标识符
     var id: String { get }
 
+    func register(in context: WindowContext)
+
     func registerNavigationViewItems(in context: WindowContext) -> [NavigationViewItem]
 
     func makeNavigationTarget(for selectedItemTag: Any) -> (header: UIElement?, page: AppPage)?
@@ -14,6 +16,9 @@ public protocol Module {
 }
 
 public extension Module {
+    func register(in context: WindowContext) {        
+    }
+
     func registerNavigationViewItems(in context: WindowContext) -> [NavigationViewItem] {
         return []
     }
