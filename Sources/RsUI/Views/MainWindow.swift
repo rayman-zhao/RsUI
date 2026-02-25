@@ -35,7 +35,7 @@ fileprivate struct MainWindowPreferences: Preferable {
 }
 
 /// 主窗口类，管理整个应用的导航和 UI 布局
-class MainWindow: Window, @unchecked Sendable {
+class MainWindow: Window {
     // MARK: - 属性
     private let viewModel = MainWindowViewModel()
 
@@ -171,7 +171,7 @@ class MainWindow: Window, @unchecked Sendable {
     }
 
     private func setupModules() {
-        let context = WindowContext()
+        let context = WindowContext(hwnd: self.appWindow)
         for module in App.context.modules {
             module.register(in: context)
         }
@@ -199,7 +199,7 @@ class MainWindow: Window, @unchecked Sendable {
         titleBar.title = self.title
         searchBox?.placeholderText = tr("searchControlsAndSamples")
 
-        let context = WindowContext()
+        let context = WindowContext(hwnd: self.appWindow)
         navigationView.menuItems.clear()
         for module in App.context.modules {
             for item in module.registerNavigationViewItems(in: context) {
