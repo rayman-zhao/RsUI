@@ -93,6 +93,19 @@ class SettingsPage: AppPage {
             control: languageCombo
         )
 
-        return buildSettingsCard(title: tr("personalizationSection"), content: [themeRow, languageRow])      
+        let statusBarToggle = WinUI.ToggleSwitch()
+        statusBarToggle.isOn = App.context.isStatusBarVisible
+        statusBarToggle.toggled.addHandler { _, _ in
+            App.context.isStatusBarVisible = statusBarToggle.isOn
+        }
+
+        let statusBarRow = buildSettingsRow(
+            iconGlyph: "\u{E7C1}",
+            title: tr("statusBarTitle"),
+            description: tr("statusBarDescription"),
+            control: statusBarToggle
+        )
+
+        return buildSettingsCard(title: tr("personalizationSection"), content: [themeRow, languageRow, statusBarRow])      
     }
 }

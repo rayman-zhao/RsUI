@@ -38,6 +38,12 @@ fileprivate struct MainWindowPreferences: Preferable {
 class MainWindow: Window {
     // MARK: - 属性
     private let viewModel = MainWindowViewModel()
+    private lazy var statusBar = StatusBar(
+        service: App.context.statusBar,
+        tr: { App.context.tr($0, "SettingsPage") },
+        isBarVisible: { App.context.isStatusBarVisible },
+        setBarVisible: { App.context.isStatusBarVisible = $0 }
+    )
 
     /// UI 主要组件
     private lazy var preference = App.context.preferences.load(for: MainWindowPreferences.self)
@@ -95,6 +101,7 @@ class MainWindow: Window {
 
         return nav
     } ()
+    private lazy var rootGrid = WinUI.Grid()
     private var displayingPage: AppPage? = nil
 
     // MARK: - 初始化
@@ -106,6 +113,7 @@ class MainWindow: Window {
         setupModules()
 
         startObserving()
+        applyAppearance()
     }
  
     /// 配置窗口基本属性
@@ -133,18 +141,20 @@ class MainWindow: Window {
 
     /// 初始化主要的 UI 布局
     private func setupContent() {
-        let root = Grid()
-
         // 设置行定义
         let titleRowDef = RowDefinition()
         titleRowDef.height = GridLength(value: 1, gridUnitType: .auto)
-        root.rowDefinitions.append(titleRowDef)
+        rootGrid.rowDefinitions.append(titleRowDef)
         
         let contentRowDef = RowDefinition()
         contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
-        root.rowDefinitions.append(contentRowDef)
+        rootGrid.rowDefinitions.append(contentRowDef)
+
+        let statusRowDef = RowDefinition()
+        statusRowDef.height = GridLength(value: 1, gridUnitType: .auto)
+        rootGrid.rowDefinitions.append(statusRowDef)
         
-        root.children.append(titleBar)
+        rootGrid.children.append(titleBar)
         try? Grid.setRow(titleBar, 0)
         try? setTitleBar(titleBar)
         
@@ -157,7 +167,7 @@ class MainWindow: Window {
                 self.navigationContentFrame.content = page.rootView
                 self.displayingPage = page
             } else if let item = args.selectedItem as? NavigationViewItem, let tag = item.tag {
-                let context = WindowContext(hwnd: self.appWindow)
+                let context = WindowContext(hwnd: self.appWindow, statusBar: App.context.statusBar)
                 for module in App.context.modules {
                     if let target = module.makeNavigationTarget(for: tag, in: context) {
                         view.header = target.header
@@ -168,14 +178,17 @@ class MainWindow: Window {
                 }
             }
         }
-        root.children.append(navigationView)
+        rootGrid.children.append(navigationView)
         try? Grid.setRow(navigationView, 1)
 
-        self.content = root
+        rootGrid.children.append(statusBar.root)
+        try? Grid.setRow(statusBar.root, 2)
+
+        self.content = rootGrid
     }
 
     private func setupModules() {
-        let context = WindowContext(hwnd: self.appWindow)
+        let context = WindowContext(hwnd: self.appWindow, statusBar: App.context.statusBar)
         for module in App.context.modules {
             module.register(in: context)
         }
@@ -183,12 +196,28 @@ class MainWindow: Window {
 
     private func startObserving() { 
         let env = Observations {
-            (App.context.theme, App.context.language)
+            (App.context.theme, App.context.language, App.context.isStatusBarVisible)
         }
         Task { [weak self] in
             for await _ in env {
                 await MainActor.run { [weak self] in
                     self?.applyAppearance()
+                }
+            }
+        }
+
+        let statusBarState = Observations {
+            (
+                App.context.statusBar.items,
+                App.context.statusBar.logs,
+                App.context.statusBar.hiddenItemIDs,
+                App.context.statusBar.descriptors
+            )
+        }
+        Task { [weak self] in
+            for await _ in statusBarState {
+                await MainActor.run { [weak self] in
+                    self?.statusBar.render()
                 }
             }
         }
@@ -202,7 +231,7 @@ class MainWindow: Window {
         titleBar.title = self.title
         searchBox?.placeholderText = tr("searchControlsAndSamples")
 
-        let context = WindowContext(hwnd: self.appWindow)
+        let context = WindowContext(hwnd: self.appWindow, statusBar: App.context.statusBar)
         navigationView.menuItems.clear()
         for module in App.context.modules {
             for item in module.registerNavigationViewItems(in: context) {
@@ -214,6 +243,27 @@ class MainWindow: Window {
         }
 
         displayingPage?.onAppearanceChanged()
+        statusBar.applyTheme(App.context.theme)
+        statusBar.root.visibility = App.context.isStatusBarVisible ? WinUI.Visibility.visible : WinUI.Visibility.collapsed
+        registerSystemStatusBarItems()
+        statusBar.render()
+    }
+
+    private func registerSystemStatusBarItems() {
+        App.context.statusBar.register(
+            moduleId: "system",
+            itemId: "logs",
+            title: App.context.language == .zh_CN ? "日志入口" : "Log entry",
+            slot: .right,
+            priority: 90
+        )
+        App.context.statusBar.upsert(
+            moduleId: "system",
+            itemId: "logs",
+            slot: .right,
+            text: App.context.language == .zh_CN ? "日志 \(App.context.statusBar.logs.count)" : "Logs \(App.context.statusBar.logs.count)",
+            priority: 90
+        )
     }
     
     private func restoreWindowRect() {

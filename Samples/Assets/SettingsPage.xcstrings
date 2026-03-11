@@ -222,6 +222,40 @@
         }
       }
     },
+    "statusBarDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the persistent status bar at the bottom of the main window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the persistent status bar at the bottom of the main window"
+          }
+        }
+      }
+    },
+    "statusBarTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status bar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态栏"
+          }
+        }
+      }
+    },
     "settingsSaved" : {
       "extractionState" : "manual",
       "localizations" : {

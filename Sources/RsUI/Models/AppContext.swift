@@ -21,17 +21,42 @@ public class AppContext {
             preferences.save(language)
         }
     }
+    public var isStatusBarVisible: Bool {
+        didSet {
+            guard oldValue != isStatusBarVisible else { return }
+            preferences.save(
+                StatusBarPreferences(
+                    isStatusBarVisible: isStatusBarVisible,
+                    hiddenItemIDs: Array(statusBar.hiddenItemIDs).sorted()
+                )
+            )
+        }
+    }
     public let bundle: Bundle
+    public let statusBar: StatusBarService
     
     var modules: [any Module] = []
 
     init(_ group: String, _ product: String, _ bundle: Bundle) {
         productName = product
         supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!       
-        preferences = JsonPreferences.makeAppStandard(group: group, product: product)
-        theme = preferences.load(for: AppTheme.self)
-        language = preferences.load(for: AppLanguage.self)
+        let store = JsonPreferences.makeAppStandard(group: group, product: product)
+        preferences = store
+        theme = store.load(for: AppTheme.self)
+        language = store.load(for: AppLanguage.self)
+        let statusBarPreferences = store.load(for: StatusBarPreferences.self)
+        isStatusBarVisible = statusBarPreferences.isStatusBarVisible
+        statusBar = StatusBarService(preferences: statusBarPreferences)
         self.bundle = bundle
+        statusBar.onPreferencesChanged = { [weak self] updated in
+            guard let self else { return }
+            self.preferences.save(
+                StatusBarPreferences(
+                    isStatusBarVisible: self.isStatusBarVisible,
+                    hiddenItemIDs: updated.hiddenItemIDs
+                )
+            )
+        }
 
         if Application.current.requestedTheme != theme.applicationTheme {
             Application.current.requestedTheme = theme.applicationTheme
