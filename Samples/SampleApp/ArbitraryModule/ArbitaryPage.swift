@@ -4,20 +4,9 @@ import WinUI
 import RsUI
 
 /// 演示页面，只有展示各种静态信息，表示使用自定义的NavigationViewItem可以工作正常
-final class ArbitaryPage: AppPage {
-    private let root = WinUI.Grid()
-    var rootView: WinUI.UIElement { root }
-
-    func onAppearanceChanged() {
-        setupUI()
-    }
-
-    init() {
-        setupUI()
-    }
-
-    private func setupUI() {
-        root.children.clear()
+final class ArbitaryPage: View {
+    var body: WinUI.UIElement {
+        let root = WinUI.Grid()
         root.padding = Thickness(left: 40, top: 0, right: 40, bottom: 32)
         
         // 主容器
@@ -41,6 +30,7 @@ final class ArbitaryPage: AppPage {
         mainContainer.children.append(statsSection)
         
         root.children.append(mainContainer)
+        return root
     }
     
     private func createSeparator() -> UIElement {

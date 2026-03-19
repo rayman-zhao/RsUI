@@ -49,7 +49,7 @@ final class ArbitaryModule: Module {
         return [navigationViewItem]
     }
 
-    func makeNavigationTarget(for selectedItemTag: Any, in context: WindowContext) -> (header: UIElement?, page: AppPage)? {
+    func makeNavigationTarget(for selectedItemTag: Any, in context: WindowContext) -> (header: UIElement?, page: View)? {
         guard let tag = selectedItemTag as? Uri, tag.host == self.id else { return nil }
 
         let container = StackPanel()

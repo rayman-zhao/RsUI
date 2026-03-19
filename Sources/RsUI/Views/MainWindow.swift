@@ -95,7 +95,7 @@ class MainWindow: Window {
 
         return nav
     } ()
-    private var displayingPage: AppPage? = nil
+    private var displayingPage: View? = nil
 
     // MARK: - 初始化
     override init() {
@@ -154,14 +154,14 @@ class MainWindow: Window {
             if args.isSettingsSelected {
                 view.header = App.context.tr("title", "SettingsPage")
                 let page = SettingsPage()
-                self.navigationContentFrame.content = page.rootView
+                self.navigationContentFrame.content = page.body
                 self.displayingPage = page
             } else if let item = args.selectedItem as? NavigationViewItem, let tag = item.tag {
                 let context = WindowContext(hwnd: self.appWindow)
                 for module in App.context.modules {
                     if let target = module.makeNavigationTarget(for: tag, in: context) {
                         view.header = target.header
-                        self.navigationContentFrame.content = target.page.rootView
+                        self.navigationContentFrame.content = target.page.body
                         self.displayingPage = target.page
                         break
                     }
@@ -213,7 +213,7 @@ class MainWindow: Window {
             navigationView.selectedItem = navigationView.menuItems[0]
         }
 
-        displayingPage?.onAppearanceChanged()
+        self.navigationContentFrame.content = displayingPage?.body
     }
     
     private func restoreWindowRect() {

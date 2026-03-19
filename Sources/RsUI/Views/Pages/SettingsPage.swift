@@ -8,22 +8,10 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 }
 
 /// 设置页面类，管理主题和语言偏好设置
-class SettingsPage: AppPage {
-    private let root = WinUI.Grid()
-    var rootView: WinUI.UIElement { root }
+class SettingsPage: View {
+    var body: UIElement {
+        let root = WinUI.Grid()
 
-    func onAppearanceChanged() {
-        setupUI()
-    }
-
-    init() {
-        setupUI()
-    }
-    
-    /// 初始化用户界面，包括主题和语言选择器
-    private func setupUI() {
-        root.children.clear()
-        
         let mainStackPanel = WinUI.StackPanel()
         mainStackPanel.orientation = .vertical
         mainStackPanel.spacing = 16
@@ -39,6 +27,7 @@ class SettingsPage: AppPage {
         }
 
         root.children.append(mainStackPanel)
+        return root
     }
 
     private func buildPersonalizationCard() -> WinUI.StackPanel {
