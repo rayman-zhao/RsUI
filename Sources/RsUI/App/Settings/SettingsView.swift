@@ -8,7 +8,7 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 }
 
 /// 设置页面类，管理主题和语言偏好设置
-class SettingsPage: View {
+class SettingsView: View {
     var header: Any? {
         return tr("title")
     }

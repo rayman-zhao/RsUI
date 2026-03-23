@@ -152,7 +152,7 @@ class MainWindow: Window {
             guard let self, let view, let args else { return }
 
             if args.isSettingsSelected {
-                let page = SettingsPage()
+                let page = SettingsView()
                 view.header = page.header
                 self.navigationContentFrame.content = page.content
                 self.displayingPage = page
