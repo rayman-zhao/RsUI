@@ -4,7 +4,11 @@ import WinUI
 import RsUI
 
 /// 演示页面，只有展示各种静态信息，表示使用自定义的NavigationViewItem可以工作正常
-final class ArbitaryPage: View {
+final class ArbitaryPage: RsUI.Page {
+    var url: URL {
+        return URL(string: "rs://arbitrary")!
+    }
+
     var header: Any? {
         let container = StackPanel()
         container.padding = Thickness(left: 0, top: 0, right: 0, bottom: 32)

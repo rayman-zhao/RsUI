@@ -38,8 +38,8 @@ final class ArbitaryModule: Module {
         return [header, navigationViewItem, sep]
     }
 
-    func navigationRequested(for uri: Uri, in context: WindowContext) -> View? {
-        guard uri.host == self.id else { return nil }
+    func navigationRequested(for url: URL, in context: WindowContext) -> RsUI.Page? {
+        guard url.host == self.id else { return nil }
         return ArbitaryPage()
     }
 
