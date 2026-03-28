@@ -207,22 +207,8 @@ class MainWindow: Window {
 
         if let page = viewModel.currentPage {
             navigate(to: page)
-        } else { // Initializing main window
-            for item in navigationView.menuItems {
-                if item is NavigationViewItem {
-                    navigationView.selectedItem = item
-                    return
-                }
-            }
-            for item in navigationView.footerMenuItems {
-                if item is NavigationViewItem {
-                    navigationView.selectedItem = item
-                    return
-                }
-            }
-            // Manually set selected item to settings item will trigger event without isSettingsSelected = true
-            navigationView.selectedItem = navigationView.settingsItem
-            navigate(to: SettingsPage())
+        } else {
+            navigationView.selectFirstItem()
         }
     }
     
