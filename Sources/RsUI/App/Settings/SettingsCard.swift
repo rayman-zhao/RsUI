@@ -1,52 +1,84 @@
 import UWP
 import WinUI
 
-func buildSettingsGroup(title: String, cards: [WinUI.UIElement]) -> WinUI.StackPanel {
+public func buildSettingsCard(iconGlyph: String, title: String, description: String, control: WinUI.UIElement?) -> WinUI.Grid {
     let isDark = App.context.theme.isDark
-    let cardBrush = isDark
-        ? WinUI.SolidColorBrush(UWP.Color(a: 255, r: 33, g: 37, b: 45))
-        : WinUI.SolidColorBrush(UWP.Color(a: 255, r: 255, g: 255, b: 255))
-    let cardBorderBrush = WinUI.SolidColorBrush(isDark
-        ? UWP.Color(a: 255, r: 60, g: 63, b: 78)
-        : UWP.Color(a: 255, r: 224, g: 228, b: 236))
+    let secondaryForeground = WinUI.SolidColorBrush(isDark
+            ? UWP.Color(a: 255, r: 169, g: 173, b: 189)
+            : UWP.Color(a: 255, r: 96, g: 104, b: 112))
+    let accentColor = UWP.Color(a: 255, r: 90, g: 104, b: 255)
 
-    let group = WinUI.StackPanel()
-    group.orientation = .vertical
-    group.spacing = 0
+    let container = WinUI.Grid()
 
-    let label = WinUI.TextBlock()
-    label.text = title
-    label.fontSize = 20
-    label.fontWeight = UWP.FontWeights.semiBold
-    label.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 4)
-    group.children.append(label)
+    let iconColumn = WinUI.ColumnDefinition()
+    iconColumn.width = WinUI.GridLength(value: 56, gridUnitType: .auto)
+    container.columnDefinitions.append(iconColumn)
 
-    let border = WinUI.Border()
-    border.cornerRadius = WinUI.CornerRadius(topLeft: 20, topRight: 20, bottomRight: 20, bottomLeft: 20)
-    border.background = cardBrush
-    border.borderBrush = cardBorderBrush
-    border.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
-    border.padding = WinUI.Thickness(left: 20, top: 12, right: 20, bottom: 12)
-    border.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+    let textColumn = WinUI.ColumnDefinition()
+    textColumn.width = WinUI.GridLength(value: 1, gridUnitType: .star)
+    container.columnDefinitions.append(textColumn)
 
-    let stack = WinUI.StackPanel()
-    stack.orientation = .vertical
-    stack.spacing = 0
+    let controlColumn = WinUI.ColumnDefinition()
+    controlColumn.width = WinUI.GridLength(value: 1, gridUnitType: .auto)
+    container.columnDefinitions.append(controlColumn)
 
-    for card in cards {
-        if stack.children.count > 0 {
-            let divider = WinUI.Border()
-            divider.height = 1
-            divider.margin = WinUI.Thickness(left: 72, top: 16, right: 0, bottom: 16)
-            divider.background = WinUI.SolidColorBrush(isDark
-                ? UWP.Color(a: 255, r: 52, g: 57, b: 70)
-                : UWP.Color(a: 255, r: 230, g: 232, b: 236))
-            stack.children.append(divider)
-        }
-        stack.children.append(card)
+    let titleRow = WinUI.RowDefinition()
+    titleRow.height = WinUI.GridLength(value: 1, gridUnitType: .auto)
+    container.rowDefinitions.append(titleRow)
+
+    let descRow = WinUI.RowDefinition()
+    descRow.height = WinUI.GridLength(value: 1, gridUnitType: .auto)
+    container.rowDefinitions.append(descRow)
+
+    let iconBadge = WinUI.Border()
+    iconBadge.width = 44
+    iconBadge.height = 44
+    iconBadge.cornerRadius = WinUI.CornerRadius(topLeft: 14, topRight: 14, bottomRight: 14, bottomLeft: 14)
+    iconBadge.background = WinUI.SolidColorBrush(accentColor)
+    iconBadge.verticalAlignment = .center
+    iconBadge.horizontalAlignment = .center
+
+    let icon = WinUI.FontIcon()
+    icon.glyph = iconGlyph
+    icon.fontSize = 20
+    icon.foreground = WinUI.SolidColorBrush(UWP.Color(a: 255, r: 255, g: 255, b: 255))
+    iconBadge.child = icon
+
+    container.children.append(iconBadge)
+    try? WinUI.Grid.setRow(iconBadge, 0)
+    try? WinUI.Grid.setColumn(iconBadge, 0)
+    try? WinUI.Grid.setRowSpan(iconBadge, 2)
+
+    let titleLabel = WinUI.TextBlock()
+    titleLabel.text = title
+    titleLabel.fontSize = 16
+    titleLabel.fontWeight = UWP.FontWeights.semiBold
+    titleLabel.margin = WinUI.Thickness(left: 16, top: 2, right: 12, bottom: 4)
+    container.children.append(titleLabel)
+    try? WinUI.Grid.setRow(titleLabel, 0)
+    try? WinUI.Grid.setColumn(titleLabel, 1)
+
+    let descriptionLabel = WinUI.TextBlock()
+    descriptionLabel.text = description
+    descriptionLabel.foreground = secondaryForeground
+    descriptionLabel.fontSize = 13
+    descriptionLabel.margin = WinUI.Thickness(left: 16, top: 0, right: 12, bottom: 0)
+    descriptionLabel.textWrapping = .wrap
+    container.children.append(descriptionLabel)
+    try? WinUI.Grid.setRow(descriptionLabel, 1)
+    try? WinUI.Grid.setColumn(descriptionLabel, 1)
+
+    if let control {
+        let controlHost = WinUI.StackPanel()
+        controlHost.orientation = .horizontal
+        controlHost.verticalAlignment = .center
+        controlHost.spacing = 8
+        controlHost.children.append(control)
+        container.children.append(controlHost)
+        try? WinUI.Grid.setRow(controlHost, 0)
+        try? WinUI.Grid.setColumn(controlHost, 2)
+        try? WinUI.Grid.setRowSpan(controlHost, 2)
     }
 
-    border.child = stack
-    group.children.append(border)
-    return group
+    return container
 }

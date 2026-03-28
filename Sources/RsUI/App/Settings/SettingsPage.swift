@@ -8,7 +8,7 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 }
 
 /// 设置页面类，管理主题和语言偏好设置
-class SettingsView: Page {
+class SettingsPage: Page {
     var url: URL {
         return URL(string: "rs://ui/settings")!
     }
