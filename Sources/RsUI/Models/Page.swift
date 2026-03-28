@@ -5,7 +5,7 @@ import WinUI
 public protocol Page: AnyObject {
     var url: URL { get }
     var header: Any? { get }
-    var content: WinUI.UIElement { get }
+    var content: UIElement { get }
 }
 
 public extension Page {

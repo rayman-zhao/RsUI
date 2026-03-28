@@ -1,5 +1,4 @@
 ﻿import Foundation
-import WindowsFoundation
 import WinUI
 import RsHelper
 
@@ -8,24 +7,25 @@ public protocol Module : ExpressibleByEmptyLiteral {
     /// 模块的唯一标识符
     var id: String { get }
 
-    func register(in context: WindowContext)
-
-    func registerNavigationViewItems(in context: WindowContext) -> [NavigationViewItemBase]
-
-    func makeSettingsCard() -> UIElement?
+    func titleBarRightHeaderItemRequired(in context: WindowContext) -> UIElement?
+    func navigationViewMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase]
+    func navigationViewFooterMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase]
+    func settingsGroupRequired() -> (label: String, cards: [UIElement])?
 
     func navigationRequested(for url: URL, in context: WindowContext) -> Page?
 }
 
 public extension Module {
-    func register(in context: WindowContext) {
+    func titleBarRightHeaderItemRequired(in context: WindowContext) -> UIElement? {
+        return nil
     }
-
-    func registerNavigationViewItems(in context: WindowContext) -> [NavigationViewItemBase] {
+    func navigationViewMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase] {
         return []
     }
-
-    func makeSettingsCard() -> UIElement? {
+    func navigationViewFooterMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase] {
+        return []
+    }
+    func settingsGroupRequired() -> (label: String, cards: [UIElement])? {
         return nil
     }
 
