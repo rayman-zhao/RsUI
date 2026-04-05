@@ -53,11 +53,11 @@ class MainWindowViewModel {
         if let page = currentPage {
             backwardPages.append(page)
         }
-        currentPage = forwardPages.removeFirst()
+        currentPage = forwardPages.removeLast()
         routePreferences.lastPageURL = currentPage?.url
     }
 
-    private func dumpHistory() {
+    func dumpHistory() {
         for (index, page) in backwardPages.enumerated() {
             log.info("\(index) <===\(page.url)")
         }

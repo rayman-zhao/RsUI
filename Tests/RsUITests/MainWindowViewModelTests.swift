@@ -121,17 +121,22 @@ struct MainWindowViewModelTests {
         let viewModel = MainWindowViewModel()
         let view1 = MockView()
         let view2 = MockView()
+        let view3 = MockView()
+        let view4 = MockView()
         
         viewModel.navigate(to: view1)
         viewModel.navigate(to: view2)
+        viewModel.navigate(to: view3)
+        viewModel.navigate(to: view4)
+        viewModel.goBack()
         viewModel.goBack()
         
         viewModel.goForward()
         
-        #expect(viewModel.currentPage === view2)
-        #expect(viewModel.forwardPages.isEmpty)
-        #expect(viewModel.backwardPages.count == 1)
-        #expect(viewModel.routePreferences.lastPageURL == view2.url)
+        #expect(viewModel.currentPage === view3)
+        #expect(viewModel.forwardPages.count == 1)
+        #expect(viewModel.backwardPages.count == 2)
+        #expect(viewModel.routePreferences.lastPageURL == view3.url)
     }
     
     @Test
