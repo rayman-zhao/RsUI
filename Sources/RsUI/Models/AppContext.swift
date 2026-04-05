@@ -1,5 +1,7 @@
 import Foundation
 import Observation
+import UWP
+import WinAppSDK
 import WinUI
 import RsHelper
 
@@ -8,7 +10,7 @@ public class AppContext {
     public let productName: String
     public let supportDirectory: URL
     public let preferences: Preferences
-    public let bundle: Bundle
+    public let resourceBundle: Bundle
     public var theme: AppTheme {
         didSet {
             guard oldValue != theme else { return }
@@ -22,14 +24,25 @@ public class AppContext {
             preferences.save(language)
         }
     }
+    public var fontScale: Int = 100
+    public var winAppSDKVersion: String {
+        switch RuntimeInfo.version {
+            case PackageVersion(major: 8000, minor: 616, build: 304, revision: 0):
+                return "1.8.0"
+            case PackageVersion(major: 8000, minor: 806, build: 2252, revision: 0):
+                return "1.8.6"
+            default:
+                return RuntimeInfo.asString
+        }
+    }
     
     var modules: [any Module] = []
 
-    private init(_ group: String, _ product: String, _ bundle: Bundle, _ loadAppearence: Bool) {
+    private init(_ group: String, _ product: String, _ resourceBundle: Bundle, _ loadAppearence: Bool) {
         productName = product
         supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!       
         preferences = JsonPreferences.makeAppStandard(group: group, product: product)
-        self.bundle = bundle
+        self.resourceBundle = resourceBundle
         if loadAppearence {
             self.theme = preferences.load(for: AppTheme.self)
             self.language = preferences.load(for: AppLanguage.self)
@@ -39,8 +52,8 @@ public class AppContext {
         }
     }
 
-    static func gui(_ group: String, _ product: String, _ bundle: Bundle) -> AppContext {
-        let ctx = AppContext(group, product, bundle, true)
+    static func gui(_ group: String, _ product: String, _ resourceBundle: Bundle) -> AppContext {
+        let ctx = AppContext(group, product, resourceBundle, true)
 
         if Application.current.requestedTheme != ctx.theme.applicationTheme {
             Application.current.requestedTheme = ctx.theme.applicationTheme
@@ -54,6 +67,6 @@ public class AppContext {
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {
-        return String(localized: keyAndValue, table: table, bundle: bundle, locale: language.locale)
+        return String(localized: keyAndValue, table: table, bundle: resourceBundle, locale: language.locale)
     }
 }
