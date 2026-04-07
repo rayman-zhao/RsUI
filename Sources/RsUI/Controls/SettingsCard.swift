@@ -16,7 +16,7 @@ public class SettingsCard: Button {
         self.padding = WinUI.Thickness(left: 10, top: 10, right: 10, bottom: 10)
     }
 
-    public convenience init(_ headerIconGlyph: String, _ header: String, _ description: String, _ content: FrameworkElement) {
+    public convenience init(_ headerIconGlyph: String, _ header: String, _ description: String, _ content: FrameworkElement, _ actionIcon: FontIcon? = nil) {
         self.init()
 
         let icon = WinUI.FontIcon()
@@ -28,7 +28,8 @@ public class SettingsCard: Button {
             headerIcon: icon,
             header: header,
             description: textBlock,
-            content: content
+            content: content,
+            actionIcon: actionIcon
         )
     }
 
