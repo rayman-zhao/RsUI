@@ -49,6 +49,7 @@ class SettingsPage: Page {
         let scrollViewer = ScrollViewer()
         scrollViewer.verticalScrollBarVisibility = .auto
         scrollViewer.content = mainStackPanel
+        scrollViewer.maxWidth = 1200
         return scrollViewer
     }
 
