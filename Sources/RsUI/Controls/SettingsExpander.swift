@@ -6,11 +6,7 @@ public class SettingsExpander: StackPanel {
     var isExpanded = false
     var isAnimating = false
 
-    let chevron = {
-        let chevron = WinUI.FontIcon()
-        chevron.glyph = "\u{E70D}"
-        return chevron
-    }()
+    let chevron = ChevronIcon(glyph: "\u{E70D}", expandAngle: 180)
     let expandedHost = {
         let host = WinUI.StackPanel()
         // host.orientation = .vertical
@@ -109,7 +105,7 @@ public class SettingsExpander: StackPanel {
             self.isAnimating = false
         }
 
-        chevron.glyph = expanding ? "\u{E70E}" : "\u{E70D}"
+        expanding ? chevron.expand() : chevron.collapse()
 
         try? storyboard.begin()
     }
