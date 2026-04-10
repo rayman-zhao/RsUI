@@ -10,8 +10,10 @@ fileprivate func tr(_ keyAndValue: String) -> String {
 
 /// 设置页面类，管理主题和语言偏好设置
 class SettingsPage: Page {
+    static let url = URL(string: "rs://ui/settings")!
+
     var url: URL {
-        return URL(string: "rs://ui/settings")!
+        return SettingsPage.url
     }
     var header: Any? {
         return tr("title")
