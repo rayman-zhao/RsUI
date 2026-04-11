@@ -21,7 +21,7 @@ public struct WindowContext {
         owner.navigate(to: page)
     }
 
-    public func navigate(to url: URL) {
-        owner.navigate(to: url)
+    public func navigate(to url: URL) -> Bool {
+        return owner.navigate(to: url)
     }
 }

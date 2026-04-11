@@ -151,8 +151,20 @@ class MainWindow: Window {
         viewModel.navigate(to: page)
     }
 
-    func navigate(to url: URL) {
-        navigationView.selectItem(with: url)
+    func navigate(to url: URL) -> Bool {
+        if url == SettingsPage.url {
+            navigate(to: SettingsPage())
+            return true
+        } else {
+            let context = WindowContext(owner: self)
+            for module in App.context.modules {
+                if let page = module.navigationRequested(for: url, in: context) {
+                    navigate(to: page)
+                    return true
+                }
+            }
+        }
+        return false
     }
  
     /// 配置窗口基本属性
@@ -203,13 +215,7 @@ class MainWindow: Window {
                 let tag = item.tag,
                 let str = tag as? HString,
                 let url = URL(string: String(hString: str)) {
-                let context = WindowContext(owner: self)
-                for module in App.context.modules {
-                    if let view = module.navigationRequested(for: url, in: context) {
-                        navigate(to: view)
-                        break
-                    }
-                }
+                _ = navigate(to: url)
             }
         }
         root.children.append(navigationView)
@@ -288,7 +294,7 @@ class MainWindow: Window {
 
         if let page = viewModel.currentPage {
             navigate(to: page)
-        } else {
+        } else if let lastURL = viewModel.routePreferences.lastPageURL, !navigate(to: lastURL) {
             navigationView.selectFirstItem()
         }
     }
