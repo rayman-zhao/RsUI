@@ -74,4 +74,17 @@ public class AppContext {
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {
         return String(localized: keyAndValue, table: table, bundle: resourceBundle, locale: language.locale)
     }
+
+    public func trxaml(_ xaml: String, _ table: String? = nil) -> String {
+        // FIXME: Prior to Swift 6, need to write #/myregex/# instead of /myregex/
+        let pattern = #/{x:Tr ([^}]+)}/#
+        let matches = xaml.matches(of: pattern).map { $0.1 }
+
+        var result = xaml
+        for match in matches {
+            result = result.replacingOccurrences(of: "{x:Tr \(match)}", with: tr(String(match), table))
+        }
+
+        return result
+    }
 }
