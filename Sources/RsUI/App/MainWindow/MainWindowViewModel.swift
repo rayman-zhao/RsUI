@@ -2,6 +2,12 @@ import Foundation
 import Observation
 import RsHelper
 
+enum NavigationDirection {
+    case forward
+    case backward
+    case none
+}
+
 @Observable
 class MainWindowViewModel {
     var windowPosition: WindowPosition
@@ -11,6 +17,7 @@ class MainWindowViewModel {
     var backwardPages: [Page] = []
     var forwardPages: [Page] = []
     var currentPage: Page? = nil
+    var navigationDirection: NavigationDirection = .none
 
     init() {
         windowPosition = App.context.preferences.load(for: WindowPosition.self)
@@ -26,8 +33,10 @@ class MainWindowViewModel {
 
     func navigate(to page: Page) {
         if (currentPage === page) { // For refresh current page by appearance change etc.
+            navigationDirection = .none
             currentPage = page
         } else {
+            navigationDirection = .forward
             if let previousPage = currentPage {
                 backwardPages.append(previousPage)
                 if backwardPages.count > routePreferences.maxHistoryPages {
@@ -43,16 +52,18 @@ class MainWindowViewModel {
     func goBack() {
         guard !backwardPages.isEmpty else { return }
 
+        navigationDirection = .backward
         if let page = currentPage {
             forwardPages.append(page)
         }
-        currentPage = backwardPages.removeLast()        
+        currentPage = backwardPages.removeLast()
         routePreferences.lastPageURL = currentPage?.url
     }
 
     func goForward() {
         guard !forwardPages.isEmpty else { return }
 
+        navigationDirection = .forward
         if let page = currentPage {
             backwardPages.append(page)
         }
