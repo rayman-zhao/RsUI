@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WinUI
 import RsHelper
 
 @Observable
@@ -11,6 +12,7 @@ class MainWindowViewModel {
     var backwardPages: [Page] = []
     var forwardPages: [Page] = []
     var currentPage: Page? = nil
+    var navigationTransitionInfo: NavigationTransitionInfo? = nil
 
     init() {
         windowPosition = App.context.preferences.load(for: WindowPosition.self)
@@ -24,7 +26,8 @@ class MainWindowViewModel {
         App.context.preferences.save(routePreferences)
     }
 
-    func navigate(to page: Page) {
+    func navigate(to page: Page, transitionInfoOverride: NavigationTransitionInfo? = nil) {
+        navigationTransitionInfo = transitionInfoOverride
         if (currentPage === page) { // For refresh current page by appearance change etc.
             currentPage = page
         } else {
@@ -40,19 +43,21 @@ class MainWindowViewModel {
         }
     }
 
-    func goBack() {
+    func goBack(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
         guard !backwardPages.isEmpty else { return }
 
+        navigationTransitionInfo = transitionInfoOverride
         if let page = currentPage {
             forwardPages.append(page)
         }
-        currentPage = backwardPages.removeLast()        
+        currentPage = backwardPages.removeLast()
         routePreferences.lastPageURL = currentPage?.url
     }
 
-    func goForward() {
+    func goForward(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
         guard !forwardPages.isEmpty else { return }
 
+        navigationTransitionInfo = transitionInfoOverride
         if let page = currentPage {
             backwardPages.append(page)
         }

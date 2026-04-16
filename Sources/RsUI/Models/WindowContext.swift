@@ -1,7 +1,8 @@
-﻿import Foundation
+import Foundation
 import WinAppSDK
+import WinUI
 
-/// 模块所附窗口上下文信息
+/// Window context exposed to modules.
 public struct WindowContext {
     let owner: MainWindow
 
@@ -17,11 +18,11 @@ public struct WindowContext {
         }
     }
 
-    public func navigate(to page: Page) {
-        owner.navigate(to: page)
+    public func navigate(to page: Page, transitionInfoOverride: NavigationTransitionInfo? = nil) {
+        owner.navigate(to: page, transitionInfoOverride: transitionInfoOverride)
     }
 
-    public func navigate(to url: URL) -> Bool {
-        return owner.navigate(to: url)
+    public func navigate(to url: URL, transitionInfoOverride: NavigationTransitionInfo? = nil) -> Bool {
+        return owner.navigate(to: url, transitionInfoOverride: transitionInfoOverride)
     }
 }
