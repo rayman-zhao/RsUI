@@ -34,8 +34,6 @@ class MainWindow: Window {
     private var dragStartX: Double = 0
     private var dragStartPaneLength: Double = 0
     private let splitterWidth: Double = 6
-    private let minPaneLength: Double = 48
-    private let maxPaneLength: Double = 600
 
     /// UI 主要组件
     private static func makeNavButton(glyph: String, action: @escaping () -> Void) -> Button {
@@ -137,10 +135,12 @@ class MainWindow: Window {
         nav.isBackButtonVisible = .collapsed
         nav.isPaneToggleButtonVisible = false
         nav.paneDisplayMode = .auto
+
+        let length = viewModel.windowLayout.navigationViewOpenPaneLength
         nav.compactModeThresholdWidth = 0
-        nav.expandedModeThresholdWidth = 0
+        nav.expandedModeThresholdWidth = length + viewModel.windowLayout.navigationViewExpandedModeThresholdContentWidth
         nav.isPaneOpen = viewModel.windowLayout.navigationViewPaneOpen
-        nav.openPaneLength = Double(viewModel.windowLayout.navigationViewOpenPaneLength)
+        nav.openPaneLength = length        
         nav.content = navigationContentFrame
 
         return nav
@@ -195,7 +195,7 @@ class MainWindow: Window {
             // TODO: appWindow.changed事件不工作，此处窗口最大化时记录有缺陷。其实也可以不保存，恢复窗口在中间即可。
             self.trackWindowPosition()
             self.viewModel.windowLayout.navigationViewPaneOpen = self.navigationView.isPaneOpen
-            self.viewModel.windowLayout.navigationViewOpenPaneLength = Int(self.navigationView.openPaneLength)
+            self.viewModel.windowLayout.navigationViewOpenPaneLength = self.navigationView.openPaneLength
             self.viewModel = nil
         }
         restoreWindowRect()
@@ -397,7 +397,7 @@ class MainWindow: Window {
             let point = try? args.getCurrentPoint(nil) // window-relative
             let currentX = Double(point?.position.x ?? 0)
             let delta = currentX - self.dragStartX
-            let newLength = min(self.maxPaneLength, max(self.minPaneLength, self.dragStartPaneLength + delta))
+            let newLength = min(self.viewModel.windowLayout.navigationViewMaxPaneLength, max(self.viewModel.windowLayout.navigationViewMinPaneLength, self.dragStartPaneLength + delta))
             self.applyPaneLength(newLength)
             args.handled = true
         }
@@ -417,6 +417,7 @@ class MainWindow: Window {
 
     private func applyPaneLength(_ length: Double) {
         navigationView.openPaneLength = length
+        navigationView.expandedModeThresholdWidth = length + viewModel.windowLayout.navigationViewExpandedModeThresholdContentWidth
         splitterBorder.margin = Thickness(
             left: length - splitterWidth / 2,
             top: 0, right: 0, bottom: 0

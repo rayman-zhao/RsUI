@@ -10,8 +10,12 @@ struct WindowPosition: Preferable {
 }
 
 struct WindowLayout: Preferable {
+    var navigationViewMinPaneLength: Double = 100
+    var navigationViewMaxPaneLength: Double = 400
+    var navigationViewExpandedModeThresholdContentWidth: Double = 688 // MARK: 688 is from default size 1008 - 320
+
     var navigationViewPaneOpen: Bool = true
-    var navigationViewOpenPaneLength: Int = 320
+    var navigationViewOpenPaneLength: Double = 320
 }
 
 struct RoutePreferences: Preferable {
