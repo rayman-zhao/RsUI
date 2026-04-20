@@ -128,6 +128,8 @@ class MainWindow: Window {
         return bar
     } ()
     private lazy var navigationContentFrame = PageTransitionHost()
+    private var pageViewContentBorder: Border?
+    private var pageViewHeaderBorder: Border?
     private lazy var navigationView = {
         let nav = NavigationView()
         nav.paneDisplayMode = .left
@@ -279,9 +281,9 @@ class MainWindow: Window {
                     guard let self else { return }
                     
                     if let page = self.viewModel.currentPage {
-                        self.navigationView.header = page.header
+                        self.navigationView.header = nil
                         self.navigationContentFrame.transition(
-                            to: page.content,
+                            to: self.makePageView(page),
                             transitionInfo: self.viewModel.navigationTransitionInfo
                         )
                         self.syncNavigationSelection(for: page.url)
@@ -299,6 +301,53 @@ class MainWindow: Window {
                 }
             }
         }
+    }
+
+    private func makePageView(_ page: Page) -> UIElement {
+        pageViewContentBorder?.child = nil
+        pageViewHeaderBorder?.child = nil
+        pageViewContentBorder = nil
+        pageViewHeaderBorder = nil
+
+        guard let header = page.header else {
+            return page.content
+        }
+
+        let grid = Grid()
+        let autoRow = RowDefinition()
+        autoRow.height = GridLength(value: 0, gridUnitType: .auto)
+        let starRow = RowDefinition()
+        starRow.height = GridLength(value: 1, gridUnitType: .star)
+        grid.rowDefinitions.append(autoRow)
+        grid.rowDefinitions.append(starRow)
+
+        // Row 0: header, margin matches NavigationViewHeaderMargin (56,44,0,0)
+        let headerBorder = Border()
+        headerBorder.margin = Thickness(left: 56, top: 44, right: 0, bottom: 0)
+        if let text = header as? String {
+            let tb = TextBlock()
+            tb.text = text
+            tb.fontSize = 28
+            tb.fontWeight = FontWeights.semiBold
+            tb.textWrapping = .wrap
+            headerBorder.child = tb
+        } else if let view = header as? UIElement {
+            headerBorder.child = view
+            pageViewHeaderBorder = headerBorder
+        } else {
+            return page.content
+        }
+
+        // Row 1: content
+        let contentBorder = Border()
+        contentBorder.child = page.content
+        pageViewContentBorder = contentBorder
+
+        try? Grid.setRow(headerBorder, 0)
+        try? Grid.setRow(contentBorder, 1)
+        grid.children.append(headerBorder)
+        grid.children.append(contentBorder)
+        return grid
     }
 
     private func syncNavigationSelection(for url: URL) {
