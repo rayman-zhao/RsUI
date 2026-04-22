@@ -158,11 +158,11 @@ public class SettingsExpander: StackPanel {
         // Items
         let effectiveItems = itemsSource ?? items
         for (index, item) in effectiveItems.enumerated() {
-            if index > 0 {
-                expandedHost.children.append(makeDivider(isDark: isDark))
-            }
             item.suppressCardStyling()
             item.applyExpanderItemPadding()
+            // Top border only (0,1,0,0) to match WCTK item separator style
+            item.cardBorder.borderThickness = WinUI.Thickness(left: 0, top: 1, right: 0, bottom: 0)
+            item.cardBorder.borderBrush = dividerBrush(isDark: isDark)
             expandedHost.children.append(item)
         }
 
@@ -199,18 +199,22 @@ public class SettingsExpander: StackPanel {
 
         let storyboard = WinUI.Storyboard()
 
+        // Expand: 333ms with decelerate (0,0,0,1); Collapse: 167ms with accelerate (1,1,0,1)
+        let duration = expanding ? 333 : 167
+        let easingMode: WinUI.EasingMode = expanding ? .easeOut : .easeIn
+
         let opacityAnim = WinUI.DoubleAnimation()
         opacityAnim.from = expanding ? 0 : 1
         opacityAnim.to = expanding ? 1 : 0
-        opacityAnim.duration = makeDuration(milliseconds: 180)
+        opacityAnim.duration = makeDuration(milliseconds: Int64(duration))
 
         let translateAnim = WinUI.DoubleAnimation()
         translateAnim.from = expanding ? -8 : 0
         translateAnim.to = expanding ? 0 : -8
-        translateAnim.duration = makeDuration(milliseconds: 180)
+        translateAnim.duration = makeDuration(milliseconds: Int64(duration))
 
         let easing = WinUI.CubicEase()
-        easing.easingMode = .easeOut
+        easing.easingMode = easingMode
         opacityAnim.easingFunction = easing
         translateAnim.easingFunction = easing
 

@@ -179,8 +179,9 @@ public class SettingsCard: ButtonBase {
 
     /// Applies the item padding used when hosted inside a SettingsExpander.
     func applyExpanderItemPadding() {
-        // Left = 58 (aligns with header icon column), right = 44 (leaves room for action icon)
-        cardBorder.padding = WinUI.Thickness(left: 58, top: 8, right: 44, bottom: 8)
+        // Clickable items: right=16 (no action icon space); others: right=44
+        let rightPadding: Double = isClickEnabled ? 16 : 44
+        cardBorder.padding = WinUI.Thickness(left: 58, top: 8, right: rightPadding, bottom: 8)
     }
 
     // MARK: - State management
