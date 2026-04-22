@@ -42,6 +42,14 @@ public class SettingsCard: ButtonBase {
     private var rootGrid: WinUI.Grid?
     private var actionIconHolder: Viewbox?
 
+    // Event cleanups for proper handler removal
+    private var pointerEnteredToken: EventCleanup?
+    private var pointerExitedToken: EventCleanup?
+    private var pointerPressedToken: EventCleanup?
+    private var pointerReleasedToken: EventCleanup?
+    private var pointerCaptureLostToken: EventCleanup?
+    private var pointerCanceledToken: EventCleanup?
+
     // MARK: - Init
 
     private override init() {
@@ -180,9 +188,9 @@ public class SettingsCard: ButtonBase {
     private func onIsClickEnabledChanged() {
         updateActionIconVisibility()
         if isClickEnabled {
-            enableHoverInteraction()
+            enableInteraction()
         } else {
-            disableHoverInteraction()
+            disableInteraction()
         }
     }
 
@@ -191,28 +199,55 @@ public class SettingsCard: ButtonBase {
         holder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
     }
 
-    private func enableHoverInteraction() {
-        disableHoverInteraction()
-        let isDark = App.context.theme.isDark
-        pointerEntered.addHandler { [weak self] _, _ in
-            self?.cardBorder.background = cardHoverBrush(isDark: isDark)
+    private func enableInteraction() {
+        disableInteraction()
+        let isDark: Bool = App.context.theme.isDark
+
+        pointerEnteredToken = pointerEntered.addHandler { [weak self] _, _ in
+            self?.goToPointerOverState()
         }
-        pointerExited.addHandler { [weak self] _, _ in
-            self?.cardBorder.background = cardBackgroundBrush(isDark: isDark)
+        pointerExitedToken = pointerExited.addHandler { [weak self] _, _ in
+            self?.goToNormalState()
         }
-        pointerPressed.addHandler { [weak self] _, _ in
-            self?.cardBorder.background = cardPressedBrush(isDark: isDark)
+        pointerPressedToken = pointerPressed.addHandler { [weak self] _, _ in
+            self?.goToPressedState()
         }
-        pointerReleased.addHandler { [weak self] _, _ in
-            self?.cardBorder.background = cardBackgroundBrush(isDark: isDark)
+        pointerReleasedToken = pointerReleased.addHandler { [weak self] _, _ in
+            self?.goToNormalState()
+        }
+        pointerCaptureLostToken = pointerCaptureLost.addHandler { [weak self] _, _ in
+            self?.goToNormalState()
+        }
+        pointerCanceledToken = pointerCanceled.addHandler { [weak self] _, _ in
+            self?.goToNormalState()
         }
     }
 
-    private func disableHoverInteraction() {
-        // WinUI event tokens are not easily removable without storing them;
-        // reassign background to reset visual state.
+    private func disableInteraction() {
+        pointerEnteredToken?.dispose(); pointerEnteredToken = nil
+        pointerExitedToken?.dispose(); pointerExitedToken = nil
+        pointerPressedToken?.dispose(); pointerPressedToken = nil
+        pointerReleasedToken?.dispose(); pointerReleasedToken = nil
+        pointerCaptureLostToken?.dispose(); pointerCaptureLostToken = nil
+        pointerCanceledToken?.dispose(); pointerCanceledToken = nil
+
+        goToNormalState()
+    }
+
+    // Visual state transitions
+    private func goToNormalState() {
         let isDark = App.context.theme.isDark
         cardBorder.background = cardBackgroundBrush(isDark: isDark)
+    }
+
+    private func goToPointerOverState() {
+        let isDark = App.context.theme.isDark
+        cardBorder.background = cardHoverBrush(isDark: isDark)
+    }
+
+    private func goToPressedState() {
+        let isDark = App.context.theme.isDark
+        cardBorder.background = cardPressedBrush(isDark: isDark)
     }
 
     // MARK: - Layout builder
@@ -246,7 +281,7 @@ public class SettingsCard: ButtonBase {
         actionCol.width = WinUI.GridLength(value: 1, gridUnitType: .auto)
         container.columnDefinitions.append(actionCol)
 
-        // Rows: [header auto] [description auto]
+        // Rows: [header row*] [content/description row auto]
         let headerRow = WinUI.RowDefinition()
         headerRow.height = WinUI.GridLength(value: 1, gridUnitType: .star)
         container.rowDefinitions.append(headerRow)
@@ -255,8 +290,13 @@ public class SettingsCard: ButtonBase {
         descRow.height = WinUI.GridLength(value: 1, gridUnitType: .auto)
         container.rowDefinitions.append(descRow)
 
-        // Header Icon Holder (col 0, spans both rows)
-        if let icon = headerIcon {
+        // Determine visibility based on contentAlignment
+        let showHeaderIcon = (contentAlignment != .left) && (headerIcon != nil)
+        let showHeaderText = (contentAlignment != .left) && (header != nil && !header!.isEmpty)
+        let showDescription = (contentAlignment != .left) && (description != nil)
+
+        // Header Icon Holder (col 0, row 0)
+        if showHeaderIcon, let icon = headerIcon {
             if let fontIcon = icon as? WinUI.FontIcon {
                 fontIcon.fontSize = 20
             } else if let imageIcon = icon as? ImageIcon {
@@ -265,7 +305,6 @@ public class SettingsCard: ButtonBase {
             }
             icon.verticalAlignment = .center
 
-            // HeaderIconHolder
             let headerIconHolder: Viewbox = WinUI.Viewbox()
             headerIconHolder.width = 20
             headerIconHolder.height = 20
@@ -278,51 +317,75 @@ public class SettingsCard: ButtonBase {
             try? WinUI.Grid.setColumn(headerIconHolder, 0)
         }
 
-        // Header Panel
-        let headerPanel: StackPanel = WinUI.StackPanel()
-        headerPanel.orientation = .vertical
-        headerPanel.verticalAlignment = .center
-        headerPanel.margin = WinUI.Thickness(left: 0, top: 0, right: 24, bottom: 0)
-        try? WinUI.Grid.setRow(headerPanel, 0)
-        try? WinUI.Grid.setColumn(headerPanel, 1)
-        container.children.append(headerPanel)
+        // Header Panel (col 1, row 0)
+        if showHeaderText || showDescription {
+            let headerPanel: StackPanel = WinUI.StackPanel()
+            headerPanel.orientation = .vertical
+            headerPanel.verticalAlignment = .center
+            headerPanel.margin = (contentAlignment == .right)
+                ? WinUI.Thickness(left: 0, top: 0, right: 24, bottom: 0)
+                : WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+            try? WinUI.Grid.setRow(headerPanel, 0)
+            try? WinUI.Grid.setColumn(headerPanel, 1)
+            container.children.append(headerPanel)
 
-        // Header label (col 1, row 0)
-        if let headerText = header, !headerText.isEmpty {
-            let titleLabel = WinUI.TextBlock()
-            titleLabel.text = headerText
-            titleLabel.fontSize = 14
-            titleLabel.textWrapping = .wrap
-            titleLabel.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
-            headerPanel.children.append(titleLabel)
-        }
-
-        // Description (col 1, row 1)
-        if let desc = description {
-            if let tb = desc as? TextBlock {
-                tb.foreground = secondaryForeground
-                tb.fontSize = 12
-                tb.textWrapping = .wrap
-                tb.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
-            } else {
-                desc.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+            // Header label
+            if showHeaderText, let headerText = header {
+                let titleLabel = WinUI.TextBlock()
+                titleLabel.text = headerText
+                titleLabel.fontSize = 14
+                titleLabel.textWrapping = .wrap
+                titleLabel.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+                headerPanel.children.append(titleLabel)
             }
-            headerPanel.children.append(desc)
+
+            // Description
+            if showDescription, let desc = description {
+                if let tb = desc as? TextBlock {
+                    tb.foreground = secondaryForeground
+                    tb.fontSize = 12
+                    tb.textWrapping = .wrap
+                    tb.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+                } else {
+                    desc.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+                }
+                headerPanel.children.append(desc)
+            }
         }
 
-        // Right-side content (col 2, spans both rows) — only shown in .right alignment
-        if let ctrl = content, contentAlignment == .right {
-            ctrl.verticalAlignment = .center
-            container.children.append(ctrl)
-            try? WinUI.Grid.setRow(ctrl, 0)
-            try? WinUI.Grid.setColumn(ctrl, 2)
-            try? WinUI.Grid.setRowSpan(ctrl, 2)
+        // Content placement based on contentAlignment
+        if let ctrl = content {
+            switch contentAlignment {
+            case .right:
+                // Content in col 2, row 0, right-aligned
+                ctrl.verticalAlignment = .center
+                ctrl.horizontalAlignment = .right
+                container.children.append(ctrl)
+                try? WinUI.Grid.setRow(ctrl, 0)
+                try? WinUI.Grid.setColumn(ctrl, 2)
+                try? WinUI.Grid.setRowSpan(ctrl, 2)
+
+            case .left:
+                // Content in col 1, row 1, left-aligned
+                ctrl.horizontalAlignment = .left
+                ctrl.verticalAlignment = .center
+                container.children.append(ctrl)
+                try? WinUI.Grid.setRow(ctrl, 1)
+                try? WinUI.Grid.setColumn(ctrl, 1)
+
+            case .vertical:
+                // Content in col 1, row 1, stretch horizontally
+                ctrl.horizontalAlignment = .stretch
+                ctrl.verticalAlignment = .center
+                container.children.append(ctrl)
+                try? WinUI.Grid.setRow(ctrl, 1)
+                try? WinUI.Grid.setColumn(ctrl, 1)
+            }
         }
 
-        // Action icon (col 3, spans both rows) — only when isClickEnabled && isActionIconVisible
+        // Action icon (col 3, spans both rows)
         let effectiveActionIcon = actionIcon ?? self.actionIcon
         if let aIcon = effectiveActionIcon {
-            // actionIconHolder
             let actionIconHolder: Viewbox = Viewbox()
             actionIconHolder.width = 13
             actionIconHolder.height = 13
@@ -330,13 +393,14 @@ public class SettingsCard: ButtonBase {
             actionIconHolder.horizontalAlignment = .center
             actionIconHolder.verticalAlignment = .center
             actionIconHolder.stretch = .uniform
-            
+
             aIcon.fontSize = 13
             aIcon.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
             aIcon.verticalAlignment = .center
-            if let toolTip = actionIconToolTip {
-                // ToolTipService not directly available in this API; store for future use
-                _ = toolTip
+
+            // Apply ToolTip if available
+            if let toolTip = actionIconToolTip, !toolTip.isEmpty {
+                try? WinUI.ToolTipService.setToolTip(actionIconHolder, toolTip)
             }
 
             actionIconHolder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
