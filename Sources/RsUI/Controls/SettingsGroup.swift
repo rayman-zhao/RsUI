@@ -6,7 +6,7 @@ public class SettingsGroup: StackPanel {
         super.init()
 
         self.orientation = .vertical
-        self.spacing = 2
+        self.spacing = 4
 
         let label = WinUI.TextBlock()
         label.text = title
