@@ -102,14 +102,17 @@ class SettingsPage: Page {
         let wasdk = HyperlinkButton()
         wasdk.content = "Windows App SDK \(App.context.winAppSDKVersion)"
         wasdk.navigateUri = Uri("https://aka.ms/windowsappsdk")
+        wasdk.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
         let winui = HyperlinkButton()
         winui.content = "WinUI 3"
         winui.navigateUri = Uri("https://aka.ms/winui")
-        
+        winui.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
+
         let winrt = HyperlinkButton()
         winrt.content = "Swift/WinRT"
         winrt.navigateUri = Uri("https://github.com/thebrowsercompany/swift-winrt")
+        winrt.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
         let depends = WinUI.StackPanel()
         depends.children.append(wasdk)
