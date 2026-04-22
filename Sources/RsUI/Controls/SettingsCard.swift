@@ -437,42 +437,43 @@ public class SettingsCard: ButtonBase {
 func cardBackgroundBrush(isDark: Bool) -> WinUI.SolidColorBrush {
     WinUI.SolidColorBrush(
         isDark
-            ? UWP.Color(a: 255, r: 32, g: 36, b: 44)
-            : UWP.Color(a: 255, r: 255, g: 255, b: 255)
+            ? UWP.Color(a: 13, r: 255, g: 255, b: 255)
+            : UWP.Color(a: 179, r: 255, g: 255, b: 255)
     )
 }
 
 func cardBorderBrush(isDark: Bool) -> WinUI.SolidColorBrush {
     WinUI.SolidColorBrush(
         isDark
-            ? UWP.Color(a: 255, r: 49, g: 55, b: 66)
-            : UWP.Color(a: 255, r: 229, g: 231, b: 235)
+            ? UWP.Color(a: 25, r: 255, g: 255, b: 255)   // CardStrokeColorDefaultBrush dark: #19FFFFFF
+            : UWP.Color(a: 15, r: 0, g: 0, b: 0)          // CardStrokeColorDefaultBrush light: #0F000000
     )
 }
 
 private func cardHoverBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    // ControlFillColorSecondary
+    // ControlFillColorSecondaryBrush: light #F9F9F9, dark #0FFFFFFF
     WinUI.SolidColorBrush(
         isDark
-            ? UWP.Color(a: 255, r: 40, g: 44, b: 53)
-            : UWP.Color(a: 255, r: 246, g: 246, b: 248)
+            ? UWP.Color(a: 15, r: 255, g: 255, b: 255)
+            : UWP.Color(a: 255, r: 249, g: 249, b: 249)
     )
 }
 
 private func cardPressedBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    // ControlFillColorTertiary
+    // ControlFillColorTertiaryBrush: light #F9F9F9 ~78%, dark #0AFFFFFF
     WinUI.SolidColorBrush(
         isDark
-            ? UWP.Color(a: 255, r: 28, g: 32, b: 40)
-            : UWP.Color(a: 255, r: 240, g: 240, b: 242)
+            ? UWP.Color(a: 10, r: 255, g: 255, b: 255)
+            : UWP.Color(a: 199, r: 249, g: 249, b: 249)
     )
 }
 
 func dividerBrush(isDark: Bool) -> WinUI.SolidColorBrush {
+    // ExpanderContentBorderBrush: light #0F000000, dark #18FFFFFF
     WinUI.SolidColorBrush(
         isDark
-            ? UWP.Color(a: 255, r: 58, g: 63, b: 77)
-            : UWP.Color(a: 255, r: 230, g: 232, b: 236)
+            ? UWP.Color(a: 24, r: 255, g: 255, b: 255)
+            : UWP.Color(a: 15, r: 0, g: 0, b: 0)
     )
 }
 
