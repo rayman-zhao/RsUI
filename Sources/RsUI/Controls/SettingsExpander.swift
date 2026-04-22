@@ -152,9 +152,6 @@ public class SettingsExpander: StackPanel {
             expandedHost.children.append(header)
         }
 
-        // Top divider
-        expandedHost.children.append(makeDivider(isDark: isDark))
-
         // Items
         let effectiveItems = itemsSource ?? items
         for item in effectiveItems {
@@ -175,14 +172,6 @@ public class SettingsExpander: StackPanel {
     private func rebuildItems() {
         let isDark = App.context.theme.isDark
         buildExpandedContent(isDark: isDark)
-    }
-
-    private func makeDivider(isDark: Bool) -> WinUI.Border {
-        let divider = WinUI.Border()
-        divider.height = 1
-        divider.margin = WinUI.Thickness(left: 16, top: 0, right: 16, bottom: 0)
-        divider.background = dividerBrush(isDark: isDark)
-        return divider
     }
 
     // MARK: - Animation
