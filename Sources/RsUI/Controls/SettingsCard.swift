@@ -41,6 +41,7 @@ public class SettingsCard: ButtonBase {
     let cardBorder = WinUI.Border()
     private var rootGrid: WinUI.Grid?
     private var actionIconHolder: Viewbox?
+    private weak var interactionVisualTarget: WinUI.Border?
 
     // Event cleanups for proper handler removal
     private var pointerEnteredToken: EventCleanup?
@@ -183,6 +184,12 @@ public class SettingsCard: ButtonBase {
         cardBorder.padding = WinUI.Thickness(left: 58, top: 8, right: rightPadding, bottom: 8)
     }
 
+    /// Redirects hover/pressed visuals to an outer border, used by SettingsExpander headers.
+    func setInteractionVisualTarget(_ target: WinUI.Border?) {
+        interactionVisualTarget = target
+        goToNormalState()
+    }
+
     // MARK: - State management
 
     private func onIsClickEnabledChanged() {
@@ -235,20 +242,23 @@ public class SettingsCard: ButtonBase {
 
     // Visual state transitions
     private func goToNormalState() {
-        cardBorder.background = cardBackgroundBrush()
-        cardBorder.borderBrush = cardBorderBrush()
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardBackgroundBrush()
+        visualTarget.borderBrush = cardBorderBrush()
         self.foreground = cardForegroundBrush()
     }
 
     private func goToPointerOverState() {
-        cardBorder.background = cardHoverBrush()
-        cardBorder.borderBrush = cardBorderBrushPointerOver()
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardHoverBrush()
+        visualTarget.borderBrush = cardBorderBrushPointerOver()
         self.foreground = cardForegroundHoverBrush()
     }
 
     private func goToPressedState() {
-        cardBorder.background = cardPressedBrush()
-        cardBorder.borderBrush = cardBorderBrushPressed()
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardPressedBrush()
+        visualTarget.borderBrush = cardBorderBrushPressed()
         self.foreground = cardForegroundPressedBrush()
     }
 

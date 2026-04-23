@@ -42,6 +42,7 @@ public class SettingsExpander: StackPanel {
         return t
     }()
 
+    private var interactionVisualTarget: WinUI.Border?
     private var items: [SettingsCard] = []
 
     // MARK: - Init
@@ -137,6 +138,8 @@ public class SettingsExpander: StackPanel {
         outerCard.borderBrush = cardBorderBrush(theme: theme)
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
         outerCard.child = cardStack
+        interactionVisualTarget = outerCard
+        headerCard.setInteractionVisualTarget(outerCard)
 
         self.children.append(outerCard)
     }
