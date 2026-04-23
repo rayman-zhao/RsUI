@@ -41,6 +41,7 @@ public class SettingsCard: ButtonBase {
     let cardBorder = WinUI.Border()
     private var rootGrid: WinUI.Grid?
     private var actionIconHolder: Viewbox?
+    private weak var interactionVisualTarget: WinUI.Border?
 
     // Event cleanups for proper handler removal
     private var pointerEnteredToken: EventCleanup?
@@ -55,8 +56,6 @@ public class SettingsCard: ButtonBase {
     private override init() {
         super.init()
 
-        let isDark: Bool = App.context.theme.isDark
-
         self.horizontalAlignment = .stretch
         self.verticalAlignment = .stretch
         self.horizontalContentAlignment = .stretch
@@ -70,8 +69,9 @@ public class SettingsCard: ButtonBase {
         cardBorder.backgroundSizing = .innerBorderEdge
         cardBorder.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
         cardBorder.cornerRadius = WinUI.CornerRadius(topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        cardBorder.background = cardBackgroundBrush(isDark: isDark)
-        cardBorder.borderBrush = cardBorderBrush(isDark: isDark)
+        cardBorder.background = cardBackgroundBrush()
+        cardBorder.borderBrush = cardBorderBrush()
+        self.foreground = cardForegroundBrush()
 
         self.content = cardBorder
     }
@@ -184,6 +184,12 @@ public class SettingsCard: ButtonBase {
         cardBorder.padding = WinUI.Thickness(left: 58, top: 8, right: rightPadding, bottom: 8)
     }
 
+    /// Redirects hover/pressed visuals to an outer border, used by SettingsExpander headers.
+    func setInteractionVisualTarget(_ target: WinUI.Border?) {
+        interactionVisualTarget = target
+        goToNormalState()
+    }
+
     // MARK: - State management
 
     private func onIsClickEnabledChanged() {
@@ -236,18 +242,24 @@ public class SettingsCard: ButtonBase {
 
     // Visual state transitions
     private func goToNormalState() {
-        let isDark = App.context.theme.isDark
-        cardBorder.background = cardBackgroundBrush(isDark: isDark)
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardBackgroundBrush()
+        visualTarget.borderBrush = cardBorderBrush()
+        self.foreground = cardForegroundBrush()
     }
 
     private func goToPointerOverState() {
-        let isDark = App.context.theme.isDark
-        cardBorder.background = cardHoverBrush(isDark: isDark)
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardHoverBrush()
+        visualTarget.borderBrush = cardBorderBrushPointerOver()
+        self.foreground = cardForegroundHoverBrush()
     }
 
     private func goToPressedState() {
-        let isDark = App.context.theme.isDark
-        cardBorder.background = cardPressedBrush(isDark: isDark)
+        let visualTarget = interactionVisualTarget ?? cardBorder
+        visualTarget.background = cardPressedBrush()
+        visualTarget.borderBrush = cardBorderBrushPressed()
+        self.foreground = cardForegroundPressedBrush()
     }
 
     // MARK: - Layout builder
@@ -259,8 +271,7 @@ public class SettingsCard: ButtonBase {
         content: FrameworkElement? = nil,
         actionIcon: FontIcon? = nil
     ) -> WinUI.Grid {
-        let isDark = App.context.theme.isDark
-        let secondaryForeground = secondaryBrush(isDark: isDark)
+        let secondaryForeground = secondaryBrush()
 
         let container = WinUI.Grid()
 
@@ -430,54 +441,4 @@ public class SettingsCard: ButtonBase {
         }()
         return tb
     }
-}
-
-// MARK: - Brushes (internal)
-
-func cardBackgroundBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 0x0D, r: 0xFF, g: 0xFF, b: 0xFF)
-            : UWP.Color(a: 0xB3, r: 0xFF, g: 0xFF, b: 0xFF)
-    )
-}
-
-private func cardHoverBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 0x15, r: 0xFF, g: 0xFF, b: 0xFF)
-            : UWP.Color(a: 0x80, r: 0xF9, g: 0xF9, b: 0xF9)
-    )
-}
-
-private func cardPressedBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 0x08, r: 0xFF, g: 0xFF, b: 0xFF)
-            : UWP.Color(a: 0x4D, r: 0xF9, g: 0xF9, b: 0xF9)
-    )
-}
-
-func cardBorderBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 25, r: 255, g: 255, b: 255)
-            : UWP.Color(a: 0x19, r: 0x00, g: 0x00, b: 0x00)
-    )
-}
-
-func dividerBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 24, r: 255, g: 255, b: 255)
-            : UWP.Color(a: 15, r: 0, g: 0, b: 0)
-    )
-}
-
-func secondaryBrush(isDark: Bool) -> WinUI.SolidColorBrush {
-    WinUI.SolidColorBrush(
-        isDark
-            ? UWP.Color(a: 255, r: 174, g: 178, b: 190)
-            : UWP.Color(a: 255, r: 96, g: 104, b: 112)
-    )
 }

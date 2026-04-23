@@ -42,6 +42,7 @@ public class SettingsExpander: StackPanel {
         return t
     }()
 
+    private var interactionVisualTarget: WinUI.Border?
     private var items: [SettingsCard] = []
 
     // MARK: - Init
@@ -112,7 +113,7 @@ public class SettingsExpander: StackPanel {
     // MARK: - Setup
 
     private func setup(headerCard: SettingsCard) {
-        let isDark = App.context.theme.isDark
+        let theme = App.context.theme
 
         headerCard.isClickEnabled = true
         headerCard.suppressCardStyling()
@@ -123,7 +124,7 @@ public class SettingsExpander: StackPanel {
         }
 
         expandedHost.renderTransform = expandedTransform
-        buildExpandedContent(isDark: isDark)
+        buildExpandedContent(theme: theme)
 
         let cardStack = WinUI.StackPanel()
         cardStack.orientation = .vertical
@@ -132,16 +133,18 @@ public class SettingsExpander: StackPanel {
         cardStack.children.append(expandedHost)
 
         let outerCard = WinUI.Border()
-        outerCard.cornerRadius = WinUI.CornerRadius(topLeft: 8, topRight: 8, bottomRight: 8, bottomLeft: 8)
-        outerCard.background = cardBackgroundBrush(isDark: isDark)
-        outerCard.borderBrush = cardBorderBrush(isDark: isDark)
+        outerCard.cornerRadius = WinUI.CornerRadius(topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
+        outerCard.background = cardBackgroundBrush(theme: theme)
+        outerCard.borderBrush = cardBorderBrush(theme: theme)
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
         outerCard.child = cardStack
+        interactionVisualTarget = outerCard
+        headerCard.setInteractionVisualTarget(outerCard)
 
         self.children.append(outerCard)
     }
 
-    private func buildExpandedContent(isDark: Bool) {
+    private func buildExpandedContent(theme: AppTheme) {
         // Clear existing children (keep transform)
         while expandedHost.children.count > 0 {
             expandedHost.children.removeAt(0)
@@ -159,7 +162,7 @@ public class SettingsExpander: StackPanel {
             item.applyExpanderItemPadding()
             // Top border only (0,1,0,0) to match WCTK item separator style
             item.cardBorder.borderThickness = WinUI.Thickness(left: 0, top: 1, right: 0, bottom: 0)
-            item.cardBorder.borderBrush = dividerBrush(isDark: isDark)
+            item.cardBorder.borderBrush = dividerBrush(theme: theme)
             expandedHost.children.append(item)
         }
 
@@ -170,8 +173,7 @@ public class SettingsExpander: StackPanel {
     }
 
     private func rebuildItems() {
-        let isDark = App.context.theme.isDark
-        buildExpandedContent(isDark: isDark)
+        buildExpandedContent(theme: App.context.theme)
     }
 
     // MARK: - Animation
