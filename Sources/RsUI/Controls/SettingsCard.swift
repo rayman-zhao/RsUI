@@ -235,14 +235,17 @@ public class SettingsCard: ButtonBase {
     // Visual state transitions
     private func goToNormalState() {
         cardBorder.background = cardBackgroundBrush()
+        cardBorder.borderBrush = cardBorderBrush()
     }
 
     private func goToPointerOverState() {
         cardBorder.background = cardHoverBrush()
+        cardBorder.borderBrush = cardBorderBrushPointerOver()
     }
 
     private func goToPressedState() {
         cardBorder.background = cardPressedBrush()
+        cardBorder.borderBrush = cardBorderBrushPressed()
     }
 
     // MARK: - Layout builder

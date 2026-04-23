@@ -118,6 +118,10 @@ func cardBorderBrushPointerOver(theme: AppTheme = App.context.theme) -> WinUI.So
     WinUI.SolidColorBrush(settingsBrushPalette(for: theme).settingsCardBorderBrushPointerOver)
 }
 
+func cardBorderBrushPressed(theme: AppTheme = App.context.theme) -> WinUI.SolidColorBrush {
+    WinUI.SolidColorBrush(settingsBrushPalette(for: theme).settingsCardBorderBrushPressed)
+}
+
 func dividerBrush(theme: AppTheme = App.context.theme) -> WinUI.SolidColorBrush {
     WinUI.SolidColorBrush(settingsBrushPalette(for: theme).divider)
 }
