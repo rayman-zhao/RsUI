@@ -857,7 +857,7 @@ class MainWindow: Window {
     }
 
     /// 把 `child` 赋值给 `border.child` 之前先显式从原 parent 断开，
-    /// 防御 Page 把 UIElement 作为存储属性返回（如 Ruslan FolderView）导致的
+    /// 防御 Page 把 UIElement 作为存储属性返回导致的 
     /// "Element is already the child of another element" WinRT 异常 ——
     /// 这种异常发生在 COM callback 路径里，会从 `try!` 抛出但传不到 Swift 主线程，
     /// 进程不会真正终止，但相关 UI 操作会失败、日志会污染。
