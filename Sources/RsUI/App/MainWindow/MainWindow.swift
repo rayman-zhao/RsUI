@@ -84,7 +84,7 @@ class MainWindow: Window {
     }
     lazy var closeOtherTabsButton: Button = {
         let icon = FontIcon()
-        icon.glyph = "\u{E8BB}"
+        icon.glyph = "\u{F166}"
         icon.fontSize = 12
         let btn = Button()
         btn.content = icon
