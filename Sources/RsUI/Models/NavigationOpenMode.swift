@@ -1,9 +1,9 @@
-/// 导航打开模式 —— 调用 `WindowContext.navigate` / `MainWindow.navigate` 时指定。
+/// Opening destination used by `WindowContext.open` and `MainWindow.navigate`.
 ///
-/// - inplace：在当前选中 Tab 内导航（默认行为）
-/// - newTab：打开为新 Tab 并切换过去
-/// - newTabBackground：打开为新 Tab 但**不**切换过去（类似浏览器 Ctrl+click）
-/// - newWindow：打开为新主窗口
+/// - inplace: Open in the currently selected tab.
+/// - newTab: Open in a new tab and switch to it.
+/// - newTabBackground: Open in a new tab without switching to it.
+/// - newWindow: Open in a new main window.
 public enum NavigationOpenMode: Sendable {
     case inplace
     case newTab

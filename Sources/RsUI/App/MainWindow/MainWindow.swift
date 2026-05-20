@@ -20,6 +20,8 @@ class MainWindow: Window {
 
     var openInNewTabRequested: Bool = false
     var initialNavigationURL: URL? = nil
+    var initialPageFactory: ((WindowContext) -> Page)? = nil
+    var initialNavigationTransitionInfoOverride: NavigationTransitionInfo? = nil
     static var isTabTearOffMergeEnabled = false
     var tabDragHintBorder: Border? = nil
     var draggingTabForDrop: MainWindowTab? = nil

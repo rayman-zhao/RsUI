@@ -93,9 +93,19 @@ extension MainWindow {
             }
         }
 
+        if let makeInitialPage = initialPageFactory {
+            initialPageFactory = nil
+            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+            initialNavigationTransitionInfoOverride = nil
+            navigate(to: makeInitialPage(context), transitionInfoOverride: transitionInfoOverride)
+            return
+        }
+
         if let url = initialNavigationURL {
             initialNavigationURL = nil
-            _ = navigate(to: url, transitionInfoOverride: SuppressNavigationTransitionInfo())
+            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+            initialNavigationTransitionInfoOverride = nil
+            _ = navigate(to: url, transitionInfoOverride: transitionInfoOverride)
             return
         }
 

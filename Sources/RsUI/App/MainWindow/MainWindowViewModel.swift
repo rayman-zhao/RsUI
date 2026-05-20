@@ -139,6 +139,32 @@ class MainWindowViewModel {
         navigationRevision += 1
     }
 
+    func findTab(matchingURL url: URL) -> MainWindowTab? {
+        tabs.first { $0.currentPage?.url == url }
+    }
+
+    @discardableResult
+    func addTab(
+        at index: Int? = nil,
+        for page: Page,
+        transitionInfoOverride: NavigationTransitionInfo? = nil,
+        switchToTab: Bool = true
+    ) -> MainWindowTab {
+        let tab = MainWindowTab(page: page, transitionInfoOverride: transitionInfoOverride)
+        if let index, index >= 0, index <= tabs.count {
+            tabs.insert(tab, at: index)
+        } else {
+            tabs.append(tab)
+        }
+        if switchToTab || selectedTab == nil {
+            selectedTab = tab
+            routePreferences.lastPageURL = page.url
+        }
+        syncLegacyHistory()
+        navigationRevision += 1
+        return tab
+    }
+
     func select(tab: MainWindowTab) {
         guard tabs.contains(where: { $0 === tab }) else { return }
         selectedTab = tab

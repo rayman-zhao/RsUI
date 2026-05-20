@@ -86,9 +86,60 @@ extension MainWindow {
         }
     }
 
-    static func openDetachedWindow(navigatingTo url: URL) {
+    func focusTab(matchingURL url: URL) -> Bool {
+        guard let tab = viewModel.findTab(matchingURL: url) else { return false }
+        switchToTab(tab)
+        return true
+    }
+
+    func detachCurrentTab() -> DetachedTabInfo? {
+        guard let currentTab = viewModel.selectedTab else { return nil }
+        guard let index = viewModel.tabs.firstIndex(where: { $0 === currentTab }) else { return nil }
+        guard let url = currentTab.currentPage?.url else { return nil }
+        viewModel.detachTab(currentTab)
+        renderSelectedTab()
+        return DetachedTabInfo(url: url, index: index)
+    }
+
+    func insertTab(
+        _ page: Page,
+        atIndex index: Int? = nil,
+        switchToTab: Bool = true,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
+        viewModel.addTab(
+            at: index,
+            for: page,
+            transitionInfoOverride: transitionInfoOverride,
+            switchToTab: switchToTab
+        )
+        renderSelectedTab()
+    }
+
+    static func openDetachedWindow(
+        navigatingTo url: URL,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
         let window = MainWindow()
         window.initialNavigationURL = url
+        window.initialNavigationTransitionInfoOverride = transitionInfoOverride
+        try? window.activate()
+    }
+
+    static func openDetachedWindow(
+        opening page: Page,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
+        openDetachedWindow(transitionInfoOverride: transitionInfoOverride) { _ in page }
+    }
+
+    static func openDetachedWindow(
+        transitionInfoOverride: NavigationTransitionInfo? = nil,
+        makePage: @escaping (WindowContext) -> Page
+    ) {
+        let window = MainWindow()
+        window.initialPageFactory = makePage
+        window.initialNavigationTransitionInfoOverride = transitionInfoOverride
         try? window.activate()
     }
 }

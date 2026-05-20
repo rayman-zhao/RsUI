@@ -40,7 +40,7 @@ extension MainWindow {
         transitionInfoOverride: NavigationTransitionInfo?
     ) {
         if mode == .newWindow {
-            MainWindow.openDetachedWindow(navigatingTo: page.url)
+            MainWindow.openDetachedWindow(opening: page, transitionInfoOverride: transitionInfoOverride)
             return
         }
         viewModel.navigate(
@@ -59,7 +59,7 @@ extension MainWindow {
         transitionInfoOverride: NavigationTransitionInfo?
     ) -> Bool {
         if mode == .newWindow {
-            MainWindow.openDetachedWindow(navigatingTo: url)
+            MainWindow.openDetachedWindow(navigatingTo: url, transitionInfoOverride: transitionInfoOverride)
             return true
         }
         // 仅在 inplace 模式下短路；其他模式（newTab / newTabBackground）允许重复打开同 URL
