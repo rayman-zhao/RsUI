@@ -15,6 +15,7 @@ class SettingsPage: Page {
     var url: URL {
         return SettingsPage.url
     }
+    var title: String { tr("title") }
     var header: Any? {
         return tr("title")
     }

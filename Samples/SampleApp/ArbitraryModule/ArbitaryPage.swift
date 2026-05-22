@@ -9,6 +9,8 @@ final class ArbitaryPage: RsUI.Page {
         return URL(string: "rs://arbitrary")!
     }
 
+    var title: String { tr("Arbitrary Page") }
+
     var header: Any? {
         let container = StackPanel()
         container.padding = Thickness(left: 0, top: 0, right: 0, bottom: 32)

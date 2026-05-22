@@ -5,15 +5,12 @@ import WinUI
 public protocol Page: AnyObject {
     var url: URL { get }
     var header: Any? { get }
-    var tabTitle: String? { get }
-    var showPageHeader: Bool { get }
+    var title: String { get }
     var content: UIElement { get }
 }
 
 public extension Page {
     var header: Any? { nil }
-    var tabTitle: String? { nil }
-    var showPageHeader: Bool { true }
 
     func startObserving<Element>(_ emit: @escaping @Sendable () -> Element, onChanged: @escaping @MainActor (Page, Element) -> Void) {
         let obs = Observations(emit)
