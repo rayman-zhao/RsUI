@@ -12,6 +12,8 @@ private final class MockView: RsUI.Page {
 
     var url: URL { return URL(string: "rs://ui/mainwindow/test/\(id)")! }
 
+    var title: String { "Mock \(id)" }
+
     var content: WinUI.UIElement {
         WinUI.Grid()
     }
