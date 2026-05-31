@@ -53,7 +53,7 @@ extension MainWindow {
 
     func setupTabDragHint() {
         let hintText = TextBlock()
-        hintText.text = MainWindow.tr("拖到其他窗口可合并，拖到窗口外释放可分离为新窗口")
+        hintText.text = MainWindow.tr("TabDragHint")
         hintText.fontSize = 12
         hintText.textWrapping = .wrap
         hintText.maxWidth = 460
@@ -75,6 +75,7 @@ extension MainWindow {
         try? Canvas.setZIndex(hintBorder, 99)
         tabContentHost.children.append(hintBorder)
         tabDragHintBorder = hintBorder
+        tabDragHintText = hintText
 
         tabView.tabDragStarting.addHandler { [weak hintBorder] _, _ in
             hintBorder?.visibility = .visible

@@ -29,6 +29,8 @@ class MainWindow: Window {
     var suppressLayoutPersistence: Bool = false
     static var isTabTearOffMergeEnabled = false
     var tabDragHintBorder: Border? = nil
+    // 持有提示文本以便语言切换时重设（文本在 setupTabDragHint 创建时定格）
+    var tabDragHintText: TextBlock? = nil
     var draggingTabForDrop: MainWindowTab? = nil
     var dragDroppedOutside = false
 
@@ -130,11 +132,17 @@ class MainWindow: Window {
         btn.click.addHandler { [weak self] _, _ in
             self?.closeOtherTabs()
         }
-        let toolTip = ToolTip()
-        toolTip.content = MainWindow.tr("CloseOthers")
-        try? ToolTipService.setToolTip(btn, toolTip)
+        self.applyCloseOthersTooltip(to: btn)
         return btn
     }()
+
+    // tooltip 在按钮 lazy 求值时定格，语言切换后需重新应用本地化文案
+    func applyCloseOthersTooltip(to button: Button) {
+        let toolTip = ToolTip()
+        toolTip.content = MainWindow.tr("CloseOthers")
+        try? ToolTipService.setToolTip(button, toolTip)
+    }
+
     lazy var searchBox: AutoSuggestBox? = {
         // let box = AutoSuggestBox()
         // box.width = 360

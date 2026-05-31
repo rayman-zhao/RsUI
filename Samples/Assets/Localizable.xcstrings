@@ -390,6 +390,23 @@
         }
       }
     },
+    "TabDragHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag onto another window to merge, or release outside any window to detach it as a new window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖到其他窗口可合并，拖到窗口外释放可分离为新窗口"
+          }
+        }
+      }
+    },
     "success" : {
       "extractionState" : "manual",
       "localizations" : {
