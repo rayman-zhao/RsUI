@@ -1,5 +1,7 @@
 import Foundation
 import WinUI
+import WinAppSDK
+import WinSDK
 import RsHelper
 import CRsUIJumpList
 
@@ -10,6 +12,9 @@ open class App: SwiftApplication {
     let product: String
     let bundle: Bundle
     let moduleTypes: [Module.Type]
+
+    // 持有单实例注册对象，保证 activated 事件订阅在 app 生命周期内不被释放。
+    private var singleInstance: AppInstance?
 
     public required convenience init() {
         self.init("SwiftWorks", "RsUI", .main, [])
@@ -31,6 +36,19 @@ open class App: SwiftApplication {
     }
 
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
+        // 单实例：同一 app 只保留一个进程。第二次启动（含任务栏 --new-window 重启的 EXE）
+        // 把激活重定向给已运行实例后退出，由已运行实例进程内开新窗口——消除多进程并发写
+        // preferences/JSON 的竞争，行为对齐 VSCode。任一步失败则 fail-open 照常启动。
+        let keyInstance = try? AppInstance.findOrRegisterForKey(appUserModelID)
+        if let keyInstance, !keyInstance.isCurrent {
+            redirectActivationAndExit(to: keyInstance)
+            return
+        }
+        if keyInstance == nil {
+            logError("single-instance: findOrRegisterForKey 失败，退回独立进程运行")
+        }
+        singleInstance = keyInstance
+
         // Need to init context after super.init() because some WinUI APIs require the application to be initialized
         App.context = AppContext.gui(group, product, bundle)
         App.context.modules = moduleTypes.map { $0.init() }
@@ -40,6 +58,36 @@ open class App: SwiftApplication {
         let forceHome = parseForceHomeFromCommandLine(args)
         let mainWindow = forceHome ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
         try! mainWindow.activate()
+
+        observeRedirectedActivations(keyInstance, uiQueue: mainWindow.dispatcherQueue)
+    }
+
+    private func redirectActivationAndExit(to keyInstance: AppInstance) {
+        // redirectActivationToAsync 异步：把本进程的激活转交给已运行实例后，本进程不创建
+        // 任何窗口、直接退出。
+        let activatedArgs = try? AppInstance.getCurrent().getActivatedEventArgs()
+        Task {
+            if let activatedArgs {
+                try? await keyInstance.redirectActivationToAsync(activatedArgs).get()
+            } else {
+                logError("single-instance: getActivatedEventArgs 失败，重定向跳过")
+            }
+            ExitProcess(0)
+        }
+    }
+
+    private func observeRedirectedActivations(_ keyInstance: AppInstance?, uiQueue: DispatcherQueue?) {
+        // activated 在后台线程触发，进程内开窗必须回到 UI 线程。任何被重定向过来的激活都
+        // 视为"开新窗口"，复用 openDetachedWindow 家族在进程内开一个 Home 窗口。
+        keyInstance?.activated.addHandler { _, _ in
+            _ = try? uiQueue?.tryEnqueue {
+                MainWindow.openDetachedWindowAtHome()
+            }
+        }
+    }
+
+    private func logError(_ message: String) {
+        FileHandle.standardError.write(Data((message + "\n").utf8))
     }
 
     private func parseForceHomeFromCommandLine(_ args: WinUI.LaunchActivatedEventArgs) -> Bool {

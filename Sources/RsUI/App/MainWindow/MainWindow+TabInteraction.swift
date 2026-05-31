@@ -148,4 +148,11 @@ extension MainWindow {
         window.initialNavigationTransitionInfoOverride = transitionInfoOverride
         try? window.activate()
     }
+
+    // 进程内开一个新顶层窗口、直接显示 Home（跳过上次视图恢复）。
+    // 任务栏 "New Window" 被重定向回主实例后走这条进程内路径
+    static func openDetachedWindowAtHome() {
+        let window = MainWindow(forceHomeOnLaunch: true)
+        try? window.activate()
+    }
 }
