@@ -92,5 +92,9 @@ extension MainWindow {
             args?.handled = true
         }
         root.keyboardAccelerators.append(escAccelerator)
+
+        // WinUI auto-shows an "Esc" shortcut tooltip for elements owning a
+        // KeyboardAccelerator; suppress it since the accelerator is global.
+        root.keyboardAcceleratorPlacementMode = .hidden
     }
 }
