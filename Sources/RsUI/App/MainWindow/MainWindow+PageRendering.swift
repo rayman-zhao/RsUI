@@ -46,9 +46,9 @@ extension MainWindow {
         grid.rowDefinitions.append(autoRow)
         grid.rowDefinitions.append(starRow)
 
-        // Row 0: header — margin matches WinUI default NavigationViewHeaderMargin (56,44,0,0)
+        // Row 0: header — WinUI default NavigationViewHeaderMargin (56,44,0,0) is too large, use Photos app's (32,28,0,28) instead.
         let headerBorder = Border()
-        headerBorder.margin = Thickness(left: 56, top: 44, right: 0, bottom: 0)
+        headerBorder.margin = Thickness(left: 32, top: 28, right: 0, bottom: 28)
         MainWindow.safelyAssignChild(headerView, toBorder: headerBorder)
         parts.headerBorder = headerBorder
 

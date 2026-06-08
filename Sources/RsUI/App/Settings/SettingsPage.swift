@@ -24,7 +24,7 @@ class SettingsPage: Page {
         let mainStackPanel = WinUI.StackPanel()
         mainStackPanel.orientation = .vertical
         mainStackPanel.spacing = 30
-        mainStackPanel.padding = WinUI.Thickness(left: 32, top: 40, right: 32, bottom: 40)
+        mainStackPanel.padding = WinUI.Thickness(left: 32, top: 28, right: 32, bottom: 28)
 
         /// MARK: - 外观
         mainStackPanel.children.append(SettingsGroup(tr("personalizationSection"), [themeCard, languageCard]))
