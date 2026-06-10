@@ -4,9 +4,13 @@ import WinUI
 import RsUI
 
 final class FolderPickerPage: RsUI.Page {
-    let context: WindowContext
+    var context: WindowContext
 
     init(context: WindowContext) {
+        self.context = context
+    }
+
+    func windowContextChanged(_ context: WindowContext) {
         self.context = context
     }
 
