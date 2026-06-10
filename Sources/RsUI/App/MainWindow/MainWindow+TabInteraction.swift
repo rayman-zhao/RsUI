@@ -81,6 +81,12 @@ extension MainWindow {
     func adoptTornTab(_ tab: MainWindowTab, at index: Int? = nil) {
         guard viewModel != nil else { return }
         awaitTransferredTab = false
+        // The same Page instances travel with the tab; rebind their context to
+        // this window so window-scoped calls hit the new owner, not the creator.
+        let context = WindowContext(owner: self)
+        for page in tab.allPages {
+            page.windowContextChanged(context)
+        }
         viewModel.adoptTab(tab, at: index, transitionInfoOverride: SuppressNavigationTransitionInfo())
         renderSelectedTab()
     }

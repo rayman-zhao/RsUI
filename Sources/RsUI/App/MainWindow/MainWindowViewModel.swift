@@ -10,6 +10,12 @@ class MainWindowTab {
     var navigationTransitionInfo: NavigationTransitionInfo? = nil
     var needsRender: Bool = false
 
+    // Current page plus both history stacks, e.g. to rebind page-held state when
+    // the tab migrates to another window.
+    var allPages: [Page] {
+        backwardPages + forwardPages + (currentPage.map { [$0] } ?? [])
+    }
+
     init(page: Page, transitionInfoOverride: NavigationTransitionInfo? = nil) {
         navigate(to: page, transitionInfoOverride: transitionInfoOverride)
     }
