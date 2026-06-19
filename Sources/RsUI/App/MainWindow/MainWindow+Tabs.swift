@@ -138,6 +138,10 @@ extension MainWindow {
         return tabItemsByID[id] === item
     }
 
+    // Collapse the whole strip when only one tab remains, so a one-tab window
+    // looks like a plain page. Safe to hide the entire TabView because page
+    // content lives in tabContentHost, not TabViewItem.Content, so hiding the
+    // strip leaves the content showing.
     private func updateTabStripVisibility() {
         tabView.visibility = viewModel.tabs.count <= 1 ? .collapsed : .visible
     }
