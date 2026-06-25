@@ -67,11 +67,32 @@ extension MainWindow {
             self?.openNewTabFromTabStrip()
         }
 
-        guard MainWindow.isTabTearOffMergeEnabled else { return }
+        // Persist an in-window reorder. Native tear-out suppresses
+        // tabDragCompleted, but a drag-reorder still mutates the TabItems
+        // collection directly, so tabItemsChanged is the only hook that sees it.
+        // A real tear-out also mutates the collection, but then a tab has LEFT
+        // this strip, so syncTabOrderFromStrip's count check bails: the strip
+        // must still hold exactly our model's tabs. That is what separates a
+        // reorder from a tear-out, not the tear flag. Skip only our own
+        // syncTabItems edits (isSyncingTabSelection); tabStripIDs stops the
+        // follow-up sync from looping.
+        tabView.tabItemsChanged.addHandler { [weak self] _, _ in
+            guard let self, !self.isSyncingTabSelection else { return }
+            self.syncTabOrderFromStrip()
+        }
+
+        configureTabTearOutEvents()
+    }
+
+    // Registers native tear-out/merge handlers. the guard below gates this 
+    // optional native tear-out/merge.
+    private func configureTabTearOutEvents() {
+        guard MainWindow.tabTearOutEnabled else { return }
 
         // Native tear-out (CanTearOutTabs). The OS owns the drag visuals and the
-        // window-follow animation; these handlers only move our model — the
+        // window-follow animation; these handlers only move our model — the 
         // MainWindowTab plus its decoupled content frame — between windows.
+
         // Both the tab in flight and its receiving window are tracked in
         // MainWindow.pendingTearOut. The receiver can't be read from the event:
         // tabTearOutRequested gives args.newWindowId 0 even though we set it in
@@ -81,7 +102,9 @@ extension MainWindow {
         // A tab is being torn out and needs a window to land in. The framework
         // over-fires this within one drag (incl. speculative tears it never
         // commits), so tearOutReceiver() reuses one empty spare instead of
-        // leaking a window per call.
+        // leaking a window per call. Without reuse, speculative requests can
+        // leave empty receiver windows that never get a tab and keep the app
+        // process alive after the real windows close.
         tabView.tabTearOutWindowRequested.addHandler { [weak self] _, args in
             guard let self, let args else { return }
             // WinUI selects the pressed tab before the tear begins, so the
@@ -106,7 +129,8 @@ extension MainWindow {
             MainWindow.spareReceiver = nil
         }
 
-        // A torn tab from another window is dragged over this strip — accept.
+        // A torn tab from another window is dragged over this strip. always 
+        // allow it to drop.
         tabView.externalTornOutTabsDropping.addHandler { _, args in
             guard let args, MainWindow.pendingTearOut != nil else { return }
             args.allowDrop = true
@@ -127,20 +151,6 @@ extension MainWindow {
                 Task { @MainActor in receiver.closeIfEmpty() }
             }
             MainWindow.pendingTearOut = nil
-        }
-
-        // Persist an in-window reorder. Native tear-out suppresses
-        // tabDragCompleted, but a drag-reorder still mutates the TabItems
-        // collection directly, so tabItemsChanged is the only hook that sees it.
-        // A real tear-out also mutates the collection, but then a tab has LEFT
-        // this strip, so syncTabOrderFromStrip's count check bails: the strip
-        // must still hold exactly our model's tabs. That is what separates a
-        // reorder from a tear-out, not the tear flag. Skip only our own
-        // syncTabItems edits (isSyncingTabSelection); tabStripIDs stops the
-        // follow-up sync from looping.
-        tabView.tabItemsChanged.addHandler { [weak self] _, _ in
-            guard let self, !self.isSyncingTabSelection else { return }
-            self.syncTabOrderFromStrip()
         }
     }
 
