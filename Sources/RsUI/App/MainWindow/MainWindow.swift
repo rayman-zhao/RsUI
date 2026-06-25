@@ -35,13 +35,25 @@ class MainWindow: Window {
     // tabTearOutRequested to inject the torn tab; it also skips position restore.
     var awaitTransferredTab: Bool = false
     var isTearOutWindow: Bool = false
-    static var isTabTearOffMergeEnabled = true
+
+    // Keep native TabView tear-out disabled for now. CanTearOutTabs currently
+    // has two blocking issues for this shell:
+    // - TabTearOutWindowRequested can make the receiver window visible briefly,
+    //   causing flicker and taskbar animation.
+    //   https://github.com/microsoft/microsoft-ui-xaml/issues/10155
+    // - With a custom title bar, switching tabs can corrupt the drag region so
+    //   dragging the title bar tears out a tab instead of moving the window.
+    //   https://github.com/microsoft/microsoft-ui-xaml/issues/11170
+    // Keep the tear-out handlers behind this same gate so the native path can
+    // be restored when the WinUI behavior is fixed.
+    static let tabTearOutEnabled = false
+    
     // Tracks the single tab being torn out across windows. Drag is single-pointer
     // on the UI thread, so at most one is ever in flight. `holder` follows the tab
     // as it moves between windows during the drag; `receiver` is the floating
-    // window the native flow asked us to create. The receiver is resolved from
-    // HERE, not from args.newWindowId — that property reads back 0 in the
-    // tabTearOutRequested event, so we remember it ourselves.
+    // window the native flow asked us to create. 
+    // The receiver is resolved from HERE, not from args.newWindowId — that property 
+    // reads back 0 in the tabTearOutRequested event, so we remember it ourselves.
     struct PendingTearOut {
         let tab: MainWindowTab
         var holder: MainWindow
@@ -217,14 +229,11 @@ class MainWindow: Window {
         tabs.tabStripHeader = closeOtherTabsButton
         tabs.padding = Thickness(left: 0, top: 0, right: 0, bottom: 0)
         tabs.margin = Thickness(left: 0, top: -1, right: 0, bottom: 0)
-        // Native tab tear-out: canTearOutTabs hands the drag visuals and the
-        // window-follow animation to the OS; the tear-out event handlers only keep
-        // the model (MainWindowTab + its decoupled content frame) in step by moving
-        // it between windows. This native path supersedes the classic-drag
-        // cross-window merge, so allowDropTabs/allowDrop are not wired here.
         tabs.canDragTabs = true
         tabs.canReorderTabs = true
-        tabs.canTearOutTabs = MainWindow.isTabTearOffMergeEnabled
+        // Mirrors tabTearOutEnabled; see the flag comment for why native
+        // tear-out is currently off.
+        tabs.canTearOutTabs = MainWindow.tabTearOutEnabled
         return tabs
     } ()
     lazy var tabContentHost = Grid()
