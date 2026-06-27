@@ -203,7 +203,7 @@ public struct WindowContext {
         if mode == .newWindow {
             return owner.navigate(to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
         }
-        if owner.viewModel.findTab(matchingURL: url) != nil {
+        if owner.findTabContext(matchingURL: url) != nil {
             if focusExisting {
                 _ = owner.focusTab(matchingURL: url)
             }
@@ -315,7 +315,7 @@ public struct WindowContext {
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
         guard let owner else { return false }
-        owner.insertTab(
+        owner.restoreTab(
             page,
             atIndex: preferredIndex,
             switchToTab: switchToTab,

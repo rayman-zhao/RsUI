@@ -26,18 +26,15 @@ extension MainWindow {
             if MainWindow.spareReceiver === self {
                 MainWindow.spareReceiver = nil
                 MainWindow.pendingTearOut = nil
-            } else if let spare = MainWindow.spareReceiver,
-                      spare.viewModel?.tabs.isEmpty ?? true {
+            } else if let spare = MainWindow.spareReceiver, spare.hasNoTabs {
                 MainWindow.spareReceiver = nil
                 MainWindow.pendingTearOut = nil
                 try? spare.close()
             }
 
-            // 先 cancel observation tasks，避免死窗口的 task 继续访问 self.appWindow / self.viewModel
+            // 先 cancel observation task，避免死窗口的 task 继续访问 self.appWindow / self.viewModel
             self.envObservationTask?.cancel()
-            self.routeObservationTask?.cancel()
             self.envObservationTask = nil
-            self.routeObservationTask = nil
 
             // TODO: appWindow.changed事件不工作，此处窗口最大化时记录有缺陷。其实也可以不保存，恢复窗口在中间即可。
             self.trackWindowPosition()
@@ -63,19 +60,6 @@ extension MainWindow {
             }
         }
 
-        // viewModel 在 closed handler 里会被设为 nil（包括最大化最后一个 tab 的场景），
-        // 此处必须用 ?. 避免 IUO 强解包崩溃；renderSelectedTab 也会再做一次 nil 检查
-        let route = Observations {
-            self.viewModel?.navigationRevision ?? 0
-        }
-        routeObservationTask = Task { [weak self] in
-            for await _ in route {
-                await MainActor.run { [weak self] in
-                    guard let self, self.viewModel != nil else { return }
-                    self.renderSelectedTab()
-                }
-            }
-        }
     }
 
     private func applyAppearance() {
@@ -141,7 +125,7 @@ extension MainWindow {
             return
         }
 
-        if let page = viewModel.currentPage {
+        if let page = currentPage {
             navigate(to: page)
         } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
             return

@@ -51,11 +51,13 @@ extension MainWindow {
     }
 
     private func configureTabViewEvents() {
-        tabView.selectionChanged.addHandler { [weak self] sender, args in
+        // TabView owns selection: just render whatever it selected. Our own
+        // programmatic selectItem(_:) sets isSyncingTabSelection and renders
+        // separately, so skip those to avoid a redundant pass. In-window
+        // drag-reorder needs no handler — order lives in tabView.tabItems.
+        tabView.selectionChanged.addHandler { [weak self] _, _ in
             guard let self, !self.isSyncingTabSelection else { return }
-            guard let item = self.selectedTabViewItem(sender: sender, args: args) else { return }
-            guard let tab = self.tab(for: item) else { return }
-            self.switchToTab(tab)
+            self.renderSelectedTab()
         }
 
         tabView.tabCloseRequested.addHandler { [weak self] _, args in
@@ -65,20 +67,6 @@ extension MainWindow {
 
         tabView.addTabButtonClick.addHandler { [weak self] _, _ in
             self?.openNewTabFromTabStrip()
-        }
-
-        // Persist an in-window reorder. Native tear-out suppresses
-        // tabDragCompleted, but a drag-reorder still mutates the TabItems
-        // collection directly, so tabItemsChanged is the only hook that sees it.
-        // A real tear-out also mutates the collection, but then a tab has LEFT
-        // this strip, so syncTabOrderFromStrip's count check bails: the strip
-        // must still hold exactly our model's tabs. That is what separates a
-        // reorder from a tear-out, not the tear flag. Skip only our own
-        // syncTabItems edits (isSyncingTabSelection); tabStripIDs stops the
-        // follow-up sync from looping.
-        tabView.tabItemsChanged.addHandler { [weak self] _, _ in
-            guard let self, !self.isSyncingTabSelection else { return }
-            self.syncTabOrderFromStrip()
         }
 
         configureTabTearOutEvents()
@@ -109,10 +97,10 @@ extension MainWindow {
             guard let self, let args else { return }
             // WinUI selects the pressed tab before the tear begins, so the
             // selected tab is the one being torn out.
-            guard let tab = self.viewModel.selectedTab else { return }
+            guard let model = self.selectedTabModel else { return }
             let receiver = MainWindow.tearOutReceiver()
             MainWindow.pendingTearOut = MainWindow.PendingTearOut(
-                tab: tab, holder: self, receiver: receiver
+                tab: model, holder: self, receiver: receiver
             )
             args.newWindowId = receiver.appWindow.id
         }

@@ -4,51 +4,36 @@ import UWP
 import WinUI
 
 extension MainWindow {
-    func tab(for item: TabViewItem) -> MainWindowTab? {
-        // Primary: stable name-based lookup (avoids WinRT projection identity instability)
-        if let id = tabIDByName[item.name], let tab = viewModel.tabs.first(where: { ObjectIdentifier($0) == id }) {
-            return tab
-        }
-        // Fallback: identity comparison
-        for tab in viewModel.tabs {
-            if tabItemsByID[ObjectIdentifier(tab)] === item {
-                return tab
-            }
-        }
-        return nil
-    }
-
-    func selectedTabViewItem(sender: Any?, args: SelectionChangedEventArgs?) -> TabViewItem? {
-        if
-            let args,
-            let addedItems = args.addedItems,
-            addedItems.size > 0,
-            let item = addedItems.getAt(0) as? TabViewItem {
-            return item
-        }
-
-        if let tabView = sender as? TabView {
-            return tabView.selectedItem as? TabViewItem
-        }
-
-        return tabView.selectedItem as? TabViewItem
-    }
-
-    func switchToTab(_ tab: MainWindowTab) {
-        guard viewModel.selectedTab !== tab else { return }
-        viewModel.select(tab: tab)
-        renderSelectedTab()
-    }
+    // MARK: - Close
 
     func closeTab(for item: TabViewItem) {
-        guard let tab = tab(for: item) else { return }
-        viewModel.close(tab: tab)
+        guard tabCount > 1, let ctx = tabContextsByName[item.name] else { return }
+        let wasSelected = (tabView.selectedItem as? TabViewItem)?.name == item.name
+        removeTab(ctx)
+        if wasSelected, tabView.selectedItem == nil, let next = orderedTabContexts.first {
+            selectItem(next.item)
+        }
         renderSelectedTab()
     }
 
     func closeOtherTabs() {
-        viewModel.closeOtherTabs()
+        guard let keep = selectedTabContext, tabCount > 1 else { return }
+        for ctx in orderedTabContexts where ctx.item.name != keep.item.name {
+            removeTab(ctx)
+        }
+        selectItem(keep.item)
         renderSelectedTab()
+    }
+
+    func focusTab(matchingURL url: URL) -> Bool {
+        guard let ctx = findTabContext(matchingURL: url) else { return false }
+        selectItem(ctx.item)
+        renderSelectedTab()
+        return true
+    }
+
+    func findTabContext(matchingURL url: URL) -> TabContext? {
+        orderedTabContexts.first { $0.model.currentPage?.url == url }
     }
 
     // MARK: - Native tear-out helpers
@@ -58,7 +43,7 @@ extension MainWindow {
     // drag); otherwise creates and activates a fresh one so it owns a valid
     // AppWindow.Id. The OS positions it as it follows the cursor.
     static func tearOutReceiver() -> MainWindow {
-        if let spare = MainWindow.spareReceiver, spare.viewModel?.tabs.isEmpty ?? false {
+        if let spare = MainWindow.spareReceiver, spare.hasNoTabs {
             return spare
         }
         let window = MainWindow(tearOutReceiver: true)
@@ -67,65 +52,69 @@ extension MainWindow {
         return window
     }
 
-    // Removes a tab from this window's model (its strip item is reconciled away
-    // by renderSelectedTab); the MainWindowTab object — with its history — lives
-    // on to be adopted elsewhere.
-    func releaseTab(_ tab: MainWindowTab) {
-        guard viewModel != nil else { return }
-        viewModel.detachTab(tab)
+    // Removes a tab from this window's strip; the MainWindowTab object — with its
+    // history — lives on to be adopted elsewhere.
+    func releaseTab(_ model: MainWindowTab) {
+        guard viewModel != nil, let ctx = context(for: model) else { return }
+        let wasSelected = selectedTabContext === ctx
+        removeTab(ctx)
+        if wasSelected, tabView.selectedItem == nil, let next = orderedTabContexts.first {
+            selectItem(next.item)
+        }
         renderSelectedTab()
     }
 
-    // Adopts a torn tab into this window's model, building a fresh strip item for
-    // it. `at` is the merge drop position; nil appends (the empty-receiver case).
-    func adoptTornTab(_ tab: MainWindowTab, at index: Int? = nil) {
+    // Adopts a torn model into this window's strip, building a fresh item + frame
+    // for it. `at` is the merge drop position; nil appends (empty-receiver case).
+    func adoptTornTab(_ model: MainWindowTab, at index: Int? = nil) {
         guard viewModel != nil else { return }
         awaitTransferredTab = false
-        // The same Page instances travel with the tab; rebind their context to
+        // The same Page instances travel with the model; rebind their context to
         // this window so window-scoped calls hit the new owner, not the creator.
         let context = WindowContext(owner: self)
-        for page in tab.allPages {
+        for page in model.allPages {
             page.windowContextChanged(context)
         }
-        viewModel.adoptTab(tab, at: index, transitionInfoOverride: SuppressNavigationTransitionInfo())
+        model.navigationTransitionInfo = SuppressNavigationTransitionInfo()
+        model.needsRender = true
+        let ctx = makeTab(model: model)
+        insertItem(ctx.item, at: index)
+        selectItem(ctx.item)
         renderSelectedTab()
     }
 
     // Closes this window once its last tab has been torn/merged away, so an
     // emptied floating receiver doesn't linger.
     func closeIfEmpty() {
-        guard viewModel?.tabs.isEmpty ?? false else { return }
+        guard hasNoTabs else { return }
         try? close()
     }
 
-    func focusTab(matchingURL url: URL) -> Bool {
-        guard let tab = viewModel.findTab(matchingURL: url) else { return false }
-        switchToTab(tab)
-        return true
-    }
+    // MARK: - Detach / Restore (caller-managed transfer, used by viewer windows)
 
     func detachCurrentTab() -> DetachedTabInfo? {
-        guard let currentTab = viewModel.selectedTab else { return nil }
-        guard let index = viewModel.tabs.firstIndex(where: { $0 === currentTab }) else { return nil }
-        guard let url = currentTab.currentPage?.url else { return nil }
-        viewModel.detachTab(currentTab)
+        guard let ctx = selectedTabContext, let url = ctx.model.currentPage?.url else { return nil }
+        let index = indexOfItem(name: ctx.item.name) ?? 0
+        removeTab(ctx)
+        if tabView.selectedItem == nil, let next = orderedTabContexts.first {
+            selectItem(next.item)
+        }
         renderSelectedTab()
         return DetachedTabInfo(url: url, index: index)
     }
 
-    func insertTab(
+    func restoreTab(
         _ page: Page,
         atIndex index: Int? = nil,
         switchToTab: Bool = true,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) {
-        viewModel.addTab(
+        addTab(
+            page: page,
             at: index,
-            for: page,
-            transitionInfoOverride: transitionInfoOverride,
-            switchToTab: switchToTab
+            switchToTab: switchToTab,
+            transitionInfoOverride: transitionInfoOverride
         )
-        renderSelectedTab()
     }
 
     static func openDetachedWindow(

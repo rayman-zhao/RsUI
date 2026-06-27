@@ -3,12 +3,69 @@ import WindowsFoundation
 import UWP
 import WinUI
 
-extension MainWindow {
-    func renderSelectedTab() {
-        syncTabItems()
-        updateTabStripVisibility()
+// Bridges one TabView strip item to its navigation model and content frame.
+// Lives in MainWindow.tabContextsByName keyed by `item.name`. Holds a strong
+// reference to the item (safe — only identity comparison of projected items is
+// unstable, which we avoid by keying on name).
+final class TabContext {
+    let model: MainWindowTab
+    let item: TabViewItem
+    let frame: PageTransitionHost
+    var pageViewParts = PageViewParts()
+    var title: String?
+    var isClosable: Bool?
 
-        guard let tab = viewModel.selectedTab, let page = tab.currentPage else {
+    init(model: MainWindowTab, item: TabViewItem, frame: PageTransitionHost) {
+        self.model = model
+        self.item = item
+        self.frame = frame
+    }
+}
+
+extension MainWindow {
+    // MARK: - TabView-backed accessors (strip is the source of truth)
+
+    var selectedTabContext: TabContext? {
+        guard let item = tabView.selectedItem as? TabViewItem else { return nil }
+        return tabContextsByName[item.name]
+    }
+
+    var selectedTabModel: MainWindowTab? { selectedTabContext?.model }
+
+    var currentPage: Page? { selectedTabModel?.currentPage }
+
+    var tabCount: Int { tabContextsByName.count }
+
+    // True once the window has no tabs, or after teardown nilled the viewModel.
+    var hasNoTabs: Bool { viewModel == nil || tabContextsByName.isEmpty }
+
+    // Contexts in strip order (tabView.tabItems is authoritative for ordering,
+    // including after a native drag-reorder — no separate sync needed).
+    var orderedTabContexts: [TabContext] {
+        guard let items = tabView.tabItems else { return [] }
+        var result: [TabContext] = []
+        var i: UInt32 = 0
+        while i < items.size {
+            if let item = items.getAt(i) as? TabViewItem, let ctx = tabContextsByName[item.name] {
+                result.append(ctx)
+            }
+            i += 1
+        }
+        return result
+    }
+
+    func context(for model: MainWindowTab) -> TabContext? {
+        tabContextsByName.values.first { $0.model === model }
+    }
+
+    // MARK: - Rendering
+
+    func renderSelectedTab() {
+        guard viewModel != nil else { return }
+        updateTabStripVisibility()
+        updateAllTabClosableStates()
+
+        guard let ctx = selectedTabContext, let page = ctx.model.currentPage else {
             navigationView.header = nil
             hideAllTabFrames()
             navigationView.selectedItem = nil
@@ -18,124 +75,28 @@ extension MainWindow {
         }
 
         navigationView.header = nil
-        updateTabItemState(for: tab)
-        let frame = showFrame(for: tab)
+        updateTabTitle(ctx)
+        let frame = showFrame(for: ctx)
 
-        if tab.needsRender {
+        if ctx.model.needsRender {
             let effectiveTransitionInfo: NavigationTransitionInfo?
             if isFirstNavigation {
                 effectiveTransitionInfo = SuppressNavigationTransitionInfo()
                 isFirstNavigation = false
             } else {
-                effectiveTransitionInfo = tab.navigationTransitionInfo
+                effectiveTransitionInfo = ctx.model.navigationTransitionInfo
             }
             frame.transition(
-                to: makePageView(page, for: tab),
+                to: makePageView(page, into: ctx),
                 transitionInfo: effectiveTransitionInfo
             )
-            tab.needsRender = false
-        }
-
-        let tabItem = tabViewItem(for: tab)
-        if !tabViewItem(tabView.selectedItem as? TabViewItem, represents: ObjectIdentifier(tab)) {
-            isSyncingTabSelection = true
-            tabView.selectedItem = tabItem
-            isSyncingTabSelection = false
+            ctx.model.needsRender = false
         }
 
         syncNavigationSelection(for: page.url)
-        backButton.isEnabled = !tab.backwardPages.isEmpty
-        forwardButton.isEnabled = !tab.forwardPages.isEmpty
-    }
-
-    private func syncTabItems() {
-        guard let items = tabView.tabItems else { return }
-
-        let ids = viewModel.tabs.map { ObjectIdentifier($0) }
-        let activeIDs = Set(ids)
-        tabItemsByID = tabItemsByID.filter { activeIDs.contains($0.key) }
-        tabIDByName = tabIDByName.filter { activeIDs.contains($0.value) }
-        tabTitlesByID = tabTitlesByID.filter { activeIDs.contains($0.key) }
-        tabClosableByID = tabClosableByID.filter { activeIDs.contains($0.key) }
-        tabPageViewPartsByID = tabPageViewPartsByID.filter { activeIDs.contains($0.key) }
-        removeClosedTabFrames(activeIDs: activeIDs)
-
-        guard ids != tabStripIDs else {
-            return
-        }
-
-        isSyncingTabSelection = true
-        defer { isSyncingTabSelection = false }
-
-        // Step 1: 按身份精确移除 items 中所有不再属于 viewModel.tabs 的 TabViewItem。
-        //   旧版只 `items.removeAt(items.size - 1)` 截尾，关闭非末尾 tab 时残留错位 item，
-        //   后续 insertAt 会试图把同一 UIElement 插到已存在位置 → "two parents" WinRT 异常。
-        var i: UInt32 = 0
-        while i < items.size {
-            if let item = items.getAt(i) as? TabViewItem,
-               let id = tabIDByName[item.name],
-               activeIDs.contains(id) {
-                i += 1
-            } else {
-                items.removeAt(i)
-            }
-        }
-
-        // Step 2: 重排到目标顺序。如果目标 tabItem 已在 items 中（错位），先从原位置移除再插入。
-        for (index, tab) in viewModel.tabs.enumerated() {
-            let id = ObjectIdentifier(tab)
-            let tabItem = tabViewItem(for: tab)
-            if UInt32(index) < items.size,
-               let item = items.getAt(UInt32(index)) as? TabViewItem,
-               tabViewItem(item, represents: id) {
-                continue
-            }
-
-            // 找一下 tabItem 是否已在 items 别处
-            var existingIndex: UInt32? = nil
-            var j: UInt32 = 0
-            while j < items.size {
-                if let item = items.getAt(j) as? TabViewItem,
-                   tabViewItem(item, represents: id) {
-                    existingIndex = j
-                    break
-                }
-                j += 1
-            }
-            if let existingIndex {
-                items.removeAt(existingIndex)
-            }
-            items.insertAt(UInt32(index), tabItem)
-        }
-        tabStripIDs = ids
-        updateAllTabItemCloseStates()
-    }
-
-    // After an in-window drag reorder WinUI has already moved the TabViewItems,
-    // but viewModel.tabs still holds the old order. Rebuild it from the strip so
-    // the reorder survives later add/close operations, which re-sync items to
-    // the model order and would otherwise snap the tabs back.
-    func syncTabOrderFromStrip() {
-        guard let items = tabView.tabItems else { return }
-        var reordered: [MainWindowTab] = []
-        var i: UInt32 = 0
-        while i < items.size {
-            if let item = items.getAt(i) as? TabViewItem, let tab = tab(for: item) {
-                reordered.append(tab)
-            }
-            i += 1
-        }
-        guard reordered.count == viewModel.tabs.count else { return }
-        viewModel.reorder(to: reordered)
-        tabStripIDs = reordered.map { ObjectIdentifier($0) }
-    }
-
-    private func tabViewItem(_ item: TabViewItem?, represents id: ObjectIdentifier) -> Bool {
-        guard let item else { return false }
-        if tabIDByName[item.name] == id {
-            return true
-        }
-        return tabItemsByID[id] === item
+        backButton.isEnabled = !ctx.model.backwardPages.isEmpty
+        forwardButton.isEnabled = !ctx.model.forwardPages.isEmpty
+        viewModel.routePreferences.lastPageURL = page.url
     }
 
     // Collapse the whole strip when only one tab remains, so a one-tab window
@@ -143,7 +104,68 @@ extension MainWindow {
     // content lives in tabContentHost, not TabViewItem.Content, so hiding the
     // strip leaves the content showing.
     private func updateTabStripVisibility() {
-        tabView.visibility = viewModel.tabs.count <= 1 ? .collapsed : .visible
+        tabView.visibility = tabCount <= 1 ? .collapsed : .visible
+    }
+
+    func updateTabTitle(_ ctx: TabContext) {
+        let newTitle = title(for: ctx.model.currentPage)
+        if ctx.title != newTitle {
+            ctx.item.header = newTitle
+            ctx.title = newTitle
+        }
+    }
+
+    // Closable iff more than one tab remains; the lone tab can't be closed.
+    private func updateAllTabClosableStates() {
+        let canClose = tabCount > 1
+        for ctx in tabContextsByName.values where ctx.isClosable != canClose {
+            ctx.item.isClosable = canClose
+            ctx.isClosable = canClose
+        }
+    }
+
+    // MARK: - Tab lifecycle
+
+    func makeTab(model: MainWindowTab) -> TabContext {
+        let item = TabViewItem()
+        item.name = UUID().uuidString
+
+        let frame = PageTransitionHost()
+        frame.visibility = .collapsed
+        tabContentHost.children.append(frame)
+
+        let ctx = TabContext(model: model, item: item, frame: frame)
+        tabContextsByName[item.name] = ctx
+        updateTabTitle(ctx)
+        return ctx
+    }
+
+    @discardableResult
+    func addTab(
+        page: Page,
+        at index: Int? = nil,
+        switchToTab: Bool = true,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> TabContext {
+        let model = MainWindowTab(page: page, transitionInfoOverride: transitionInfoOverride)
+        let ctx = makeTab(model: model)
+        insertItem(ctx.item, at: index)
+        if switchToTab || selectedTabContext == nil {
+            selectItem(ctx.item)
+        }
+        renderSelectedTab()
+        return ctx
+    }
+
+    // Removes a tab from the strip and tears down its frame, keeping its model
+    // alive so a tear-out/detach caller can re-home it. Does not adjust selection.
+    func removeTab(_ ctx: TabContext) {
+        removeItemFromStrip(name: ctx.item.name)
+        tabContextsByName[ctx.item.name] = nil
+        removeFrame(ctx.frame)
+        if visibleTabFrameName == ctx.item.name {
+            visibleTabFrameName = nil
+        }
     }
 
     func openNewTabFromTabStrip() {
@@ -154,50 +176,48 @@ extension MainWindow {
         }
     }
 
-    func tabViewItem(for tab: MainWindowTab) -> TabViewItem {
-        let id = ObjectIdentifier(tab)
-        if let item = tabItemsByID[id] {
-            return item
-        }
+    // MARK: - Strip primitives (match items by stable name, not by === identity)
 
-        let item = TabViewItem()
-        let name = id.debugDescription
-        item.name = name
-        tabIDByName[name] = id
-        item.tapped.addHandler { [weak self, weak item] _, _ in
-            guard let self, let item, let tab = self.tab(for: item) else { return }
-            self.switchToTab(tab)
-        }
-        item.closeRequested.addHandler { [weak self, weak item] _, _ in
-            guard let self, let item else { return }
-            self.closeTab(for: item)
-        }
-        tabItemsByID[id] = item
-        updateTabItemState(for: tab)
-        return item
-    }
-
-    func updateTabItemState(for tab: MainWindowTab) {
-        let id = ObjectIdentifier(tab)
-        guard let item = tabItemsByID[id] else { return }
-
-        let newTitle = title(for: tab.currentPage)
-        if tabTitlesByID[id] != newTitle {
-            item.header = newTitle
-            tabTitlesByID[id] = newTitle
-        }
-
-        let canClose = viewModel.tabs.count > 1
-        if tabClosableByID[id] != canClose {
-            item.isClosable = canClose
-            tabClosableByID[id] = canClose
+    func insertItem(_ item: TabViewItem, at index: Int?) {
+        guard let items = tabView.tabItems else { return }
+        isSyncingTabSelection = true
+        defer { isSyncingTabSelection = false }
+        if let index, index >= 0, UInt32(index) <= items.size {
+            items.insertAt(UInt32(index), item)
+        } else {
+            items.insertAt(items.size, item)
         }
     }
 
-    private func updateAllTabItemCloseStates() {
-        for tab in viewModel.tabs {
-            updateTabItemState(for: tab)
+    func selectItem(_ item: TabViewItem) {
+        isSyncingTabSelection = true
+        tabView.selectedItem = item
+        isSyncingTabSelection = false
+    }
+
+    private func removeItemFromStrip(name: String) {
+        guard let items = tabView.tabItems else { return }
+        isSyncingTabSelection = true
+        defer { isSyncingTabSelection = false }
+        var i: UInt32 = 0
+        while i < items.size {
+            if let it = items.getAt(i) as? TabViewItem, it.name == name {
+                items.removeAt(i)
+                return
+            }
+            i += 1
         }
     }
 
+    func indexOfItem(name: String) -> Int? {
+        guard let items = tabView.tabItems else { return nil }
+        var i: UInt32 = 0
+        while i < items.size {
+            if let it = items.getAt(i) as? TabViewItem, it.name == name {
+                return Int(i)
+            }
+            i += 1
+        }
+        return nil
+    }
 }
