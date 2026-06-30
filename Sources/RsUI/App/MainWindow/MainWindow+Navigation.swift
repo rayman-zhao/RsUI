@@ -39,16 +39,45 @@ extension MainWindow {
         mode: NavigationOpenMode,
         transitionInfoOverride: NavigationTransitionInfo?
     ) {
-        if mode == .newWindow {
+        switch mode {
+        case .newWindow:
             MainWindow.openDetachedWindow(opening: page, transitionInfoOverride: transitionInfoOverride)
+        case .inplace:
+            navigateInSelectedTab(to: page, transitionInfoOverride: transitionInfoOverride)
+        case .newTab:
+            addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
+        case .newTabBackground:
+            addTab(page: page, switchToTab: false, transitionInfoOverride: transitionInfoOverride)
+        }
+    }
+
+    // In-place navigation: push onto the selected tab's history. With no tab yet
+    // (first navigation / restore), the page opens a new tab instead.
+    private func navigateInSelectedTab(
+        to page: Page,
+        transitionInfoOverride: NavigationTransitionInfo?
+    ) {
+        guard let ctx = selectedTabContext else {
+            addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
             return
         }
-        viewModel.navigate(
+        ctx.model.navigate(
             to: page,
             transitionInfoOverride: transitionInfoOverride,
-            inNewTab: mode != .inplace,
-            switchToTab: mode != .newTabBackground
+            maxHistoryPages: viewModel.routePreferences.maxHistoryPages
         )
+        renderSelectedTab()
+    }
+
+    func goBack(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+        guard let model = selectedTabModel, !model.backwardPages.isEmpty else { return }
+        model.goBack(transitionInfoOverride)
+        renderSelectedTab()
+    }
+
+    func goForward(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+        guard let model = selectedTabModel, !model.forwardPages.isEmpty else { return }
+        model.goForward(transitionInfoOverride)
         renderSelectedTab()
     }
 
@@ -63,7 +92,7 @@ extension MainWindow {
             return true
         }
         // 仅在 inplace 模式下短路；其他模式（newTab / newTabBackground）允许重复打开同 URL
-        if mode == .inplace, viewModel.currentPage?.url == url {
+        if mode == .inplace, currentPage?.url == url {
             return true
         }
 

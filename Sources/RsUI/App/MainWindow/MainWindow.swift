@@ -67,7 +67,6 @@ class MainWindow: Window {
 
     // 持有 Observation Task 句柄，窗口关闭时 cancel，避免死窗口的 task 继续访问失效的 self.appWindow / self.viewModel
     var envObservationTask: Task<Void, Never>?
-    var routeObservationTask: Task<Void, Never>?
     var isApplyingAppearance = false
 
     // 全屏时整体 collapse，含 NavigationView + Splitter
@@ -118,14 +117,10 @@ class MainWindow: Window {
     }
 
     lazy var backButton: Button = MainWindow.makeNavButton(glyph: "\u{E72B}") { [weak self] in
-        guard let self else { return }
-        self.viewModel.goBack(MainWindow.makeSlideTransition(effect: .fromLeft))
-        self.renderSelectedTab()
+        self?.goBack(MainWindow.makeSlideTransition(effect: .fromLeft))
     }
     lazy var forwardButton: Button = MainWindow.makeNavButton(glyph: "\u{E72A}") { [weak self] in
-        guard let self else { return }
-        self.viewModel.goForward(MainWindow.makeSlideTransition(effect: .fromRight))
-        self.renderSelectedTab()
+        self?.goForward(MainWindow.makeSlideTransition(effect: .fromRight))
     }
     lazy var closeOtherTabsButton: Button = {
         let icon = FontIcon()
@@ -255,15 +250,14 @@ class MainWindow: Window {
 
         return grid
     } ()
-    var tabItemsByID: [ObjectIdentifier: TabViewItem] = [:]
-    // Stable string name keyed to tab identity — avoids WinRT projection object identity instability
-    var tabIDByName: [String: ObjectIdentifier] = [:]
-    var tabFramesByID: [ObjectIdentifier: PageTransitionHost] = [:]
-    var tabPageViewPartsByID: [ObjectIdentifier: PageViewParts] = [:]
-    var tabStripIDs: [ObjectIdentifier] = []
-    var tabTitlesByID: [ObjectIdentifier: String] = [:]
-    var tabClosableByID: [ObjectIdentifier: Bool] = [:]
-    var visibleTabFrameID: ObjectIdentifier?
+    // TabView owns the tab strip — order, selection, add/remove/reorder all live
+    // in tabView.tabItems. Each strip item is bridged to its navigation model and
+    // content frame by a TabContext, keyed by the item's stable `name` (WinRT
+    // projection identity for TabViewItem is unstable, so items are matched by
+    // name, never by ===).
+    var tabContextsByName: [String: TabContext] = [:]
+    // Caches the visible tab frame to avoid reapplying visibility on every render.
+    var visibleTabFrameName: String?
     var isFirstNavigation = true
     lazy var navigationView = {
         let nav = NavigationView()

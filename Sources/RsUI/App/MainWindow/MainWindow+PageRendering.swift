@@ -12,14 +12,12 @@ extension MainWindow {
         page?.title ?? MainWindow.tr("New Tab")
     }
 
-    func makePageView(_ page: Page, for tab: MainWindowTab) -> UIElement {
-        let tabID = ObjectIdentifier(tab)
-        let parts = tabPageViewPartsByID[tabID] ?? PageViewParts()
+    func makePageView(_ page: Page, into ctx: TabContext) -> UIElement {
+        let parts = ctx.pageViewParts
         parts.contentBorder?.child = nil
         parts.headerBorder?.child = nil
         parts.contentBorder = nil
         parts.headerBorder = nil
-        tabPageViewPartsByID[tabID] = parts
 
         // String header: 渲染为页面顶部标题
         // UIElement header: 直接渲染到页面顶部

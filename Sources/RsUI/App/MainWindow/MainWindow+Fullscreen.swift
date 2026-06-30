@@ -16,9 +16,9 @@ import WindowsFoundation
 extension MainWindow {
     func enterTabFullscreen() {
         guard !isInTabFullscreen else { return }
-        guard let selectedTab = viewModel?.selectedTab else { return }
+        guard viewModel != nil, let ctx = selectedTabContext else { return }
         guard let root = self.content as? Grid else { return }
-        let frame = self.frame(for: selectedTab)
+        let frame = ctx.frame
 
         // setPresenter(.overlapped) 退出时不还原 maximize 状态，需要提前记录。
         if let presenter = self.appWindow.presenter as? OverlappedPresenter {
