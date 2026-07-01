@@ -123,6 +123,86 @@ public struct WindowContext {
         return owner?.navigate(to: url, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? false
     }
 
+    /// Opens several pages as tabs in one batch.
+    ///
+    /// Use this instead of calling `open(_:mode:)` in a loop: every page is
+    /// inserted first and the tab strip is rendered a single time, so opening
+    /// N tabs costs one render instead of N. There is no need to hop onto a
+    /// `Task` to add tabs one by one.
+    ///
+    /// - Parameters:
+    ///   - pages: The page instances to open, in tab order. An empty array is a
+    ///     no-op. Each page is a separate tab; pass pre-built `Page` instances
+    ///     bound to this window's context.
+    ///   - mode: Controls selection only. `.newTab` (default) selects the last
+    ///     opened tab; `.newTabBackground` keeps the current selection (or lands
+    ///     on the first new tab if the window was empty). `.inplace` and
+    ///     `.newWindow` are not batch modes and behave like `.newTab`.
+    ///   - transitionInfoOverride: Optional WinUI navigation transition applied
+    ///     when each tab first renders.
+    /// - Returns: The number of tabs opened (equal to `pages.count`).
+    ///
+    /// Example:
+    /// ```swift
+    /// context.open([DetailsPage(id: 1), DetailsPage(id: 2), DetailsPage(id: 3)])
+    /// ```
+    @discardableResult
+    public func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int {
+        guard let owner else { return 0 }
+        let contexts = owner.addTabs(
+            pages: pages,
+            switchToLast: mode != .newTabBackground,
+            transitionInfoOverride: transitionInfoOverride
+        )
+        return contexts.count
+    }
+
+    /// Opens several URLs as tabs in one batch.
+    ///
+    /// Each URL is resolved through Settings or a module's
+    /// `navigationRequested(for:in:)`, then all resolved pages are opened with a
+    /// single tab-strip render — the URL counterpart to `open(_:mode:)` for
+    /// arrays. URLs that no module claims are skipped.
+    ///
+    /// - Parameters:
+    ///   - urls: The route URLs to resolve and open, in tab order. An empty
+    ///     array is a no-op.
+    ///   - mode: Controls selection only, identical to the `[Page]` overload:
+    ///     `.newTab` (default) selects the last opened tab, `.newTabBackground`
+    ///     keeps the current selection. `.inplace` and `.newWindow` behave like
+    ///     `.newTab`.
+    ///   - transitionInfoOverride: Optional WinUI navigation transition applied
+    ///     when each tab first renders.
+    /// - Returns: The number of tabs opened — i.e. how many URLs resolved to a
+    ///   page. May be fewer than `urls.count` if some were unrouted.
+    ///
+    /// Example:
+    /// ```swift
+    /// _ = context.open([
+    ///     URL(string: "rs://arbitrary/navigation")!,
+    ///     URL(string: "rs://arbitrary/openorfocus")!,
+    /// ])
+    /// ```
+    @discardableResult
+    public func open(
+        _ urls: [URL],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int {
+        guard let owner else { return 0 }
+        let pages = urls.compactMap { owner.resolvePage(for: $0) }
+        let contexts = owner.addTabs(
+            pages: pages,
+            switchToLast: mode != .newTabBackground,
+            transitionInfoOverride: transitionInfoOverride
+        )
+        return contexts.count
+    }
+
     /// Builds a page with the destination window context and opens it with the requested mode.
     ///
     /// Use this overload when the page should receive a `WindowContext` at construction

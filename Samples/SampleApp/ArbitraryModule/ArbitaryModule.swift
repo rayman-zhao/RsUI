@@ -48,6 +48,7 @@ final class ArbitaryModule: Module {
             NavigationViewItem.build(iconGlyph: "\u{E740}", label: tr("Tab Fullscreen"), url: "rs://\(id)/fullscreen"),
             NavigationViewItem.build(iconGlyph: "\u{ECCD}", label: tr("Navigation Modes"), url: "rs://\(id)/navigation"),
             NavigationViewItem.build(iconGlyph: "\u{E8A7}", label: tr("Open or Focus"), url: "rs://\(id)/openorfocus"),
+            NavigationViewItem.build(iconGlyph: "\u{E8FD}", label: tr("Batch Open"), url: "rs://\(id)/batch-open"),
             NavigationViewItem.build(iconGlyph: "\u{E78B}", label: tr("New Window"), url: "rs://\(id)/new-window"),
             NavigationViewItem.build(iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
             NavigationViewItem.build(iconGlyph: "\u{E8B7}", label: tr("Folder Picker"), url: "rs://\(id)/folder-picker"),
@@ -126,6 +127,8 @@ final class ArbitaryModule: Module {
             return NavigationModesPage(context: context)
         case "/openorfocus":
             return OpenOrFocusPage(context: context)
+        case "/batch-open":
+            return BatchOpenPage(context: context)
         case "/new-window":
             return NewWindowPage(context: context)
         case "/appearance":
