@@ -37,6 +37,8 @@ public class AppContext {
                 return "1.8.6"
             case PackageVersion(major: 8000, minor: 836, build: 2153, revision: 0):
                 return "1.8.7"
+            case PackageVersion(major: 8000, minor: 879, build: 2017, revision: 0):
+                return "1.8.9"
             default:
                 return RuntimeInfo.asString
         }
