@@ -96,21 +96,27 @@ extension MainWindow {
             return true
         }
 
+        guard let page = resolvePage(for: url) else { return false }
+        performNavigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
+        return true
+    }
+
+    // Resolves a route URL to a Page via Settings or a registered module, without
+    // performing any navigation. Returns nil when no module claims the URL. The
+    // batch tab APIs reuse this so a list of URLs can be turned into pages up front.
+    func resolvePage(for url: URL) -> Page? {
         if url == SettingsPage.url {
-            performNavigate(to: SettingsPage(), mode: mode, transitionInfoOverride: transitionInfoOverride)
-            return true
-        } else {
-            let context = WindowContext(owner: self)
-            for module in App.context.modules {
-                if let page = module.navigationRequested(for: url, in: context) {
-                    performNavigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
-                    return true
-                }
+            return SettingsPage()
+        }
+        let context = WindowContext(owner: self)
+        for module in App.context.modules {
+            if let page = module.navigationRequested(for: url, in: context) {
+                return page
             }
         }
-        return false
+        return nil
     }
- 
+
 
     func firstNavigationItemURL() -> URL? {
         return firstNavigationItemURL(in: navigationView.menuItems)

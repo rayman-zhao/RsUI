@@ -157,6 +157,51 @@ extension MainWindow {
         return ctx
     }
 
+    // Batch form of addTab: inserts every page as a tab but renders the strip
+    // only once at the end, instead of once per tab. A client loop that called
+    // addTab N times would pay renderSelectedTab() N times — and its
+    // O(tabCount) closable-state rescan makes that O(N²) — plus N selection
+    // changes and N frame shows. Here all items are inserted first, the final
+    // selection is chosen once, and a single renderSelectedTab() draws only the
+    // landed tab; background tabs stay unrendered until first selected, exactly
+    // like a single background addTab.
+    @discardableResult
+    func addTabs(
+        pages: [Page],
+        switchToLast: Bool = true,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> [TabContext] {
+        guard !pages.isEmpty else { return [] }
+        let hadSelection = selectedTabContext != nil
+
+        var contexts: [TabContext] = []
+        contexts.reserveCapacity(pages.count)
+        for page in pages {
+            let model = MainWindowTab(page: page, transitionInfoOverride: transitionInfoOverride)
+            let ctx = makeTab(model: model)
+            insertItem(ctx.item, at: nil)
+            contexts.append(ctx)
+        }
+
+        // Mirror the looped-addTab selection: foreground lands on the last tab;
+        // a background batch into an empty window still needs a selection, so it
+        // lands on the first; an existing selection is otherwise preserved.
+        let selection: TabContext?
+        if switchToLast {
+            selection = contexts.last
+        } else if !hadSelection {
+            selection = contexts.first
+        } else {
+            selection = nil
+        }
+        if let selection {
+            selectItem(selection.item)
+        }
+
+        renderSelectedTab()
+        return contexts
+    }
+
     // Removes a tab from the strip and tears down its frame, keeping its model
     // alive so a tear-out/detach caller can re-home it. Does not adjust selection.
     func removeTab(_ ctx: TabContext) {
