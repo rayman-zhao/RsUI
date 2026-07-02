@@ -219,7 +219,7 @@ class MainWindow: Window {
     lazy var tabView: TabView = {
         let tabs = TabView()
         tabs.isAddTabButtonVisible = true
-        tabs.tabWidthMode = .equal
+        tabs.tabWidthMode = .sizeToContent
         tabs.closeButtonOverlayMode = .onPointerOver
         tabs.tabStripHeader = closeOtherTabsButton
         tabs.padding = Thickness(left: 0, top: 0, right: 0, bottom: 0)

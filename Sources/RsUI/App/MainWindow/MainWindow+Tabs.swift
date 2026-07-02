@@ -129,6 +129,7 @@ extension MainWindow {
     func makeTab(model: MainWindowTab) -> TabContext {
         let item = TabViewItem()
         item.name = UUID().uuidString
+        item.minWidth = 100
 
         let frame = PageTransitionHost()
         frame.visibility = .collapsed
