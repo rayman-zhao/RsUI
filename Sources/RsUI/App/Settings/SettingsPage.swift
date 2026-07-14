@@ -1,5 +1,6 @@
 import Foundation
 import WindowsFoundation
+import WinAppSDK
 import WinUI
 import CppWinRT
 import RsFoundation
@@ -101,7 +102,7 @@ class SettingsPage: Page {
 
     private var dependenciesCard: SettingsCard {
         let wasdk = HyperlinkButton()
-        wasdk.content = "Windows App SDK \(App.context.winAppSDKVersion)"
+        wasdk.content = "Windows App SDK \(RuntimeInfo.sdkVersion)"
         wasdk.navigateUri = Uri("https://aka.ms/windowsappsdk")
         wasdk.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
