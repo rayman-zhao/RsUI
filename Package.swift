@@ -29,7 +29,7 @@ let package = Package(
         .package(url: "https://github.com/rayman-zhao/swift-windowsappsdk", branch: "main"),
         .package(url: "https://github.com/rayman-zhao/swift-winui", branch: "main"),
         .package(url: "https://github.com/rayman-zhao/swift-cppwinrt", branch: "main"),
-        .package(url: "https://github.com/rayman-zhao/RsHelper", branch: "main"),
+        .package(url: "https://github.com/rayman-zhao/RsFoundation", branch: "main"),
     ],
     targets: [
         .target(
@@ -41,7 +41,7 @@ let package = Package(
                 .product(name: "WinAppSDK", package: "swift-windowsappsdk"),
                 .product(name: "WinUI", package: "swift-winui"),
                 .product(name: "CppWinRT", package: "swift-cppwinrt"),
-                .product(name: "RsHelper", package: "RsHelper"),
+                .product(name: "RsFoundation", package: "RsFoundation"),
             ],
         ),
         .executableTarget(

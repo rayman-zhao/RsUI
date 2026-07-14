@@ -1,7 +1,7 @@
 import Foundation
 import WinAppSDK
 import WinSDK
-import RsHelper
+import RsFoundation
 
 // Keeps the app to a single process. The first launch becomes the primary
 // instance; later launches (including the taskbar --new-window relaunch)

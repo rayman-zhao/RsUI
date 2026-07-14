@@ -4,7 +4,7 @@ import WindowsFoundation
 import UWP
 import WinUI
 import RsUI
-import RsHelper
+import RsFoundation
 
 func tr(_ keyAndValue: String) -> String {
     return App.context.language == .zh_CN ? "翻译\(keyAndValue)" : keyAndValue

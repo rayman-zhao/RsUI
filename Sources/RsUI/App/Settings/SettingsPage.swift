@@ -2,7 +2,7 @@ import Foundation
 import WindowsFoundation
 import WinUI
 import CppWinRT
-import RsHelper
+import RsFoundation
 
 fileprivate func tr(_ keyAndValue: String) -> String {
     return App.context.tr(keyAndValue, "SettingsPage")

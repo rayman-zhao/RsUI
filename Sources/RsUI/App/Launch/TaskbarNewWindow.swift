@@ -1,6 +1,6 @@
 import Foundation
 import UWP
-import RsHelper
+import RsFoundation
 
 // Taskbar right-click "New Window" entry, backed by the WinRT
 // Windows.UI.StartScreen.JumpList. Works for both packaged and unpackaged apps

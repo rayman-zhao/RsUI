@@ -1,7 +1,7 @@
 import Foundation
 import WinAppSDK
 import WinUI
-import RsHelper
+import RsFoundation
 
 public enum AppTheme: String, Sendable, RawValuePreferable {
     case dark = "Dark"

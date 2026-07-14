@@ -1,6 +1,6 @@
 import Foundation
 import UWP
-import RsHelper
+import RsFoundation
 
 struct WindowPosition: Preferable {
     var windowWidth: Int = 1440

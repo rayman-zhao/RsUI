@@ -1,6 +1,6 @@
 ﻿import Foundation
 import WinUI
-import RsHelper
+import RsFoundation
 
 /// 模块协议，定义了模块的标准接口
 public protocol Module : ExpressibleByEmptyLiteral {

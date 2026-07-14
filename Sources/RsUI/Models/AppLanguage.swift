@@ -1,6 +1,6 @@
 import Foundation
 import UWP
-import RsHelper
+import RsFoundation
 
 public enum AppLanguage: String, CaseIterable, Sendable, RawValuePreferable {
     case en_US

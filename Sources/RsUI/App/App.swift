@@ -1,6 +1,6 @@
 import Foundation
 import WinUI
-import RsHelper
+import RsFoundation
 
 open class App: SwiftApplication {
     public static var context = AppContext.cli()

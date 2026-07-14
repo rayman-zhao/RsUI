@@ -3,7 +3,7 @@ import Observation
 import UWP
 import WinAppSDK
 import WinUI
-import RsHelper
+import RsFoundation
 
 @Observable
 public class AppContext {

@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 import WinUI
-import RsHelper
+import RsFoundation
 
 // Per-tab navigation model: the current page plus its back/forward history.
 // TabView owns the tab strip (order, selection, lifecycle); this type only
