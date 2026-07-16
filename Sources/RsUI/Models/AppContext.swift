@@ -29,7 +29,8 @@ public final class AppContext {
         }
     }
     
-    var modules: [any Module] = []
+    private var moduleTypes: [Module.Type] = []
+    private(set) var modules: [any Module] = []
 
     init() {
         let group = "Swift Works"
@@ -42,13 +43,16 @@ public final class AppContext {
         self.resourceBundle = .main
     }
 
-    func bootstrapGUI(_ group: String, _ product: String, _ resourceBundle: Bundle) {
+    func bootstrap(_ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]) {
         groupName = group
         productName = product
         supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!
         preferences = JsonPreferences.makeAppStandard(group: group, product: product)
         self.resourceBundle = resourceBundle
+        self.moduleTypes = moduleTypes
+    }
 
+    func bootstrapGUI() {
         theme = preferences.load(for: AppTheme.self)
         if case .undefined = theme {
             theme = (Application.current.requestedTheme == .dark) ? .dark : .light
@@ -57,6 +61,14 @@ public final class AppContext {
         if case .undefined = language {
             language = (ApplicationLanguages.languages.first == "zh-Hans-CN") ? .zh_CN : .en_US
         }
+    }
+
+    func initializeModules() {
+        modules = moduleTypes.map { $0.init() }
+    }
+
+    func releaseModules() {
+        modules = []
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {

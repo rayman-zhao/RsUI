@@ -5,37 +5,27 @@ import RsFoundation
 open class App: SwiftApplication {
     public static let context = AppContext()
 
-    let group: String
-    let product: String
-    let bundle: Bundle
-    let moduleTypes: [Module.Type]
-
-    private let appInstanceCoordinator = AppInstanceCoordinator()
-
-    public required convenience init() {
-        self.init("SwiftWorks", "RsUI", .main, [])
-    }
-
-    public init(_ group: String, _ product: String, _ bundle: Bundle, _ moduleTypes: [Module.Type]) {
-        self.group = group
-        self.product = product
-        self.bundle = bundle
-        self.moduleTypes = moduleTypes
-
-        super.init()
-    }
-
     // Stable across releases — the taskbar uses this to identify the app
     // (pinning, jump list lookup) and it doubles as the single-instance key.
     // Don't change once shipped.
-    private var appUserModelID: String { "\(group).\(product)" }
+    private var appUserModelID: String { "\(App.context.groupName).\(App.context.productName)" }
+    private let appInstanceCoordinator = AppInstanceCoordinator()
+
+    public required init() {
+        super.init()
+    }
+
+    public init(_ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]) {
+        App.context.bootstrap(group, product, resourceBundle, moduleTypes)
+        super.init()
+    }
 
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
         if appInstanceCoordinator.redirectIfSecondary(key: appUserModelID) { return }
 
-        // Need to init context after super.init() because some WinUI APIs require the application to be initialized
-        App.context.bootstrapGUI(group, product, bundle)
-        App.context.modules = moduleTypes.map { $0.init() }
+        // Need to bootstrap context to GUI after super.init() because some WinUI APIs require the application to be initialized
+        App.context.bootstrapGUI()
+        App.context.initializeModules()
 
         TaskbarNewWindow.register(title: App.context.tr("newWindow"))
 
@@ -56,7 +46,6 @@ open class App: SwiftApplication {
     }
 
     override open func onShutdown(exitCode: Int32) {
-        // Allow modules to deinit
-        App.context.modules = []
+        App.context.releaseModules()
     }
 }
