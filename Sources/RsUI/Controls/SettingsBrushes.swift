@@ -16,7 +16,7 @@ enum SettingsBrushMode {
             self = .light
         case .dark:
             self = .dark
-        case .auto:
+        default:
             self = .automatic
         }
     }

@@ -1,19 +1,21 @@
 import Foundation
-import UWP
 import RsFoundation
 
 public enum AppLanguage: String, CaseIterable, Sendable, RawValuePreferable {
+    case undefined
     case en_US
     case zh_CN
+    case auto
     
     public init() {
-        self = (ApplicationLanguages.languages.first == "zh-Hans-CN") ? .zh_CN : .en_US
+        self = .undefined
     }
 
     var displayName: String {
         switch self {
             case .en_US: return "English"
             case .zh_CN: return "简体中文"
+            default: return "English"
         }
     }
     var locale: Locale {
@@ -25,6 +27,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawValuePreferable {
         switch self {
             case .en_US: return LocaleConstants.en
             case .zh_CN: return LocaleConstants.zh_Hans
+            default: return LocaleConstants.en
         }
     }
 }

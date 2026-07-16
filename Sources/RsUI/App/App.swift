@@ -3,7 +3,7 @@ import WinUI
 import RsFoundation
 
 open class App: SwiftApplication {
-    public static var context = AppContext.cli()
+    public static let context = AppContext()
 
     let group: String
     let product: String
@@ -34,7 +34,7 @@ open class App: SwiftApplication {
         if appInstanceCoordinator.redirectIfSecondary(key: appUserModelID) { return }
 
         // Need to init context after super.init() because some WinUI APIs require the application to be initialized
-        App.context = AppContext.gui(group, product, bundle)
+        App.context.bootstrapGUI(group, product, bundle)
         App.context.modules = moduleTypes.map { $0.init() }
 
         TaskbarNewWindow.register(title: App.context.tr("newWindow"))

@@ -4,19 +4,20 @@ import WinUI
 import RsFoundation
 
 public enum AppTheme: String, Sendable, RawValuePreferable {
+    case undefined
     case dark = "Dark"
     case light = "Light"
     case auto = "Auto"
 
     public init() {
-        self = (Application.current.requestedTheme == .dark) ? .dark : .light
+        self = .undefined
     }
     
     public var isDark: Bool {
         switch self {
             case .dark: return true
             case .light: return false
-            case .auto: return true /// Todo: should retrive system theme
+            default: return true
         }
     }
     var applicationTheme: WinUI.ApplicationTheme {

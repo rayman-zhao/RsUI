@@ -1,67 +1,79 @@
 import Foundation
 import Observation
+import UWP
 import WinUI
 import RsFoundation
 
 @Observable
-public class AppContext {
-    public let groupName: String
-    public let productName: String
-    public let supportDirectory: URL
-    public let preferences: Preferences
-    public let resourceBundle: Bundle
+public final class AppContext {
+    public private(set) var groupName: String
+    public private(set) var productName: String
+    public private(set) var supportDirectory: URL
+    public private(set) var preferences: Preferences
+    public private(set) var resourceBundle: Bundle
     public var iconPath: String? {
         resourceBundle.path(forResource: productName, ofType: "ico")
     }
 
-    public var theme: AppTheme {
+    public var theme: AppTheme = .undefined {
         didSet {
             guard oldValue != theme else { return }
             Application.current.requestedTheme = theme.applicationTheme
             preferences.save(theme)
         }
     }
-    public var language: AppLanguage {
+    public var language: AppLanguage = .undefined {
         didSet {
             guard oldValue != language else { return }
             preferences.save(language)
         }
     }
-    public var fontScale = 100
     
     var modules: [any Module] = []
 
-    private init(_ group: String, _ product: String, _ resourceBundle: Bundle, _ loadAppearence: Bool) {
+    init() {
+        let group = "Swift Works"
+        let product = "RsUI"
+
         groupName = group
         productName = product
-        supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!       
+        supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!
+        preferences = JsonPreferences.makeAppStandard(group: group, product: product)
+        self.resourceBundle = .main
+    }
+
+    func bootstrapGUI(_ group: String, _ product: String, _ resourceBundle: Bundle) {
+        groupName = group
+        productName = product
+        supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!
         preferences = JsonPreferences.makeAppStandard(group: group, product: product)
         self.resourceBundle = resourceBundle
-        if loadAppearence {
-            self.theme = preferences.load(for: AppTheme.self)
-            self.language = preferences.load(for: AppLanguage.self)
-        } else {
-            self.theme = .auto 
-            self.language = .en_US
+
+        theme = preferences.load(for: AppTheme.self)
+        if case .undefined = theme {
+            theme = (Application.current.requestedTheme == .dark) ? .dark : .light
         }
-    }
-
-    static func gui(_ group: String, _ product: String, _ resourceBundle: Bundle) -> AppContext {
-        let ctx = AppContext(group, product, resourceBundle, true)
-
-        if Application.current.requestedTheme != ctx.theme.applicationTheme {
-            Application.current.requestedTheme = ctx.theme.applicationTheme
+        language = preferences.load(for: AppLanguage.self)
+        if case .undefined = language {
+            language = (ApplicationLanguages.languages.first == "zh-Hans-CN") ? .zh_CN : .en_US
         }
-
-        return ctx
-    }
-
-    static func cli() -> AppContext {
-        return AppContext("SwiftWorks", "RsUI", .main, false)
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {
         return String(localized: keyAndValue, table: table, bundle: resourceBundle, locale: language.locale)
+    }
+
+    public func trxaml(_ xaml: String, _ table: String? = nil) -> String {
+        // FIXME: Prior to Swift 6, need to write #/myregex/# instead of /myregex/
+        let pattern = #/{x:Tr ([^}]+)}/#
+        let matches = xaml.matches(of: pattern).map { $0.1 }
+
+        var result = xaml
+        for match in matches {
+            result = result.replacingOccurrences(of: "{x:Tr \(match)}", with: tr(String(match), table))
+        }
+
+        return result
     }
 
     /// Opens a brand-new `MainWindow` and navigates it to the given URL.
@@ -86,18 +98,5 @@ public class AppContext {
             navigatingTo: url,
             collapseNavigationPane: collapseNavigationPane
         )
-    }
-
-    public func trxaml(_ xaml: String, _ table: String? = nil) -> String {
-        // FIXME: Prior to Swift 6, need to write #/myregex/# instead of /myregex/
-        let pattern = #/{x:Tr ([^}]+)}/#
-        let matches = xaml.matches(of: pattern).map { $0.1 }
-
-        var result = xaml
-        for match in matches {
-            result = result.replacingOccurrences(of: "{x:Tr \(match)}", with: tr(String(match), table))
-        }
-
-        return result
     }
 }
