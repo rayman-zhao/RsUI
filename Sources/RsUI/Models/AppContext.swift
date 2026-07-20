@@ -38,16 +38,16 @@ public final class AppContext {
 
         groupName = group
         productName = product
-        supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!
-        preferences = JsonPreferences.makeAppStandard(group: group, product: product)
+        supportDirectory = URL.applicationSupportDirectory.ensuringChild(named: "\(group)/\(product)/")!
+        preferences = JSONPreferences.makeStandard(group: group, product: product)
         self.resourceBundle = .main
     }
 
     func bootstrap(_ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]) {
         groupName = group
         productName = product
-        supportDirectory = URL.applicationSupportDirectory.reachingChild(named: "\(group)/\(product)/")!
-        preferences = JsonPreferences.makeAppStandard(group: group, product: product)
+        supportDirectory = URL.applicationSupportDirectory.ensuringChild(named: "\(group)/\(product)/")!
+        preferences = JSONPreferences.makeStandard(group: group, product: product)
         self.resourceBundle = resourceBundle
         self.moduleTypes = moduleTypes
     }

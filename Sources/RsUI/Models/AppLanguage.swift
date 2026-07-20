@@ -1,7 +1,7 @@
 import Foundation
 import RsFoundation
 
-public enum AppLanguage: String, CaseIterable, Sendable, RawValuePreferable {
+public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
     case undefined
     case en_US
     case zh_CN

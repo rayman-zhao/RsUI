@@ -3,7 +3,7 @@ import WinAppSDK
 import WinUI
 import RsFoundation
 
-public enum AppTheme: String, Sendable, RawValuePreferable {
+public enum AppTheme: String, Sendable, RawPreferenceValue {
     case undefined
     case dark = "Dark"
     case light = "Light"

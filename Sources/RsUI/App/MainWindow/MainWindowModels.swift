@@ -2,7 +2,7 @@ import Foundation
 import UWP
 import RsFoundation
 
-struct WindowPosition: Preferable {
+struct WindowPosition: PreferenceValue {
     var windowWidth: Int = 1440
     var windowHeight: Int = 800
     var windowX: Int = 100
@@ -10,7 +10,7 @@ struct WindowPosition: Preferable {
     var isMaximized: Bool = true
 }
 
-struct WindowLayout: Preferable {
+struct WindowLayout: PreferenceValue {
     var navigationViewMinPaneLength: Double = 100
     var navigationViewMaxPaneLength: Double = 400
     var navigationViewExpandedModeThresholdContentWidth: Double = 688 // MARK: 688 is from default size 1008 - 320
@@ -19,7 +19,7 @@ struct WindowLayout: Preferable {
     var navigationViewOpenPaneLength: Double = 320
 }
 
-struct RoutePreferences: Preferable {
+struct RoutePreferences: PreferenceValue {
     var maxHistoryPages: Int = 32
     var lastPageURL: URL? = nil
 }
