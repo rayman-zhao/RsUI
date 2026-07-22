@@ -1,7 +1,7 @@
 import Foundation
+import RsFoundation
 import WinAppSDK
 import WinUI
-import RsFoundation
 
 public enum AppTheme: String, Sendable, RawPreferenceValue {
     case undefined
@@ -12,12 +12,12 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     public init() {
         self = .undefined
     }
-    
+
     public var isDark: Bool {
         switch self {
-            case .dark: return true
-            case .light: return false
-            default: return true
+        case .dark: return true
+        case .light: return false
+        default: return true
         }
     }
     var applicationTheme: WinUI.ApplicationTheme {
@@ -28,7 +28,7 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     }
     var titleBarTheme: WinAppSDK.TitleBarTheme {
         return isDark ? .dark : .light
-    } 
+    }
 
     mutating func toggle() {
         self = isDark ? .light : .dark

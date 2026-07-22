@@ -14,12 +14,15 @@ public protocol Page: AnyObject {
     func windowContextChanged(_ context: WindowContext)
 }
 
-public extension Page {
-    var header: Any? { nil }
+extension Page {
+    public var header: Any? { nil }
 
-    func windowContextChanged(_ context: WindowContext) {}
+    public func windowContextChanged(_ context: WindowContext) {}
 
-    func startObserving<Element>(_ emit: @escaping @Sendable () -> Element, onChanged: @escaping @MainActor (Page, Element) -> Void) {
+    public func startObserving<Element>(
+        _ emit: @escaping @Sendable () -> Element,
+        onChanged: @escaping @MainActor (Page, Element) -> Void
+    ) {
         let obs = Observations(emit)
 
         Task { [weak self] in

@@ -120,7 +120,8 @@ public struct WindowContext {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
-        return owner?.navigate(to: url, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? false
+        return owner?.navigate(to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
+            ?? false
     }
 
     /// Opens several pages as tabs in one batch.
@@ -269,7 +270,7 @@ public struct WindowContext {
     ///     Pass `false` for background-open gestures that should avoid stealing focus.
     ///   - transitionInfoOverride: Optional navigation transition for newly
     ///     created tabs.
-    
+
     /// - Returns: `true` if an existing tab was focused or a new navigation
     ///   was accepted.
     @discardableResult
@@ -281,7 +282,8 @@ public struct WindowContext {
     ) -> Bool {
         guard let owner else { return false }
         if mode == .newWindow {
-            return owner.navigate(to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
+            return owner.navigate(
+                to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
         }
         if owner.findTabContext(matchingURL: url) != nil {
             if focusExisting {

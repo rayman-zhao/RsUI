@@ -1,8 +1,8 @@
 import Foundation
 import Observation
+import RsFoundation
 import UWP
 import WinUI
-import RsFoundation
 
 @Observable
 public final class AppContext {
@@ -28,7 +28,7 @@ public final class AppContext {
             preferences.save(language)
         }
     }
-    
+
     private var moduleTypes: [Module.Type] = []
     private(set) var modules: [any Module] = []
 
@@ -38,15 +38,19 @@ public final class AppContext {
 
         groupName = group
         productName = product
-        supportDirectory = URL.applicationSupportDirectory.ensuringChild(named: "\(group)/\(product)/")!
+        supportDirectory = URL.applicationSupportDirectory.ensuringChild(
+            named: "\(group)/\(product)/")!
         preferences = JSONPreferences.makeStandard(group: group, product: product)
         self.resourceBundle = .main
     }
 
-    func bootstrap(_ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]) {
+    func bootstrap(
+        _ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]
+    ) {
         groupName = group
         productName = product
-        supportDirectory = URL.applicationSupportDirectory.ensuringChild(named: "\(group)/\(product)/")!
+        supportDirectory = URL.applicationSupportDirectory.ensuringChild(
+            named: "\(group)/\(product)/")!
         preferences = JSONPreferences.makeStandard(group: group, product: product)
         self.resourceBundle = resourceBundle
         self.moduleTypes = moduleTypes
@@ -72,7 +76,8 @@ public final class AppContext {
     }
 
     public func tr(_ keyAndValue: String, _ table: String? = nil) -> String {
-        return String(localized: keyAndValue, table: table, bundle: resourceBundle, locale: language.locale)
+        return String(
+            localized: keyAndValue, table: table, bundle: resourceBundle, locale: language.locale)
     }
 
     public func trxaml(_ xaml: String, _ table: String? = nil) -> String {
@@ -82,7 +87,8 @@ public final class AppContext {
 
         var result = xaml
         for match in matches {
-            result = result.replacingOccurrences(of: "{x:Tr \(match)}", with: tr(String(match), table))
+            result = result.replacingOccurrences(
+                of: "{x:Tr \(match)}", with: tr(String(match), table))
         }
 
         return result
