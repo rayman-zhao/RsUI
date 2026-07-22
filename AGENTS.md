@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-RsUI is a native LOB (Line of Business) application framework built with **Swift on Windows** + **WinUI 3** / **Windows App SDK**. It provides a tabbed MDI shell with a modular plugin system.
+RsUI is a native LOB (Line of Business) application framework built with **Swift on Windows** + **WinUI 3** / **Windows App SDK**. It provides a tabbed multiple window shell with a modular plugin system.
 
 - **Platform**: Windows only (Swift for Windows, NOT Apple Swift)
-- **Package manager**: Swift Package Manager (SPM), swift-tools-version 5.10
+- **Package manager**: Swift Package Manager (SPM), swift-tools-version 6.3
 - **Outputs**: `RsUI` library + `SampleApp` executable
 - **Build**: `swift build` | **Run**: `swift run SampleApp` | **Test**: `swift test`
 
@@ -13,12 +13,12 @@ RsUI is a native LOB (Line of Business) application framework built with **Swift
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Swift 5.10+ (Windows) |
+| Language | Swift 6.3+ (Windows) |
 | UI Framework | WinUI 3 (via swift-winrt WinRT projection) |
 | Runtime | Windows App SDK |
 | Dependencies | swift-cwinrt → swift-windowsfoundation → swift-uwp → swift-windowsappsdk → swift-winui → swift-cppwinrt, plus RsFoundation |
 
-**Critical distinction**: This is NOT SwiftUI. All UI is built imperatively in Swift by calling WinUI 3 WinRT APIs directly. There is no XAML, no Storyboard, no `{x:Bind}`.
+**Critical distinction**: This is NOT SwiftUI. All UI is built imperatively in Swift by calling WinUI 3 WinRT APIs directly. There are some embeded XAML strings, but no Storyboard, no `{x:Bind}`.
 
 ## Architecture
 
@@ -32,7 +32,7 @@ App (entry point, lifecycle, single-instance, module init)
 - **`Module`** — Plugin protocol. Modules register navigation items, handle URL-based routing (`rs://{moduleId}/{path}`), and contribute settings panels.
 - **`Page`** — Represents a displayable page with `url`, `title`, `header`, and `content` (UIElement).
 - **`WindowContext`** — Window-scoped service facade. Module code uses this for navigation, tab management, fullscreen, folder picking, etc.
-- **`MainWindow`** — MDI shell window containing NavigationView sidebar + TabView tab strip + content area. Split into multiple extension files by responsibility.
+- **`MainWindow`** — Shell window containing NavigationView sidebar + TabView tab strip + content area. Split into multiple extension files by responsibility.
 - **`AppContext`** — Global singleton holding theme, language, modules, preferences, and localization.
 
 ## File Organization
@@ -75,7 +75,7 @@ Tests/RsUITests/                      — Unit tests
 
 - **Comments**: Chinese comments, English code identifiers
 - **Code sectioning**: `// MARK: -` comments for logical sections
-- **UI construction**: Imperative Swift (no XAML). Controls created programmatically.
+- **UI construction**: XAML and imperative Swift. Controls usually created programmatically based on XAML string.
 - **Event handling**: `addHandler { [weak self] _, args in ... }` with weak capture lists
 - **Type casting**: `as? Type` → `let` → safe unwrap chain
 - **WinRT calls**: Use `try?` to avoid crashes from COM exceptions
