@@ -10,7 +10,7 @@ final class FullscreenPage: RsUI.Page {
         self.context = context
     }
 
-    func windowContextChanged(_ context: WindowContext) {
+    func onWindowContextChanged(to context: WindowContext) {
         self.context = context
     }
 

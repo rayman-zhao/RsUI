@@ -5,6 +5,6 @@ import RsUI
 @main
 class SampleApp: App {
     public required init() {
-        super.init("SampleCompany", "SampleApp", Bundle.module, [ArbitaryModule.self])
+        super.init(group: "SampleCompany", product: "SampleApp", resourceBundle: Bundle.module, moduleTypes: [ArbitaryModule.self])
     }
 }

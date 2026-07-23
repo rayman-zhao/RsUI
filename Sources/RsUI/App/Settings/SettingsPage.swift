@@ -6,7 +6,7 @@ import CppWinRT
 import RsFoundation
 
 fileprivate func tr(_ keyAndValue: String) -> String {
-    return App.context.tr(keyAndValue, "SettingsPage")
+    return App.context.tr(keyAndValue, table: "SettingsPage")
 }
 
 /// 设置页面类，管理主题和语言偏好设置
@@ -32,7 +32,7 @@ class SettingsPage: Page {
         
         /// MARK: - 各个模块
         for module in App.context.modules {
-            if let group = module.settingsGroupRequired() {
+            if let group = module.settingsGroup() {
                 mainStackPanel.children.append(SettingsGroup(group.title, group.cards))
             }
         }

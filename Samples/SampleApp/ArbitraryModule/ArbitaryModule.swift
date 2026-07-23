@@ -22,7 +22,7 @@ final class ArbitaryModule: Module {
         log.info("ArbitaryModule deinit")
     }
 
-    func titleBarRightHeaderItemRequired(in context: WindowContext) -> UIElement? {
+    func titleBarRightHeaderItem(in context: WindowContext) -> UIElement? {
         let ring = ProgressRingEx()
         ring.startObserving { [weak self] in
             self?.state
@@ -38,7 +38,7 @@ final class ArbitaryModule: Module {
         return ring
     }
 
-    func navigationViewMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase] {
+    func navigationViewMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
         let header = NavigationViewItemHeader()
         header.content = tr("Arbitrary")
 
@@ -56,7 +56,7 @@ final class ArbitaryModule: Module {
         return items
     }
 
-    func navigationViewFooterMenuItemsRequired(in context: WindowContext) -> [NavigationViewItemBase] {
+    func navigationViewFooterMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
         let header = NavigationViewItemHeader()
         header.content = tr("Footer")
         let pickerItem = NavigationViewItem.build(
@@ -74,7 +74,7 @@ final class ArbitaryModule: Module {
         return [NavigationViewItemSeparator(), header, pickerItem]
     }
 
-    func settingsGroupRequired() -> (title: String, cards: [UIElement])? {
+    func settingsGroup() -> (title: String, cards: [UIElement])? {
         let toggle = ToggleSwitch()
         toggle.isOn = true
         toggle.onContent = tr("On")
@@ -116,7 +116,7 @@ final class ArbitaryModule: Module {
         return (tr("Settings Controls Demo"), [basicCard, clickableCard, expander])
     }
 
-    func navigationRequested(for url: URL, in context: WindowContext) -> RsUI.Page? {
+    func onNavigationRequested(for url: URL, in context: WindowContext) -> RsUI.Page? {
         guard url.host == self.id else { return nil }
         switch url.path {
         case "", "/":

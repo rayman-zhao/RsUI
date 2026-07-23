@@ -73,7 +73,7 @@ extension MainWindow {
         // this window so window-scoped calls hit the new owner, not the creator.
         let context = WindowContext(owner: self)
         for page in model.allPages {
-            page.windowContextChanged(context)
+            page.onWindowContextChanged(to: context)
         }
         model.navigationTransitionInfo = SuppressNavigationTransitionInfo()
         model.needsRender = true

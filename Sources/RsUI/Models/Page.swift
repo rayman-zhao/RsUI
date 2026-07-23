@@ -11,13 +11,13 @@ public protocol Page: AnyObject {
     // Called when the page's tab is moved to another window (tab tear-out or
     // merge). A page that caches window-scoped state from its WindowContext
     // should rebind it here, else calls like fullscreen act on the old window.
-    func windowContextChanged(_ context: WindowContext)
+    func onWindowContextChanged(to context: WindowContext)
 }
 
 extension Page {
     public var header: Any? { nil }
 
-    public func windowContextChanged(_ context: WindowContext) {}
+    public func onWindowContextChanged(to context: WindowContext) {}
 
     public func startObserving<Element>(
         _ emit: @escaping @Sendable () -> Element,

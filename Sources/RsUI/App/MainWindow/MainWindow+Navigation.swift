@@ -110,7 +110,7 @@ extension MainWindow {
         }
         let context = WindowContext(owner: self)
         for module in App.context.modules {
-            if let page = module.navigationRequested(for: url, in: context) {
+            if let page = module.onNavigationRequested(for: url, in: context) {
                 return page
             }
         }

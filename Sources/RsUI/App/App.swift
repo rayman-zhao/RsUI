@@ -15,8 +15,8 @@ open class App: SwiftApplication {
         super.init()
     }
 
-    public init(_ group: String, _ product: String, _ resourceBundle: Bundle, _ moduleTypes: [Module.Type]) {
-        App.context.bootstrap(group, product, resourceBundle, moduleTypes)
+    public init(group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]) {
+        App.context.bootstrap(group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes)
         super.init()
     }
 

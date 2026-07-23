@@ -83,13 +83,13 @@ extension MainWindow {
         navigationView.menuItems.clear()
         navigationView.footerMenuItems.clear()
         for module in App.context.modules {
-            if let item = module.titleBarRightHeaderItemRequired(in: context) {
+            if let item = module.titleBarRightHeaderItem(in: context) {
                 titleBarRightHeader.children.append(item)
             }
-            for item in module.navigationViewMenuItemsRequired(in: context) {
+            for item in module.navigationViewMenuItems(in: context) {
                 appendNavigationItem(item, false)
             }
-            for item in module.navigationViewFooterMenuItemsRequired(in: context) {
+            for item in module.navigationViewFooterMenuItems(in: context) {
                 appendNavigationItem(item, true)
             }
         }
