@@ -5,7 +5,7 @@
 RsUI is a native LOB (Line of Business) application framework built with **Swift on Windows** + **WinUI 3** / **Windows App SDK**. It provides a tabbed multiple window shell with a modular plugin system.
 
 - **Platform**: Windows only (Swift for Windows, NOT Apple Swift)
-- **Package manager**: Swift Package Manager (SPM), swift-tools-version 6.3
+- **Package manager**: Swift Package Manager (SPM), swift-tools-version 5.10 (see Toolchain Version Note below)
 - **Outputs**: `RsUI` library + `SampleApp` executable
 - **Build**: `swift build` | **Run**: `swift run SampleApp` | **Test**: `swift test`
 
@@ -13,12 +13,18 @@ RsUI is a native LOB (Line of Business) application framework built with **Swift
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Swift 6.3+ (Windows) |
+| Language | Swift 6.3+ (Windows); tools-version pinned to 5.10 for swift-winrt compat, see Toolchain Version Note |
 | UI Framework | WinUI 3 (via swift-winrt WinRT projection) |
 | Runtime | Windows App SDK |
 | Dependencies | swift-cwinrt → swift-windowsfoundation → swift-uwp → swift-windowsappsdk → swift-winui → swift-cppwinrt, plus RsFoundation |
 
 **Critical distinction**: This is NOT SwiftUI. All UI is built imperatively in Swift by calling WinUI 3 WinRT APIs directly. There are some embeded XAML strings, but no Storyboard, no `{x:Bind}`.
+
+### Toolchain Version Note
+
+- `Package.swift` declares `swift-tools-version: 5.10`. This pin is temporary: the swift-winrt projection code currently produces Swift 6 concurrency errors and cannot build under Swift 6 language mode.
+- Code outside the UI/projection layer is still expected to follow Swift 6+ conventions (strict concurrency, `Sendable`, `async/await`, structured concurrency). Only the swift-winrt compatibility issue keeps the tools version pinned today.
+- Do not treat the `5.10` marker as permission to write pre-Swift-6 code in non-UI / non-projection modules.
 
 ## Architecture
 
@@ -73,7 +79,7 @@ Tests/RsUITests/                      — Unit tests
 
 ## Coding Conventions
 
-- **Comments**: Chinese comments, English code identifiers
+- **Comments**: The package is still unstable, so do not require documentation comments (`///`) on public declarations. Do not flag missing doc comments as issues in reviews; focus on naming, labels, logic, and API shape instead. Internal comments (`//`) for non-obvious code are still welcome.
 - **Code sectioning**: `// MARK: -` comments for logical sections
 - **UI construction**: XAML and imperative Swift. Controls usually created programmatically based on XAML string.
 - **Event handling**: `addHandler { [weak self] _, args in ... }` with weak capture lists
@@ -84,6 +90,26 @@ Tests/RsUITests/                      — Unit tests
 - **Localization**: `tr()` function + `.xcstrings` localized string files
 - **Logging**: RsFoundation's `log.info` / `log.warning`
 - **Threading**: UI on MainActor, background via `Task` + `dispatcherQueue`
+
+### Tooling Constraints
+
+- `swift-format` on Windows still has open issues; do not run it automatically — not as a pre-commit hook, an editor on-save trigger, or a CI step. Apply formatting only by manual invocation at an appropriate point, opportunistically. Until the upstream issues are fixed, treat formatting as a manual step rather than an enforced gate.
+
+### UI & MVVM Conventions
+
+- **Architecture pattern — MVVM**: Follow Model-View-ViewModel. ViewModels are the source of truth for UI state. Mark ViewModel types with `@Observable` (see existing `AppContext` and `MainWindowViewModel`). Use the Swift `Observation` framework: UI observes ViewModel state changes and re-renders in response; in event handler closures, call ViewModel methods rather than mutating UI controls directly.
+- **Observation driver**: UI reacts to `@Observable` state through the `Observations` async-sequence helper provided by `RsFoundation`, surfaced via the `startObserving` extension on `Page` (`Page.swift`) and mirrored on `NavigationViewItem` and the `Progress*` controls. Prefer this flow: emit the relevant ViewModel state from the closure, run the update on `MainActor`, and mutate UI only inside the `onChanged` callback.
+- **XAML-first UI construction (target direction)**: Prefer building UI from XAML strings loaded with `XamlReader.load`, then find named controls and bind event-handler callbacks in Swift. Avoid long chains of imperative WinUI API calls (`Control()` + property assignment + `children.append`) when the same UI can be expressed compactly in XAML.
+- **Current reality vs. the target**: The legacy code still builds most UI imperatively (e.g. `SettingsPage.swift`, `MainWindow+Content.swift`, and several Controls together hold ~46 `children.append` call sites). Treat that as existing tech debt, not a pattern to copy. New and refactored UI should move toward the XAML-string approach where practical; keep a concise imperative fallback only where XAML genuinely cannot express the layout (see `SettingsCard.swift` for a mixed fallback pattern).
+
+### Naming Conventions for Events & Templates
+
+GUI callback and template-method naming follows four distinct rules depending on the API category — do not collapse them into a single "on X Changed" or "X Changed" style.
+
+- **Event-callback closure parameters** (Observation-driven, single handler): use `on` + event noun, not past tense. Match Apple's `Observation` framework spelling: `onChange`, `onFocus`, `onFullscreenChange`. Use the plain noun form (`onChange`, not `onChanged`) and add the observed entity when it aids clarity (`onTabClose`, `onDocumentLoad`) — the callback fires per change event, not as a one-shot past-tense notice. The existing `Page.startObserving(_:onChanged:)` retains the `onChanged` spelling for now; new APIs should use `onChange`, and a future rename of `onChanged` → `onChange` is pre-approved by this rule.
+- **Delegate / life-cycle methods** (protocol member, `will`/`did` semantics): use `will` for "about to happen" and `did` for "already happened" + past-tense verb, e.g. `tabWillClose(_:)`, `tabDidClose(_:)`, `applicationDidEnterBackground(_:)`. Do NOT use the C# `onClosing`/`onClosed` prefix for Swift delegate protocols — `on` is reserved for the closure-parameter form above.
+- **Protocol "provide something" requirements** (template methods returning a value): use a plain noun phrase or noun phrase + context label, with no `Required` / `get` suffix. E.g. `titleBarRightHeaderItem(in:)`, `settingsGroup()`, `navigationViewMenuItems(in:)`. Reserve the `make` prefix for factory methods that construct a new object, e.g. `makePage(for:in:)` (see `IteratorProtocol.makeIterator()`).
+- **WinUI event-handler closures**: the event-property name is fixed by the swift-winrt projection (`loaded`, `selectionChanged`, `click`, `sizeChanged`) — do not rename it. Inside `addHandler { ... }`, use the conventional `[weak self] _, args in` capture; the first parameter (`sender`) is usually ignored, so prefer `_` over an unused `sender` label. In the handler body, call ViewModel methods per the MVVM rule above rather than mutating controls directly.
 
 ## Important Pitfalls
 
