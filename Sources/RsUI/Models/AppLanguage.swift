@@ -7,10 +7,6 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
     case zh_CN
     case auto
 
-    public init() {
-        self = .undefined
-    }
-
     var displayName: String {
         switch self {
         case .en_US: return "English"
@@ -29,5 +25,9 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
         case .zh_CN: return LocaleConstants.zh_Hans
         default: return LocaleConstants.en
         }
+    }
+    
+    public init() {
+        self = .undefined
     }
 }

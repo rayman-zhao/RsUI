@@ -9,10 +9,6 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     case light = "Light"
     case auto = "Auto"
 
-    public init() {
-        self = .undefined
-    }
-
     public var isDark: Bool {
         switch self {
         case .dark: return true
@@ -29,8 +25,14 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     var titleBarTheme: WinAppSDK.TitleBarTheme {
         return isDark ? .dark : .light
     }
+    
+    public init() {
+        self = .undefined
+    }
 
-    mutating func toggle() {
+    @discardableResult
+    mutating func toggled() -> AppTheme {
         self = isDark ? .light : .dark
+        return self
     }
 }

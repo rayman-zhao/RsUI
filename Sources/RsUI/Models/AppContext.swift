@@ -11,10 +11,10 @@ public final class AppContext {
     public private(set) var supportDirectory: URL
     public private(set) var preferences: Preferences
     public private(set) var resourceBundle: Bundle
+    
     public var iconPath: String? {
         resourceBundle.path(forResource: productName, ofType: "ico")
     }
-
     public var theme: AppTheme = .undefined {
         didSet {
             guard oldValue != theme else { return }
@@ -30,7 +30,7 @@ public final class AppContext {
     }
 
     private var moduleTypes: [Module.Type] = []
-    private(set) var modules: [any Module] = []
+    internal private(set) var modules: [any Module] = []
 
     init() {
         let group = "Swift Works"
