@@ -1,5 +1,6 @@
 import Foundation
 import RsFoundation
+import UWP
 import WinAppSDK
 import WinUI
 
@@ -17,7 +18,11 @@ open class App: SwiftApplication {
         )
         super.init()
 
-        coordinateSingleInstance()
+        // AppInstance can be used start from app initilization.
+        AppInstance.coordinateSingleInstance(for: "\(group)/\(product)") { [weak self] _, args in
+            guard let self else { return }
+            self.onActivated(args)
+        }
     }
 
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
@@ -25,50 +30,19 @@ open class App: SwiftApplication {
         App.context.bootstrapGUI()
         App.context.initializeModules()
 
-        TaskbarNewWindow.register(title: App.context.tr("newWindow"))
+        JumpList.register(title: App.context.tr("newWindow"))
 
         let mainWindow =
             launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
         try! mainWindow.activate()
     }
-    
+
     open func onActivated(_ args: AppActivationArguments?) {
         MainWindow.openDetachedWindowAtHome()
     }
 
     override open func onShutdown(exitCode: Int32) {
         App.context.releaseModules()
-    }
-
-    private func coordinateSingleInstance() {
-        // Register instance.
-        let key = "\(App.context.groupName)/\(App.context.productName)"
-        guard let instance = try? AppInstance.findOrRegisterForKey(key)  // AppInstance can be used start from initilization.
-        else {
-            fatalError("Failed to findOrRegister AppInstance.")
-        }
-
-        // Single instance check.
-        guard instance.isCurrent else {
-            if let args = try? instance.getActivatedEventArgs(),
-                let asyncResult = try? instance.redirectActivationToAsync(args)
-            {
-                Task {
-                    try? await asyncResult.get()
-                }
-            }
-            log.info("Exit later instance.")
-            Foundation.exit(0)
-        }
-
-        // Responese to activated event.
-        instance.activated.addHandler { [weak self] _, args in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                self.onActivated(args)
-            }
-        }
     }
 
     private func launchHasFlag(_ flag: String, _ args: WinUI.LaunchActivatedEventArgs) -> Bool {

@@ -1,12 +1,9 @@
 import Foundation
-import UWP
 import RsFoundation
+import UWP
 
-// Taskbar right-click "New Window" entry, backed by the WinRT
-// Windows.UI.StartScreen.JumpList. Works for both packaged and unpackaged apps
-// through the Windows App SDK runtime.
-enum TaskbarNewWindow {
-    static func register(title: String, argument: String = "--new-window") {
+extension JumpList {
+    public static func register(title: String, argument: String = "--new-window") {
         guard (try? JumpList.isSupported()) == true else { return }
         Task {
             do {
