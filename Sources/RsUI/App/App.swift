@@ -17,8 +17,32 @@ open class App: SwiftApplication {
         )
         super.init()
 
+        coordinateSingleInstance()
+    }
+
+    override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
+        // Application.current.requestedTheme can be used only start from launch.
+        App.context.bootstrapGUI()
+        App.context.initializeModules()
+
+        TaskbarNewWindow.register(title: App.context.tr("newWindow"))
+
+        let mainWindow =
+            launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
+        try! mainWindow.activate()
+    }
+    
+    open func onActivated(_ args: AppActivationArguments?) {
+        MainWindow.openDetachedWindowAtHome()
+    }
+
+    override open func onShutdown(exitCode: Int32) {
+        App.context.releaseModules()
+    }
+
+    private func coordinateSingleInstance() {
         // Register instance.
-        let key = "\(group)/\(product)"
+        let key = "\(App.context.groupName)/\(App.context.productName)"
         guard let instance = try? AppInstance.findOrRegisterForKey(key)  // AppInstance can be used start from initilization.
         else {
             fatalError("Failed to findOrRegister AppInstance.")
@@ -33,7 +57,7 @@ open class App: SwiftApplication {
                     try? await asyncResult.get()
                 }
             }
-            log.info("Exist later instance.")
+            log.info("Exit later instance.")
             Foundation.exit(0)
         }
 
@@ -47,30 +71,10 @@ open class App: SwiftApplication {
         }
     }
 
-    override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
-        // Application.current.requestedTheme can be used only start from launch.
-        App.context.bootstrapGUI()
-        App.context.initializeModules()
-
-        TaskbarNewWindow.register(title: App.context.tr("newWindow"))
-
-        let mainWindow =
-            launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
-        try! mainWindow.activate()
-    }
-
     private func launchHasFlag(_ flag: String, _ args: WinUI.LaunchActivatedEventArgs) -> Bool {
         if CommandLine.arguments.contains(flag) {
             return true
         }
         return args.arguments.split(separator: " ").contains { $0 == flag }
-    }
-    
-    open func onActivated(_ args: AppActivationArguments?) {
-        MainWindow.openDetachedWindowAtHome()
-    }
-
-    override open func onShutdown(exitCode: Int32) {
-        App.context.releaseModules()
     }
 }
