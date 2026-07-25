@@ -1,7 +1,7 @@
 import WinUI
 
-public extension TabView {
-    var canAutoCloseTabs: Bool {
+extension TabView {
+    public var canAutoCloseTabs: Bool {
         get {
             fatalError("canAutoCloseTabs getter is not implemented")
         }

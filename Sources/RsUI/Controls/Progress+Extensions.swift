@@ -2,12 +2,14 @@ import Foundation
 import Observation
 import WinUI
 
-/// NOTE: Must inherit ProgressRing/Bar, otherwise can't be triggered the second change of the observation
+/// FIXME: Must inherit ProgressRing/Bar, otherwise can't be triggered the second change of the observation
 public class ProgressRingEx: ProgressRing {
 }
-
-public extension ProgressRingEx {
-       func startObserving<Element>(_ emit: @escaping @Sendable () -> Element, onChanged: @escaping @MainActor (ProgressRing, Element) -> Void) {
+extension ProgressRingEx {
+    public func startObserving<Element>(
+        _ emit: @escaping @Sendable () -> Element,
+        onChanged: @escaping @MainActor (ProgressRing, Element) -> Void
+    ) {
         let obs = Observations(emit)
 
         Task { [weak self] in
@@ -25,11 +27,14 @@ public extension ProgressRingEx {
     }
 }
 
+/// FIXME: Must inherit ProgressBar, otherwise can't be triggered the second change of the observation
 public class ProgressBarEx: ProgressBar {
 }
-
-public extension ProgressBarEx {
-       func startObserving<Element>(_ emit: @escaping @Sendable () -> Element, onChanged: @escaping @MainActor (ProgressBar, Element) -> Void) {
+extension ProgressBarEx {
+    public func startObserving<Element>(
+        _ emit: @escaping @Sendable () -> Element,
+        onChanged: @escaping @MainActor (ProgressBar, Element) -> Void
+    ) {
         let obs = Observations(emit)
 
         Task { [weak self] in

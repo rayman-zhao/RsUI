@@ -1,10 +1,9 @@
-
 import Foundation
-import WindowsFoundation
 import WinUI
+import WindowsFoundation
 
-public extension NavigationView {
-    func selectFirstItem() {
+extension NavigationView {
+    public func selectFirstItem() {
         if let firstItem = self.first(where: { _ in true }) {
             self.selectedItem = firstItem
         } else {
@@ -12,7 +11,7 @@ public extension NavigationView {
         }
     }
 
-    func selectItem(with url: URL) {
+    public func selectItem(with url: URL) {
         if url == SettingsPage.url {
             selectSettingsItem()
         } else {
@@ -34,10 +33,13 @@ public extension NavigationView {
     }
 
     private func first(where predicate: (NavigationViewItem) -> Bool) -> NavigationViewItem? {
-        return first(where: predicate, in: self.menuItems) ?? first(where: predicate, in: self.footerMenuItems)
+        return first(where: predicate, in: self.menuItems)
+            ?? first(where: predicate, in: self.footerMenuItems)
     }
 
-    private func first(where predicate: (NavigationViewItem) -> Bool, in items: AnyIVector<Any?>?) -> NavigationViewItem? {
+    private func first(where predicate: (NavigationViewItem) -> Bool, in items: AnyIVector<Any?>?)
+        -> NavigationViewItem?
+    {
         guard let items else { return nil }
 
         for item in items {
