@@ -30,7 +30,9 @@ open class App: SwiftApplication {
         App.context.bootstrapGUI()
         App.context.initializeModules()
 
-        JumpList.register(arguments: "--new-window", displayName: App.context.tr("newWindow"), logo: App.context.iconAppxUri)
+        JumpList.register(
+            arguments: "--new-window", displayName: App.context.tr("newWindow"),
+            logo: App.context.iconAppxUri)
 
         let mainWindow =
             launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
