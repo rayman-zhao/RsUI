@@ -3,7 +3,7 @@ import RsFoundation
 import WinAppSDK
 
 extension AppInstance {
-    static func coordinateSingleInstance(
+    static func registerOrRedirect(
         for key: String, onActivated: @escaping @MainActor (Any?, AppActivationArguments?) -> Void
     ) {
         guard let instance = try? AppInstance.findOrRegisterForKey(key)
@@ -20,7 +20,7 @@ extension AppInstance {
                     try? await asyncResult.get()
                 }
             }
-            log.info("Exit later instance.")
+            log.info("Found running instance, exit.")
             exit(0)
         }
 

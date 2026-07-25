@@ -19,7 +19,7 @@ open class App: SwiftApplication {
         super.init()
 
         // AppInstance can be used start from app initilization.
-        AppInstance.coordinateSingleInstance(for: "\(group)/\(product)") { [weak self] _, args in
+        AppInstance.registerOrRedirect(for: "\(group)/\(product)") { [weak self] _, args in
             guard let self else { return }
             self.onActivated(args)
         }
@@ -30,7 +30,7 @@ open class App: SwiftApplication {
         App.context.bootstrapGUI()
         App.context.initializeModules()
 
-        JumpList.register(title: App.context.tr("newWindow"))
+        JumpList.register(arguments: "--new-window", displayName: App.context.tr("newWindow"), logo: App.context.iconAppxUri)
 
         let mainWindow =
             launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()

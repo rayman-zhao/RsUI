@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import RsFoundation
 import UWP
+import WindowsFoundation
 import WinUI
 
 @Observable
@@ -14,6 +15,11 @@ public final class AppContext {
     
     public var iconPath: String? {
         resourceBundle.path(forResource: productName, ofType: "ico")
+    }
+    public var iconAppxUri: Uri? {
+        guard let path = iconPath else { return nil }
+        let relativePath = path.trimmingPrefix(Bundle.main.bundlePath)
+        return Uri("ms-appx://\(relativePath)")
     }
     public var theme: AppTheme = .undefined {
         didSet {

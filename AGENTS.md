@@ -81,10 +81,10 @@ Tests/RsUITests/                      — Unit tests
 
 - **Comments**: The package is still unstable, so do not require documentation comments (`///`) on public declarations. Do not flag missing doc comments as issues in reviews; focus on naming, labels, logic, and API shape instead. Internal comments (`//`) for non-obvious code are still welcome.
 - **Code sectioning**: `// MARK: -` comments for logical sections
+- **Projected APIs**: Use the projected APIs in packages of swift-foundation, swift-uwp, swift-windowsappsdk, swift-winui and swift-webview2 for Windows features.
 - **UI construction**: XAML and imperative Swift. Controls usually created programmatically based on XAML string.
 - **Event handling**: `addHandler { [weak self] _, args in ... }` with weak capture lists
 - **Type casting**: `as? Type` → `let` → safe unwrap chain
-- **WinRT calls**: Use `try?` to avoid crashes from COM exceptions
 - **Lazy init**: `lazy var` for deferred UI control initialization
 - **Preferences**: `PreferenceValue` protocol + `JSONPreferences` for persistence
 - **Localization**: `tr()` function + `.xcstrings` localized string files
