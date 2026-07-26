@@ -41,6 +41,31 @@ App (entry point, lifecycle, single-instance, module init)
 - **`MainWindow`** — Shell window containing NavigationView sidebar + TabView tab strip + content area. Split into multiple extension files by responsibility.
 - **`AppContext`** — Global singleton holding theme, language, modules, preferences, and localization.
 
+## Core UI Composition Model
+
+RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page → Frame → TabView → MainWindow。当前代码中的 `MainWindow+*` 扩展文件混合承担了 Frame/TabView 的职责，长期重构方向是将这些职责抽成独立的 RsUI 控件，使 MainWindow 退化为纯粹的 NavigationView 容器。
+
+1. **Page（基本页面单元）** — 见 [`Sources/RsUI/Models/Page.swift`](./Sources/RsUI/Models/Page.swift)。每个 Page 的 UI 由 `header` 和 `content`（`UIElement`）两部分构成，加上 `url`、`title` 元信息。Page 是框架内最小的可导航、可渲染单元。
+
+2. **RsUI.Frame（页面栈容器）** — 管理一组 Page 的导航栈。支持在栈内 Back / Forward，并配有转场动画。
+   - **不能直接复用 WinUI 的 `Frame`**：WinUI Frame 的导航参数是 `Any?` / WinRT 对象，无法承载 Swift 的 `Page` 协议类型，因此需要自实现一个等价的 RsUI.Frame（当前的 `PageTransitionHost` + `MainWindowTab`（currentPage + back/forward 栈）即其雏形，见 `MainWindowViewModel.swift`）。
+   - RsUI.Frame 内部维护当前 Page 的 header/content 渲染、单 parent 重绑定（见 [`UIElement Single-Parent Rule`](#uielement-single-parent-rule)），以及切换时的转场动画。
+
+3. **RsUI.Frame 可放入任意 WinUI 容器** — 例如 `TabView.TabViewItem.content`、`NavigationView.content`、`Grid` 等。它是与具体外壳解耦的可复用控件。
+
+4. **RsUI.TabView（组合 WinUI.TabView + RsUI.Frame）** — WinUI 标准 `TabView` 不符合当前 UI 设计需求（最典型的是：只有一个 Page 时无法自动隐藏 TabStrip）。因此需要一个 RsUI.TabView：内部由 `WinUI.TabView`（仅作为 tab strip）+ 多个 `RsUI.Frame`（每个 tab 一个）组成。
+   - 当 Page 数量 ≤ 1 时，自动隐藏 TabViewStrip，仅显示单个 Frame 内容；Page 数量 ≥ 2 时恢复 strip。
+   - 当前的实现雏形见 `MainWindow+Tabs.swift` / `MainWindow+TabFrames.swift`：`tabContentHost` 外置于 TabView 之外、以 visibility 切换 frame，正是为这一行为预留的。
+
+5. **MainWindow（标准 NavigationView 窗口）** — 一个标准的带 TitleBar + NavigationView 的窗口。其 NavigationView 的 Content 可以选择以下三种形态之一：
+   - **RsUI.Frame** — 单页面栈模式，无 tab。适用于简单模块窗口。
+   - **WinUI.TabView（内嵌 RsUI.Frame）** — 直接使用标准 TabView，每个 tab 内容为一个 RsUI.Frame。当标准 TabView 行为已满足需求时使用。
+   - **RsUI.TabView** — 组合形态，支持单 Page 自动隐藏 strip。当前 MainWindow 默认形态即此模式的内联实现。
+
+   重构目标：MainWindow 不再内联 Frame/TabView 的实现细节，而是按上述三种模式之一装配 Content，自身只负责 NavigationView、TitleBar、生命周期与窗口级偏好。
+
+> **重构方向提示**：上述 RsUI.Frame 与 RsUI.TabView 在当前代码中尚未作为独立类型存在，而是散落在 `MainWindow+Tabs.swift`、`MainWindow+TabFrames.swift`、`MainWindow+PageRendering.swift`、`MainWindowViewModel.swift` 等文件中。新增 / 重构 UI 时应朝“把它们抽成独立控件”的方向推进，每次抽取须净减少 MainWindow 的字段数与扩展文件数。
+
 ## File Organization
 
 ```
