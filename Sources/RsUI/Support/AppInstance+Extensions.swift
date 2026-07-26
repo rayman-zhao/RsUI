@@ -3,7 +3,7 @@ import RsFoundation
 import WinAppSDK
 
 extension AppInstance {
-    static func registerOrRedirect(
+    static func redirectOrRegister(
         for key: String, onActivated: @escaping @MainActor (Any?, AppActivationArguments?) -> Void
     ) {
         guard let instance = try? AppInstance.findOrRegisterForKey(key)

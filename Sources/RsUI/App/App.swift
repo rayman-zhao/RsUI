@@ -19,7 +19,7 @@ open class App: SwiftApplication {
         super.init()
 
         // AppInstance can be used start from app initilization.
-        AppInstance.registerOrRedirect(for: "\(group)/\(product)") { [weak self] _, args in
+        AppInstance.redirectOrRegister(for: "\(group)/\(product)") { [weak self] _, args in
             guard let self else { return }
             self.onActivated(args)
         }
