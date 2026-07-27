@@ -47,11 +47,11 @@ class PageFrame: Grid {
         )
     }
 
-    func goBack(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+    func goBack(_ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(slideEffect: .fromLeft)) {
         model.goBack(transitionInfoOverride)
     }
 
-    func goForward(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+    func goForward(_ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(slideEffect: .fromRight)) {
         model.goForward(transitionInfoOverride)
     }
 

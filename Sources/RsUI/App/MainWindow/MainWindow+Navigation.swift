@@ -69,13 +69,13 @@ extension MainWindow {
         renderSelectedTab()
     }
 
-    func goBack(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+    func goBack(_ transitionInfoOverride: NavigationTransitionInfo) {
         guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
         ctx.frame.goBack(transitionInfoOverride)
         renderSelectedTab()
     }
 
-    func goForward(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
+    func goForward(_ transitionInfoOverride: NavigationTransitionInfo) {
         guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
         ctx.frame.goForward(transitionInfoOverride)
         renderSelectedTab()
