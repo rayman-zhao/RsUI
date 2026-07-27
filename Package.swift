@@ -21,6 +21,10 @@ let package = Package(
             name: "SampleApp",
             targets: ["SampleApp"]
         ),
+        .executable(
+            name: "PageControlTests",
+            targets: ["PageControlTests"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/rayman-zhao/swift-cwinrt", branch: "main"),
@@ -47,7 +51,7 @@ let package = Package(
         .executableTarget(
             name: "SampleApp",
             dependencies: [
-                "RsUI",
+                "RsUI"
             ],
             path: "Samples",
             resources: [
@@ -55,10 +59,17 @@ let package = Package(
             ],
             linkerSettings: GUILinkerSettings,
         ),
+        .executableTarget(
+            name: "PageControlTests",
+            dependencies: [
+                "RsUI"
+            ],
+            path: "Tests/PageControlTests",
+        ),
         .testTarget(
             name: "RsUITests",
             dependencies: [
-                "RsUI",
+                "RsUI"
             ]
         ),
     ]

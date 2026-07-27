@@ -35,9 +35,7 @@ open class App: SwiftApplication {
             logo: App.context.iconAppxUri)
 
         let window: WinUI.Window
-        if launchHasFlag("--test-frame", args) {
-            window = PageFrameTestWindow()
-        } else if launchHasFlag("--new-window", args) {
+        if launchHasFlag("--new-window", args) {
             window = MainWindow(forceHomeOnLaunch: true)
         } else {
             window = MainWindow()
