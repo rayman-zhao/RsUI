@@ -4,14 +4,7 @@ import WinUI
 
 @testable import RsUI
 
-// MARK: - Test Page factory
-
-// 用 static 而非实例属性：init 里 super.init() 之前不能 dispatch self 方法，
-// static 计数器/调色板索引供静态 makePage 在构造期也能安全复用。本窗口全进程唯一。
-var counter = 0
 var colorCycle: UInt32 = 0
-// 复用按钮：同一个 Grid 实例反复被不同 Page 返回，验证 UIElement 单 parent 重绑定。
-let reusedGrid = Grid()
 
 enum HeaderKind { case string, uiElement, nilHeader }
 
@@ -19,9 +12,7 @@ enum HeaderKind { case string, uiElement, nilHeader }
 func makePage(
     name: String,
     headerKind: HeaderKind,
-    effect: SlideNavigationTransitionEffect,
-    reuseGrid: Bool,
-    reusedGrid: Grid
+    effect: SlideNavigationTransitionEffect
 ) -> RsUI.Page {
     // 循环颜色用肉眼分辨转场
     let palette: [(r: UInt8, g: UInt8, b: UInt8)] = [
@@ -30,22 +21,87 @@ func makePage(
     ]
     let rgb = palette[Int(colorCycle % UInt32(palette.count))]
     colorCycle += 1
-    let bg = SolidColorBrush(UWP.Color(a: 0xFF, r: rgb.r, g: rgb.g, b: rgb.b))
-    let reused: Grid? = reuseGrid ? reusedGrid : nil
+    let bg = SolidColorBrush(UWP.Color(a: 0xFF, r: rgb.r / 2, g: rgb.g / 2, b: rgb.b / 2))
 
     switch headerKind {
     case .string:
-        return StringHeaderPage(name: name, bg: bg, reusedGrid: reused)
+        return StringHeaderPage(name: name, bg: bg)
     case .uiElement:
-        return UIElementHeaderPage(name: name, bg: bg, reusedGrid: reused)
+        return UIElementHeaderPage(name: name, bg: bg)
     case .nilHeader:
-        return NilHeaderPage(name: name, bg: bg, reusedGrid: reused)
+        return NilHeaderPage(name: name, bg: bg)
+    }
+}
+
+private final class StringHeaderPage: RsUI.Page {
+    let name: String
+    let bg: SolidColorBrush
+
+    init(name: String, bg: SolidColorBrush) {
+        self.name = name
+        self.bg = bg
+    }
+
+    var url: URL { URL(string: "rs://test-frame/string/\(name)")! }
+    var title: String { name }
+    var header: Any? { "String Header — \(name)" }
+
+    var content: UIElement {
+        return make(name: name, subtitle: "header.kind = String", bg: bg)
+    }
+}
+
+private final class UIElementHeaderPage: RsUI.Page {
+    let name: String
+    let bg: SolidColorBrush
+
+    init(name: String, bg: SolidColorBrush) {
+        self.name = name
+        self.bg = bg
+    }
+
+    var url: URL { URL(string: "rs://test-frame/uielem/\(name)")! }
+    var title: String { name }
+
+    // Header 用 XAML 加载，避免命令式 StackPanel/TextBlock 长链。
+    var header: Any? {
+        let escapedName = escape(name)
+        let xaml = """
+            <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                        Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="UIElement Header" FontWeight="SemiBold"/>
+                <TextBlock Text="\(escapedName)" Opacity="0.7"/>
+            </StackPanel>
+            """
+        return (try? XamlReader.load(xaml)) as? UIElement
+    }
+
+    var content: UIElement {
+        return make(name: name, subtitle: "header.kind = UIElement", bg: bg)
+    }
+}
+
+private final class NilHeaderPage: RsUI.Page {
+    let name: String
+    let bg: SolidColorBrush
+
+    init(name: String, bg: SolidColorBrush) {
+        self.name = name
+        self.bg = bg
+    }
+
+    var url: URL { URL(string: "rs://test-frame/nil/\(name)")! }
+    var title: String { name }
+    var header: Any? { nil }
+
+    var content: UIElement {
+        return make(name: name, subtitle: "header.kind = nil (content fills)", bg: bg)
     }
 }
 
 /// 用 XAML 字符串构建内容卡片：彩色 Border + 内部 StackPanel + 两个 TextBlock。
 /// 颜色用 `#AARRGGBB` 十六进制字符串嵌入 XAML，避免运行时再设置画刷。
-func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElement {
+private func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElement {
     let escapedName = escape(name)
     let escapedSub = escape(subtitle)
     // SolidColorBrush 的 Color 在运行时才知道（来自调色板），故把 ARGB 拼成 XAML 颜色字面量。
@@ -63,111 +119,12 @@ func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElement {
             </Border>
         </Grid>
         """
-    if let view = (try? XamlReader.load(xaml)) as? UIElement { return view }
-
-    // 兜底：再走一次结果不带颜色的最小命令式构造，保证 page 始终有 content。
-    let grid = Grid()
-    let border = Border()
-    border.background = bg
-    border.margin = Thickness(left: 16, top: 0, right: 16, bottom: 16)
-    border.padding = Thickness(left: 24, top: 24, right: 24, bottom: 24)
-    let stack = StackPanel()
-    stack.spacing = 6
-    let title = TextBlock()
-    title.text = name
-    title.fontSize = 24
-    let sub = TextBlock()
-    sub.text = subtitle
-    sub.opacity = 0.7
-    stack.children.append(title)
-    stack.children.append(sub)
-    border.child = stack
-    grid.children.append(border)
-    return grid
+    return (try? XamlReader.load(xaml)) as! UIElement
 }
-
-private final class StringHeaderPage: RsUI.Page {
-    let name: String
-    let bg: SolidColorBrush
-    let reusedGrid: Grid?
-
-    init(name: String, bg: SolidColorBrush, reusedGrid: Grid?) {
-        self.name = name
-        self.bg = bg
-        self.reusedGrid = reusedGrid
-    }
-
-    var url: URL { URL(string: "rs://test-frame/string/\(name)")! }
-    var title: String { name }
-    var header: Any? { "String Header — \(name)" }
-
-    var content: UIElement {
-        if let reusedGrid { return reusedGrid }
-        return make(name: name, subtitle: "header.kind = String", bg: bg)
-    }
-}
-
-private final class UIElementHeaderPage: RsUI.Page {
-    let name: String
-    let bg: SolidColorBrush
-    let reusedGrid: Grid?
-
-    init(name: String, bg: SolidColorBrush, reusedGrid: Grid?) {
-        self.name = name
-        self.bg = bg
-        self.reusedGrid = reusedGrid
-    }
-
-    var url: URL { URL(string: "rs://test-frame/uielem/\(name)")! }
-    var title: String { name }
-
-    // Header 用 XAML 加载，避免命令式 StackPanel/TextBlock 长链。
-    var header: Any? {
-        let escapedName = escape(name)
-        let xaml = """
-            <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                        Orientation="Horizontal" Spacing="12">
-                <TextBlock Text="UIElement Header" FontWeight="SemiBold"/>
-                <TextBlock Text="\(escapedName)" Opacity="0.7"/>
-            </StackPanel>
-            """
-        if let panel = (try? XamlReader.load(xaml)) as? UIElement { return panel }
-        // 兜底：返回 nil header，与 NilHeaderPage 行为一致，避免 render 抛异常。
-        return nil
-    }
-
-    var content: UIElement {
-        if let reusedGrid { return reusedGrid }
-        return make(name: name, subtitle: "header.kind = UIElement", bg: bg)
-    }
-}
-
-private final class NilHeaderPage: RsUI.Page {
-    let name: String
-    let bg: SolidColorBrush
-    let reusedGrid: Grid?
-
-    init(name: String, bg: SolidColorBrush, reusedGrid: Grid?) {
-        self.name = name
-        self.bg = bg
-        self.reusedGrid = reusedGrid
-    }
-
-    var url: URL { URL(string: "rs://test-frame/nil/\(name)")! }
-    var title: String { name }
-    var header: Any? { nil }
-
-    var content: UIElement {
-        if let reusedGrid { return reusedGrid }
-        return make(name: name, subtitle: "header.kind = nil (content fills)", bg: bg)
-    }
-}
-
-// MARK: - Test page content factory (XAML-loaded)
 
 /// 把可能影响 XAML 解析的字串做最小转义。XamlReader.load 走 XML 解析器，
 /// `&`、`<`、`>`、`"` 必须转义；`#` 在属性值内合法无需处理。
-func escape(_ s: String) -> String {
+private func escape(_ s: String) -> String {
     // 拼接两段字面量构建 XML 实体，避免编辑器对完整实体的处理。
     let amp = "&" + "amp;"
     let lt = "&" + "lt;"

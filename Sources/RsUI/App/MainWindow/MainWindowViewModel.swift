@@ -20,6 +20,9 @@ class MainWindowTab {
         backwardPages + forwardPages + (currentPage.map { [$0] } ?? [])
     }
 
+    init() {
+    }
+
     init(page: Page, transitionInfoOverride: NavigationTransitionInfo? = nil) {
         currentPage = page
         navigationTransitionInfo = transitionInfoOverride

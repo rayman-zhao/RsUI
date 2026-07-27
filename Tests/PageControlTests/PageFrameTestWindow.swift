@@ -13,34 +13,33 @@ import WinUI
 ///     Row0: Border 工具栏（back / forward / 4 个加页按钮 + 计数显示）
 ///     Row1: PageFrame
 final class PageFrameTestWindow: Window {
+    private var counter = 0
+
     // 工具栏控件（XAML 加载后用 findName 取回）
     private var backButton: Button!
     private var forwardButton: Button!
     private var statusText: TextBlock!
-
     private var frame: PageFrame!
 
     override init() {
-        // 首页 Page：直接构造为 Frame 的初值，避免占位页进入 back 历史。
-        let homePage = makePage(
-            name: "Home", headerKind: .string, effect: .fromBottom, reuseGrid: false,
-            reusedGrid: reusedGrid
-        )
-        let model = MainWindowTab(
-            page: homePage, transitionInfoOverride: SuppressNavigationTransitionInfo())
+        let model = MainWindowTab()
         frame = PageFrame(model: model)
 
         super.init()
         title = "PageFrame Test"
         extendsContentIntoTitleBar = true
         appWindow.titleBar.preferredHeightOption = .tall
+        content = makeRoot()
 
-        let root = makeRoot()
-        content = root
+        Task { @MainActor in
+            let homePage = makePage(
+                name: "Home", headerKind: .string, effect: .fromBottom
+            )
 
-        // 首帧：作隐形建帧渲染（Suppress 已记入 model），随后 UI 由按钮驱动。
-        frame.renderCurrentPageIfNeeded()
-        updateStatus()
+            frame.navigate(to: homePage, maxHistoryPages: 30)
+            frame.renderCurrentPageIfNeeded()
+            updateStatus()
+        }
     }
 
     // MARK: - Root + Toolbar (XAML-loaded)
@@ -49,12 +48,7 @@ final class PageFrameTestWindow: Window {
     /// 命名控件、绑定 click。frame 因是项目内 Swift 类不在 XAML 词汇表内，
     /// 加载后挂到 Row1。
     private func makeRoot() -> FrameworkElement {
-        guard let root = (try? XamlReader.load(rootXAML)) as? Grid else {
-            // 加载失败时回退到最小可用的命令式构造（与 SettingsCard.swift 同款兜底风格）。
-            let fallback = Grid()
-            fallback.children.append(frame)
-            return fallback
-        }
+        let root = (try? XamlReader.load(rootXAML)) as! Grid
 
         // 命名控件：findName 在 XamlReader.Load 返回的根上调用即可访问该 namescope。
         backButton = (try? root.findName("BackButton")) as? Button
@@ -62,14 +56,13 @@ final class PageFrameTestWindow: Window {
         statusText = (try? root.findName("StatusText")) as? TextBlock
 
         // 事件处理必须在代码里绑（XAML 不能写 XAML-defined 事件处理器）。
-        backButton?.click.addHandler { [weak self] _, _ in self?.goBackTapped() }
-        forwardButton?.click.addHandler { [weak self] _, _ in self?.goForwardTapped() }
+        backButton.click.addHandler { [weak self] _, _ in self?.goBackTapped() }
+        forwardButton.click.addHandler { [weak self] _, _ in self?.goForwardTapped() }
 
         for (name, kind, reuse) in [
             ("AddStringButton", HeaderKind.string, false),
             ("AddUIElemButton", HeaderKind.uiElement, false),
             ("AddNilHdrButton", HeaderKind.nilHeader, false),
-            ("AddReuseButton", HeaderKind.string, true),
         ] as [(String, HeaderKind, Bool)] {
             guard let btn = (try? root.findName(name)) as? Button else { continue }
             btn.click.addHandler { [weak self] _, _ in
@@ -84,7 +77,8 @@ final class PageFrameTestWindow: Window {
         return root
     }
 
-    /// Root Grid + 工具栏。frame 由代码挂到 Row1，故该处仅留空承载位置。
+    /// Root Grid + 工具栏。frame 由代码挂到 Row1，故该处仅留空承载位
+    /// 置。
     private var rootXAML: String {
         """
         <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
@@ -120,10 +114,6 @@ final class PageFrameTestWindow: Window {
                             VerticalAlignment="Center">
                         <TextBlock Text="+NilHdr"/>
                     </Button>
-                    <Button Name="AddReuseButton" MinHeight="28" Padding="10,4,10,4"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="+Reuse"/>
-                    </Button>
                     <TextBlock Name="StatusText" Margin="12,0,12,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
@@ -135,14 +125,14 @@ final class PageFrameTestWindow: Window {
 
     private func goBackTapped() {
         guard frame.canGoBack else { return }
-        frame.goBack(PageFrameTestWindow.makeSlideTransition(effect: .fromLeft))
+        frame.goBack()
         frame.renderCurrentPageIfNeeded()
         updateStatus()
     }
 
     private func goForwardTapped() {
         guard frame.canGoForward else { return }
-        frame.goForward(PageFrameTestWindow.makeSlideTransition(effect: .fromRight))
+        frame.goForward()
         frame.renderCurrentPageIfNeeded()
         updateStatus()
     }
@@ -159,12 +149,11 @@ final class PageFrameTestWindow: Window {
         default: effect = .fromLeft
         }
         let page = makePage(
-            name: name, headerKind: headerKind, effect: effect, reuseGrid: reuseGrid,
-            reusedGrid: reusedGrid
+            name: name, headerKind: headerKind, effect: effect
         )
         frame.navigate(
             to: page,
-            transitionInfoOverride: PageFrameTestWindow.makeSlideTransition(effect: effect),
+            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect),
             maxHistoryPages: 64
         )
         frame.renderCurrentPageIfNeeded()
@@ -177,13 +166,5 @@ final class PageFrameTestWindow: Window {
             "current: \(current) | back: \(frame.model.backwardPages.count) | fwd: \(frame.model.forwardPages.count)"
         backButton?.isEnabled = frame.canGoBack
         forwardButton?.isEnabled = frame.canGoForward
-    }
-
-    private static func makeSlideTransition(effect: SlideNavigationTransitionEffect)
-        -> NavigationTransitionInfo
-    {
-        let transition = SlideNavigationTransitionInfo()
-        transition.effect = effect
-        return transition
     }
 }
