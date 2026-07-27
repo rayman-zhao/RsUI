@@ -61,7 +61,7 @@ extension MainWindow {
             addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
             return
         }
-        ctx.model.navigate(
+        ctx.frame.navigate(
             to: page,
             transitionInfoOverride: transitionInfoOverride,
             maxHistoryPages: viewModel.routePreferences.maxHistoryPages
@@ -70,14 +70,14 @@ extension MainWindow {
     }
 
     func goBack(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
-        guard let model = selectedTabModel, !model.backwardPages.isEmpty else { return }
-        model.goBack(transitionInfoOverride)
+        guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
+        ctx.frame.goBack(transitionInfoOverride)
         renderSelectedTab()
     }
 
     func goForward(_ transitionInfoOverride: NavigationTransitionInfo? = nil) {
-        guard let model = selectedTabModel, !model.forwardPages.isEmpty else { return }
-        model.goForward(transitionInfoOverride)
+        guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
+        ctx.frame.goForward(transitionInfoOverride)
         renderSelectedTab()
     }
 

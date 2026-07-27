@@ -10,12 +10,11 @@ import WinUI
 final class TabContext {
     let model: MainWindowTab
     let item: TabViewItem
-    let frame: PageTransitionHost
-    var pageViewParts = PageViewParts()
+    let frame: PageFrame
     var title: String?
     var isClosable: Bool?
 
-    init(model: MainWindowTab, item: TabViewItem, frame: PageTransitionHost) {
+    init(model: MainWindowTab, item: TabViewItem, frame: PageFrame) {
         self.model = model
         self.item = item
         self.frame = frame
@@ -86,11 +85,7 @@ extension MainWindow {
             } else {
                 effectiveTransitionInfo = ctx.model.navigationTransitionInfo
             }
-            frame.transition(
-                to: makePageView(page, into: ctx),
-                transitionInfo: effectiveTransitionInfo
-            )
-            ctx.model.needsRender = false
+            frame.renderCurrentPageIfNeeded(transitionInfoOverride: effectiveTransitionInfo)
         }
 
         syncNavigationSelection(for: page.url)
@@ -115,6 +110,12 @@ extension MainWindow {
         }
     }
 
+    // 迁自 MainWindow+PageRendering.swift：strip 标题的本地化文案，属 TabView
+    // 职责，故留在此文件而非 PageFrame。
+    private func title(for page: Page?) -> String {
+        page?.title ?? MainWindow.tr("New Tab")
+    }
+
     // Closable iff more than one tab remains; the lone tab can't be closed.
     private func updateAllTabClosableStates() {
         let canClose = tabCount > 1
@@ -131,7 +132,7 @@ extension MainWindow {
         item.name = UUID().uuidString
         item.minWidth = 100
 
-        let frame = PageTransitionHost()
+        let frame = PageFrame(model: model)
         frame.visibility = .collapsed
         tabContentHost.children.append(frame)
 

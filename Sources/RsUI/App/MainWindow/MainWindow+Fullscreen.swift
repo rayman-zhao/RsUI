@@ -8,8 +8,8 @@ import WindowsFoundation
 ///
 /// 全屏显示实现方法:
 ///     OS 级: appWindow.setPresenter(.fullScreen), 隐藏 Windows TaskBar。
-///     应用级 reparent: 把当前选中 tab 的 PageTransitionHost 从 tabContentHost 重新挂载到 
-///     root grid 上一个跨行的 overlay。同时把 titleBar 和 navWrapper (含 NavigationView + 
+///     应用级 reparent: 把当前选中 tab 的 PageFrame 从 tabContentHost 重新挂载到
+///     root grid 上一个跨行的 overlay。同时把 titleBar 和 navWrapper (含 NavigationView +
 ///     TabView strip + Splitter)整体 collapsed。
 /// 全屏退出实现方法：
 ///     退出时反向操作。如果进入前 window 是 maximized, 退出时会还原 maximize 状态。

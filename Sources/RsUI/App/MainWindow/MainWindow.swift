@@ -74,7 +74,7 @@ class MainWindow: Window {
     // 全屏时挂到 root 的临时 overlay，退出时需摘除
     var fullscreenOverlay: Border?
     // reparent 出去的 frame，退出时挂回 tabContentHost
-    var fullscreenStashedFrame: PageTransitionHost?
+    var fullscreenStashedFrame: PageFrame?
     var isInTabFullscreen = false
     // setPresenter(.overlapped) 退出时不还原 maximize
     var preFullscreenMaximized = false

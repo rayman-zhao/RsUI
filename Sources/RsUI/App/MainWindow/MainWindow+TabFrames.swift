@@ -5,7 +5,7 @@ extension MainWindow {
     // Makes the selected tab's frame visible and collapses the rest. Frames are
     // created with their TabContext (see makeTab) and torn down in removeTab, so
     // there is no lazy creation or separate GC pass here anymore.
-    func showFrame(for ctx: TabContext) -> PageTransitionHost {
+    func showFrame(for ctx: TabContext) -> PageFrame {
         let name = ctx.item.name
         guard visibleTabFrameName != name else {
             return ctx.frame
@@ -25,7 +25,7 @@ extension MainWindow {
         visibleTabFrameName = nil
     }
 
-    func removeFrame(_ frame: PageTransitionHost) {
+    func removeFrame(_ frame: PageFrame) {
         var idx: UInt32 = 0
         if tabContentHost.children.indexOf(frame, &idx) {
             tabContentHost.children.removeAt(idx)

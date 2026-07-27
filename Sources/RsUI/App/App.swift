@@ -34,9 +34,15 @@ open class App: SwiftApplication {
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
             logo: App.context.iconAppxUri)
 
-        let mainWindow =
-            launchHasFlag("--new-window", args) ? MainWindow(forceHomeOnLaunch: true) : MainWindow()
-        try! mainWindow.activate()
+        let window: WinUI.Window
+        if launchHasFlag("--test-frame", args) {
+            window = PageFrameTestWindow()
+        } else if launchHasFlag("--new-window", args) {
+            window = MainWindow(forceHomeOnLaunch: true)
+        } else {
+            window = MainWindow()
+        }
+        try! window.activate()
     }
 
     open func onActivated(_ args: AppActivationArguments?) {
