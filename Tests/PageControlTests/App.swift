@@ -12,5 +12,8 @@ final class App: SwiftApplication {
 
         let window2 = TabViewPageFrameTestWindow()
         try! window2.activate()
+
+        let window3 = PageTabViewTestWindow()
+        try! window3.activate()
     }
 }

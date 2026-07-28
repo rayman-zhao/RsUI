@@ -10,7 +10,9 @@ import WinUI
 /// 与回调驱动。首帧动画抑制也由调用方（`renderSelectedTab`）通过
 /// `transitionInfoOverride` 传入，本类不持有窗口级状态。
 class PageFrame: Grid {
-    let model: MainWindowTab
+    // `var` 而非 `let`：支持单 PageFrame 在多个 tab 间复用时通过 `rebind(to:)`
+    // 重设 model；切 tab 后旧 model 仍在各自 TabContext 中独立存活（不跨 tab 共享）。
+    var model: MainWindowTab
     private let transitionHost: PageTransitionHost
     private var pageViewParts = PageViewParts()
 
@@ -70,6 +72,25 @@ class PageFrame: Grid {
     /// `SuppressNavigationTransitionInfo` 避免动画。供 tab 跨窗口迁移后
     /// （`onWindowContextChanged` 改写 page 内容后）调用。
     func rerender() {
+        model.needsRender = true
+        renderCurrentPage(transitionInfo: SuppressNavigationTransitionInfo())
+    }
+
+    /// 重绑 model 并即时渲染当前页（Suppress 转场）。用于单 `PageFrame` 在多 tab
+    /// 间共享的形态（`PageTabView`）：切 tab 时把共享 frame 的 model 重设到目标
+    /// tab 的 `MainWindowTab`，并立刻渲染其 currentPage。
+    ///
+    /// 必须一步完成"换 model + 渲染"：否则 `pageViewParts` 仍指向旧 tab 的
+    /// `contentBorder`/`headerBorder`（包装着旧 tab 的 `page.content`），后续渲染
+    /// 才在 `makePageView` 开头清掉它们，中间若被取消会留下悬空 parent 引用。
+    /// 这里强制立即清既安全又显式，与 `rerender()` 策略一致。
+    ///
+    /// 切换 transition 恒取 `SuppressNavigationTransitionInfo`：tab 切换是"切 View"
+    /// 而非栈内 Back/Forward，跨 tab 的滑动动画只会串扰（旧 content 与新 content
+    /// 可能跨 tab 不连续），用即时切换最稳。tab 内 `navigate/goBack/goForward`
+    /// 仍各自走 `SlideNavigationTransitionInfo`，不受影响。
+    func rebind(to newModel: MainWindowTab) {
+        model = newModel
         model.needsRender = true
         renderCurrentPage(transitionInfo: SuppressNavigationTransitionInfo())
     }
