@@ -111,10 +111,10 @@ class MainWindow: RestorableWindow {
     }
 
     lazy var backButton: Button = MainWindow.makeNavButton(glyph: "\u{E72B}") { [weak self] in
-        self?.goBack(MainWindow.makeSlideTransition(effect: .fromLeft))
+        self?.goBack()
     }
     lazy var forwardButton: Button = MainWindow.makeNavButton(glyph: "\u{E72A}") { [weak self] in
-        self?.goForward(MainWindow.makeSlideTransition(effect: .fromRight))
+        self?.goForward()
     }
     lazy var closeOtherTabsButton: Button = {
         let icon = FontIcon()
@@ -312,13 +312,5 @@ class MainWindow: RestorableWindow {
         setupWindow()
         setupContent()
         startObserving()
-    }
-
-    private static func makeSlideTransition(effect: SlideNavigationTransitionEffect)
-        -> NavigationTransitionInfo
-    {
-        let transition = SlideNavigationTransitionInfo()
-        transition.effect = effect
-        return transition
     }
 }
