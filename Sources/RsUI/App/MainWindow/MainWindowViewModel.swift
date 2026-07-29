@@ -73,18 +73,15 @@ class MainWindowTab {
 // strip is the source of truth), so this is now only persisted preferences.
 @Observable
 class MainWindowViewModel {
-    var windowPosition: WindowPosition
     var windowLayout: WindowLayout
     var routePreferences: RoutePreferences
 
     init() {
-        windowPosition = App.context.preferences.load(for: WindowPosition.self)
         windowLayout = App.context.preferences.load(for: WindowLayout.self)
         routePreferences = App.context.preferences.load(for: RoutePreferences.self)
     }
 
     deinit {
-        App.context.preferences.save(windowPosition)
         App.context.preferences.save(windowLayout)
         App.context.preferences.save(routePreferences)
     }

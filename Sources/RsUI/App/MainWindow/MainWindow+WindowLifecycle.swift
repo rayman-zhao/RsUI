@@ -5,9 +5,6 @@ import WinUI
 
 extension MainWindow {
     func setupWindow() {
-        self.sizeChanged.addHandler { [weak self] _, _ in
-            self?.trackWindowSize()
-        }
         self.closed.addHandler { [weak self] _, _ in
             guard let self else { return }
 
@@ -28,15 +25,12 @@ extension MainWindow {
             self.envObservationTask?.cancel()
             self.envObservationTask = nil
 
-            // TODO: appWindow.changed事件不工作，此处窗口最大化时记录有缺陷。其实也可以不保存，恢复窗口在中间即可。
-            self.trackWindowPosition()
             if !self.suppressLayoutPersistence {
                 self.viewModel.windowLayout.navigationViewPaneOpen = self.navigationView.isPaneOpen
                 self.viewModel.windowLayout.navigationViewOpenPaneLength = self.navigationView.openPaneLength
             }
             self.viewModel = nil
         }
-        restoreWindowRect()
     }
 
 
@@ -125,42 +119,4 @@ extension MainWindow {
             navigationView.selectFirstItem()
         }
     }
-    
-    private func restoreWindowRect() {
-        // A tear-out receiver is positioned by the OS as it follows the cursor —
-        // don't restore the saved main-window rect over it.
-        guard !isTearOutWindow else { return }
-        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
-        else { return }
-
-        let maximized = viewModel.windowPosition.isMaximized //moveAndResize will cause pref changed in event, so need to reserve here
-        try? hwnd.moveAndResize(viewModel.windowPosition.windowRect)
-        if maximized {
-            try? presenter.maximize()
-        }
-    }
-
-    private func trackWindowSize() {
-        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter else { return }
-
-        if presenter.state == .restored {
-            viewModel.windowPosition.windowWidth = Int(hwnd.size.width)
-            viewModel.windowPosition.windowHeight = Int(hwnd.size.height)
-            viewModel.windowPosition.isMaximized = false
-        } else if presenter.state == .maximized {
-            viewModel.windowPosition.isMaximized = true
-        }
-    }
-
-    private func trackWindowPosition() {
-        guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
-        else { return }
-
-        if presenter.state == .restored {
-            viewModel.windowPosition.windowX = Int(hwnd.position.x)
-            viewModel.windowPosition.windowY = Int(hwnd.position.y)
-        }
-    }
-
-    // MARK: - Splitter Methods
 }

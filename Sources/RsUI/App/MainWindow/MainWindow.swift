@@ -5,7 +5,7 @@ import WinAppSDK
 import WinUI
 import WindowsFoundation
 
-class MainWindow: MicaWindow {
+class MainWindow: RestorableWindow {
     // MARK: - 属性
     var viewModel: MainWindowViewModel! = MainWindowViewModel()
     var isSyncingSelection = false
@@ -34,7 +34,6 @@ class MainWindow: MicaWindow {
     // comes up with no tab (startup navigation is skipped) and waits for
     // tabTearOutRequested to inject the torn tab; it also skips position restore.
     var awaitTransferredTab: Bool = false
-    var isTearOutWindow: Bool = false
 
     // Native tear-out gate moved to PageTabView.tabTearOutEnabled (the single
     // place controlling `canTearOutTabs`). The cross-window tear-out handlers /
@@ -279,7 +278,7 @@ class MainWindow: MicaWindow {
     }()
 
     // MARK: - 初始化
-    override init() {
+    init() {
         super.init()
         bootstrap()
     }
@@ -302,9 +301,10 @@ class MainWindow: MicaWindow {
     // Empty receiver window for a tear-out. Comes up with no tab and skips
     // position restore; the torn tab is injected by tabTearOutRequested.
     init(tearOutReceiver: Bool) {
-        super.init()
+        // A tear-out receiver is positioned by the OS as it follows the cursor —
+        // don't restore the saved main-window rect over it.
+        super.init(!tearOutReceiver)
         self.awaitTransferredTab = tearOutReceiver
-        self.isTearOutWindow = tearOutReceiver
         bootstrap()
     }
 
