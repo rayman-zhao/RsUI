@@ -5,7 +5,7 @@ import WinAppSDK
 import WinUI
 import WindowsFoundation
 
-class MainWindow: Window {
+class MainWindow: MicaWindow {
     // MARK: - 属性
     var viewModel: MainWindowViewModel! = MainWindowViewModel()
     var isSyncingSelection = false

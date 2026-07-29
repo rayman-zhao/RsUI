@@ -5,14 +5,6 @@ import WinUI
 
 extension MainWindow {
     func setupWindow() {
-        self.extendsContentIntoTitleBar = true
-        self.appWindow.titleBar.preferredHeightOption = .tall
-                
-        // 设置 Mica 背景
-        let micaBackdrop = MicaBackdrop()
-        micaBackdrop.kind = .base
-        self.systemBackdrop = micaBackdrop
-
         self.sizeChanged.addHandler { [weak self] _, _ in
             self?.trackWindowSize()
         }
