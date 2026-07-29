@@ -5,31 +5,8 @@ import WindowsFoundation
 
 extension MainWindow {
     func setupContent() {
-        let root = Grid()
-
-        // 设置行定义
-        let titleRowDef = RowDefinition()
-        titleRowDef.height = GridLength(value: 1, gridUnitType: .auto)
-        root.rowDefinitions.append(titleRowDef)
-
-        let contentRowDef = RowDefinition()
-        contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
-        root.rowDefinitions.append(contentRowDef)
-
-        root.children.append(titleBar)
-        try? Grid.setRow(titleBar, 0)
-        try? setTitleBar(titleBar)
-
         configureNavigationViewSelection()
         configureTabViewEvents()
-        configurePaneEvents()
-
-        let navWrapper = makeNavigationWrapper()
-        self.navWrapper = navWrapper
-        root.children.append(navWrapper)
-        try? Grid.setRow(navWrapper, 1)
-
-        self.content = root
 
         installFullscreenEscapeAccelerator(on: root)
     }
@@ -142,23 +119,5 @@ extension MainWindow {
             }
             MainWindow.pendingTearOut = nil
         }
-    }
-
-    private func configurePaneEvents() {
-        navigationView.paneClosed.addHandler { [weak self] _, _ in
-            self?.splitterBorder.visibility = .collapsed
-        }
-        navigationView.paneOpened.addHandler { [weak self] _, _ in
-            self?.splitterBorder.visibility = .visible
-        }
-    }
-
-    private func makeNavigationWrapper() -> Grid {
-        let navWrapper = Grid()
-        navWrapper.children.append(navigationView)
-        splitterBorder = makeSplitterBorder()
-        navWrapper.children.append(splitterBorder)
-        try? Canvas.setZIndex(splitterBorder, 10)
-        return navWrapper
     }
 }

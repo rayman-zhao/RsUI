@@ -69,18 +69,6 @@ extension MainWindow {
         renderSelectedTab()
     }
 
-    func goBack() {
-        guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
-        ctx.frame.goBack()
-        renderSelectedTab()
-    }
-
-    func goForward() {
-        guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
-        ctx.frame.goForward()
-        renderSelectedTab()
-    }
-
     @discardableResult
     private func performNavigate(
         to url: URL,

@@ -25,10 +25,6 @@ extension MainWindow {
             self.envObservationTask?.cancel()
             self.envObservationTask = nil
 
-            if !self.suppressLayoutPersistence {
-                self.viewModel.windowLayout.navigationViewPaneOpen = self.navigationView.isPaneOpen
-                self.viewModel.windowLayout.navigationViewOpenPaneLength = self.navigationView.openPaneLength
-            }
             self.viewModel = nil
         }
     }
