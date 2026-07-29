@@ -39,7 +39,7 @@ public final class AppContext {
     internal private(set) var modules: [any Module] = []
 
     init() {
-        let group = "Swift Works"
+        let group = "SwiftWorks"
         let product = "RsUI"
 
         groupName = group

@@ -43,28 +43,28 @@ App (entry point, lifecycle, single-instance, module init)
 
 ## Core UI Composition Model
 
-RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page → Frame → TabView → MainWindow。当前代码中的 `MainWindow+*` 扩展文件混合承担了 Frame/TabView 的职责，长期重构方向是将这些职责抽成独立的 RsUI 控件，使 MainWindow 退化为纯粹的 NavigationView 容器。
+RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page → Frame → TabView → MainWindow。
 
 1. **Page（基本页面单元）** — 见 [`Sources/RsUI/Models/Page.swift`](./Sources/RsUI/Models/Page.swift)。每个 Page 的 UI 由 `header` 和 `content`（`UIElement`）两部分构成，加上 `url`、`title` 元信息。Page 是框架内最小的可导航、可渲染单元。
 
-2. **RsUI.Frame（页面栈容器）** — 管理一组 Page 的导航栈。支持在栈内 Back / Forward，并配有转场动画。
-   - **不能直接复用 WinUI 的 `Frame`**：WinUI Frame 的导航参数是 `Any?` / WinRT 对象，无法承载 Swift 的 `Page` 协议类型，因此需要自实现一个等价的 RsUI.Frame（当前的 `PageTransitionHost` + `MainWindowTab`（currentPage + back/forward 栈）即其雏形，见 `MainWindowViewModel.swift`）。
-   - RsUI.Frame 内部维护当前 Page 的 header/content 渲染、单 parent 重绑定（见 [`UIElement Single-Parent Rule`](#uielement-single-parent-rule)），以及切换时的转场动画。
+2. **`PageFrame`（页面栈容器，即 RsUI.Frame）** — 见 [`Sources/RsUI/App/PageControls/PageFrame.swift`](./Sources/RsUI/App/PageControls/PageFrame.swift)。管理一组 Page 的导航栈，支持在栈内 Back / Forward，并配有转场动画；内部维护当前 Page 的 header/content 渲染、单 parent 重绑定（见 [`UIElement Single-Parent Rule`](#uielement-single-parent-rule)）与转场动画。
+   - **不能直接复用 WinUI 的 `Frame`**：WinUI Frame 的导航参数是 `Any?` / WinRT 对象，无法承载 Swift 的 `Page` 协议类型，因此自实现一个等价的 `PageFrame`（`PageTransitionHost` + `MainWindowTab`（currentPage + back/forward 栈），见 `MainWindowViewModel.swift`）。
+   - `PageFrame` 是 `Grid` 子类，可放入任意 WinUI 容器（`TabView.TabViewItem.content`、`NavigationView.content`、`Grid` 等），与具体外壳解耦。
 
-3. **RsUI.Frame 可放入任意 WinUI 容器** — 例如 `TabView.TabViewItem.content`、`NavigationView.content`、`Grid` 等。它是与具体外壳解耦的可复用控件。
+3. **`PageTabView`（组合 WinUI.TabView + 共享 PageFrame，即 RsUI.TabView）** — 见 [`Sources/RsUI/App/PageControls/PageTabView.swift`](./Sources/RsUI/App/PageControls/PageTabView.swift)。WinUI 标准 `TabView` 不符合当前 UI 设计需求（最典型的是：只有一个 Page 时无法自动隐藏 TabStrip），故封装之：内部为 `WinUI.TabView`（仅作 tab strip）+ 一个共享的 `PageFrame`，切 tab 时用 `PageFrame.rebind(to:)` 把共享 frame 的 model 重设到目标 `MainWindowTab`。
+   - 当 Page 数量 ≤ 1 时整体隐藏 `TabView`（内容靠共享 frame 在 strip 下方显示），单 tab 窗口看起来就是一个普通 `PageFrame`；Page 数量 ≥ 2 时恢复 strip。
+   - 原生 tab tear-out 由 `PageTabView.tabTearOutEnabled` 单点控制（见 [`Tab Tear-Out Currently Disabled`](#tab-tear-out-currently-disabled)）。
 
-4. **RsUI.TabView（组合 WinUI.TabView + RsUI.Frame）** — WinUI 标准 `TabView` 不符合当前 UI 设计需求（最典型的是：只有一个 Page 时无法自动隐藏 TabStrip）。因此需要一个 RsUI.TabView：内部由 `WinUI.TabView`（仅作为 tab strip）+ 多个 `RsUI.Frame`（每个 tab 一个）组成。
-   - 当 Page 数量 ≤ 1 时，自动隐藏 TabViewStrip，仅显示单个 Frame 内容；Page 数量 ≥ 2 时恢复 strip。
-   - 当前的实现雏形见 `MainWindow+Tabs.swift` / `MainWindow+TabFrames.swift`：`tabContentHost` 外置于 TabView 之外、以 visibility 切换 frame，正是为这一行为预留的。
+4. **`PageControl` 协议（`PageFrame` / `PageTabView` 的公共驱动接口）** — 见 [`Sources/RsUI/App/PageControls/PageControl.swift`](./Sources/RsUI/App/PageControls/PageControl.swift)。两者「mutate 后渲染」的语义原本不同（`PageFrame` 的 `navigate/goBack/goForward` 只改 model、由调用方再触发 render；`PageTabView` 的 `*Current` 已内含 render），协议把它们统一到「mutate + 即时渲染」。宿主窗口可持有一个 `any PageControl` 多态驱动，无需关心渲染时机差异。
+   - 协议命令用 `pushPage` 而非 `navigate`，避免与 `PageFrame` 本类 `navigate(...)` 的「仅 mutate」方法撞签名。`goBack()` / `goForward()` 用默认 `fromLeft` / `fromRight` 转场。
+   - 协议为 `internal`：`MainWindowTab` 是 internal 类型，故 `PageControl` 暂不能 public；当前仅同模块内与 `@testable import` 的测试可执行文件使用。若未来需跨模块暴露，须先把 `MainWindowTab` 提为 public。
 
-5. **MainWindow（标准 NavigationView 窗口）** — 一个标准的带 TitleBar + NavigationView 的窗口。其 NavigationView 的 Content 可以选择以下三种形态之一：
-   - **RsUI.Frame** — 单页面栈模式，无 tab。适用于简单模块窗口。
-   - **WinUI.TabView（内嵌 RsUI.Frame）** — 直接使用标准 TabView，每个 tab 内容为一个 RsUI.Frame。当标准 TabView 行为已满足需求时使用。
-   - **RsUI.TabView** — 组合形态，支持单 Page 自动隐藏 strip。当前 MainWindow 默认形态即此模式的内联实现。
+5. **MainWindow（标准 NavigationView 窗口）** — 带 TitleBar + NavigationView 的窗口。其 Content 可装配为以下三种形态之一：
+   - **`PageFrame`** — 单页面栈模式，无 tab。适用于简单模块窗口。
+   - **WinUI.TabView（每个 tab 内嵌一个 `PageFrame`）** — 即 frame-per-tab：一个 tab 一个独立 `PageFrame`（见 `MainWindow+Tabs.swift` 的 `TabContext.frame` 与 `MainWindow+TabFrames.swift` 的 `tabContentHost` 外置 + visibility 切换）。当前 MainWindow 用的就是这个形态**内联实现**，尚未装配 `PageTabView`。
+   - **`PageTabView`** — 共享单 frame 形态，单 Page 自动隐藏 strip。控件本身已完成并经 `Tests/PageControlTests/` 验证，但 MainWindow 尚未切换过去。
 
-   重构目标：MainWindow 不再内联 Frame/TabView 的实现细节，而是按上述三种模式之一装配 Content，自身只负责 NavigationView、TitleBar、生命周期与窗口级偏好。
-
-> **重构方向提示**：上述 RsUI.Frame 与 RsUI.TabView 在当前代码中尚未作为独立类型存在，而是散落在 `MainWindow+Tabs.swift`、`MainWindow+TabFrames.swift`、`MainWindow+PageRendering.swift`、`MainWindowViewModel.swift` 等文件中。新增 / 重构 UI 时应朝“把它们抽成独立控件”的方向推进，每次抽取须净减少 MainWindow 的字段数与扩展文件数。
+   重构目标：MainWindow 不再内联 Frame/TabView 的实现细节，而是按上述三种模式之一装配 Content，自身只负责 NavigationView、TitleBar、生命周期与窗口级偏好。当前已抽出 `PageFrame` / `PageTabView` / `PageControl`（shell 职责与渲染已分离，`MainWindow+PageRendering.swift` 已并入 `PageFrame`），下一步是把 MainWindow 从 frame-per-tab 内联实现改为直接装配 `PageTabView`。
 
 ## File Organization
 
@@ -72,34 +72,44 @@ RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page →
 Sources/RsUI/
   App/
     App.swift                         — Entry point, inherits SwiftApplication
-    Launch/                           — Single-instance coordination, taskbar jump list
     MainWindow/                       — Main window (split into extension files)
       MainWindow.swift                — Core properties, lazy UI controls, init
       MainWindow+Content.swift        — Layout assembly, event binding
       MainWindow+Navigation.swift     — Navigation logic, URL route resolution
-      MainWindow+Tabs.swift           — TabContext definition, tab CRUD
+      MainWindow+Tabs.swift           — TabContext definition, tab CRUD (frame-per-tab)
       MainWindow+TabInteraction.swift — Close / tear-out / detach tabs
-      MainWindow+TabFrames.swift      — Tab content frame visibility
-      MainWindow+PageRendering.swift  — Page rendering, header layout
-      MainWindow+Splitter.swift       — NavigationView drag splitter
+      MainWindow+TabFrames.swift      — Tab content frame visibility (tabContentHost)
       MainWindow+Fullscreen.swift     — Tab fullscreen mode
+      MainWindow+Splitter.swift       — NavigationView drag splitter
       MainWindow+WindowLifecycle.swift — Window lifecycle, appearance switching
       MainWindowModels.swift          — WindowPosition / WindowLayout / RoutePreferences
       MainWindowViewModel.swift       — MainWindowTab (nav history), MainWindowViewModel
-    Settings/                         — Built-in settings page
+    PageControls/                     — Extracted RsUI.Frame / RsUI.TabView (see Core UI Composition Model)
+      PageControl.swift               — Shared "mutate + render" protocol for PageFrame / PageTabView
+      PageFrame.swift                 — Page-stack container (= RsUI.Frame); owns PageTransitionHost + page view layout
+      PageTabView.swift               — WinUI.TabView strip + shared PageFrame (= RsUI.TabView); single-frame strip auto-hide
+      PageTransitionHost.swift        — Page transition animation container
+    Settings/
+      SettingsPage.swift              — Built-in settings page
   Controls/                           — Reusable UI controls
     SettingsCard.swift / SettingsExpander.swift / SettingsGroup.swift — Fluent-style settings controls
     SettingsBrushes.swift             — Theme-aware brush factory functions
-    PageTransitionHost.swift          — Page transition animation container
+  Support/                            — WinRT/WinUI projection helpers (extensions on projected types)
+    AppInstance+Extensions.swift      — Single-instance coordination extension
+    JumpList+Extensions.swift         — Taskbar jump list extension
+    NavigationTransitionInfo+Extensions.swift — Slide/suppress transition factories
     NavigationView+Extensions.swift   — NavigationView helpers
-    NavigationViewItem+Extensions.swift — NavigationViewItem builder helpers
+    ProgressBar+Extensions.swift / ProgressRing+Extensions.swift / RuntimeInfo+Extensions.swift / TabView+Extentions.swift — misc helpers
   Models/                             — Data models
     AppContext.swift                  — Global singleton (theme/language/modules/preferences)
     AppTheme.swift / AppLanguage.swift — Theme and language enums
     Module.swift / Page.swift         — Core protocols
     WindowContext.swift               — Window context (public API)
 Samples/SampleApp/                    — Demo app showing framework usage
-Tests/RsUITests/                      — Unit tests
+Tests/
+  RsUITests/                          — Unit tests
+  PageControlTests/                   — GUI test host (executable target): PageControlTestWindow (PageTabView shared-frame),
+                                        TabViewPageFrameTestWindow (frame-per-tab), MockPages
 ```
 
 ## Coding Conventions
@@ -154,7 +164,7 @@ GUI callback and template-method naming follows four distinct rules depending on
 - Swift exceptions thrown inside COM callback paths do NOT propagate correctly to the main thread. The process won't terminate but UI operations will fail silently.
 
 ### UIElement Single-Parent Rule
-- A `UIElement` can only have one visual parent. Before reparenting, you MUST call `detachFromVisualParent()` to remove it from its current parent. See `MainWindow+PageRendering.swift`.
+- A `UIElement` can only have one visual parent. Before reparenting, you MUST remove it from its current parent (`detachFromVisualParent`). The canonical implementation now lives in `PageFrame` (`safelyAssignChild` + `detachFromVisualParent`); `MainWindow` carries the older reparent-on-fullscreen path (see `MainWindow+Fullscreen.swift`).
 
 ### Lazy Var Initialization Order
 - `navigationView` and other lazy vars depend on `viewModel`. They must be initialized AFTER `viewModel` is assigned (before `setupContent()` triggers them).
@@ -163,7 +173,7 @@ GUI callback and template-method naming follows four distinct rules depending on
 - `AppInstanceCoordinator` ensures only one process runs. Taskbar "New Window" redirects activation to the primary instance.
 
 ### Tab Tear-Out Currently Disabled
-- `tabTearOutEnabled = false` due to two unfixed WinUI bugs (see issue links in `MainWindow.swift`).
+- Native WinUI tab tear-out is gated by `PageTabView.tabTearOutEnabled = false` (the single source of truth — `MainWindow` mirrors it onto its strip via `tabs.canTearOutTabs = PageTabView.tabTearOutEnabled`). Disabled due to two unfixed WinUI bugs (issue links in `PageTabView.swift`). The cross-window tear-out handlers / pending state still live in `MainWindow` (`configureTabTearOutEvents`) and remain gated on the same flag.
 
 ### C# Documentation Requires Conversion
 - Microsoft's official WinUI docs, samples, and Stack Overflow answers are ALL in C# / XAML. They cannot be used directly in swift-winrt. Key conversions:
