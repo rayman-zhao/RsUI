@@ -104,6 +104,7 @@ Tests/RsUITests/                      — Unit tests
 
 ## Coding Conventions
 
+- **Line Break**: Always use LF (Unix).
 - **Comments**: The package is still unstable, so do not require documentation comments (`///`) on public declarations. Do not flag missing doc comments as issues in reviews; focus on naming, labels, logic, and API shape instead. Internal comments (`//`) for non-obvious code are still welcome.
 - **Code sectioning**: `// MARK: -` comments for logical sections
 - **Projected APIs**: Use the projected APIs in packages of swift-foundation, swift-uwp, swift-windowsappsdk, swift-winui and swift-webview2 for Windows features.

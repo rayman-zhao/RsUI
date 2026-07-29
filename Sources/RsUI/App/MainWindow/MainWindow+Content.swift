@@ -1,7 +1,7 @@
 import Foundation
-import WindowsFoundation
 import UWP
 import WinUI
+import WindowsFoundation
 
 extension MainWindow {
     func setupContent() {
@@ -11,11 +11,11 @@ extension MainWindow {
         let titleRowDef = RowDefinition()
         titleRowDef.height = GridLength(value: 1, gridUnitType: .auto)
         root.rowDefinitions.append(titleRowDef)
-        
+
         let contentRowDef = RowDefinition()
         contentRowDef.height = GridLength(value: 1, gridUnitType: .star)
         root.rowDefinitions.append(contentRowDef)
-        
+
         root.children.append(titleBar)
         try? Grid.setRow(titleBar, 0)
         try? setTitleBar(titleBar)
@@ -39,12 +39,13 @@ extension MainWindow {
             guard let self, let args, !self.isSyncingSelection else { return }
 
             if args.isSettingsSelected {
-                navigate(to: SettingsPage(), transitionInfoOverride: SuppressNavigationTransitionInfo())
-            } else if
-                let item = args.selectedItem as? NavigationViewItem,
+                navigate(
+                    to: SettingsPage(), transitionInfoOverride: SuppressNavigationTransitionInfo())
+            } else if let item = args.selectedItem as? NavigationViewItem,
                 let tag = item.tag,
                 let str = tag as? HString,
-                let url = URL(string: String(hString: str)) {
+                let url = URL(string: String(hString: str))
+            {
                 _ = navigate(to: url, transitionInfoOverride: SuppressNavigationTransitionInfo())
             }
         }
@@ -72,13 +73,13 @@ extension MainWindow {
         configureTabTearOutEvents()
     }
 
-    // Registers native tear-out/merge handlers. the guard below gates this 
+    // Registers native tear-out/merge handlers. the guard below gates this
     // optional native tear-out/merge.
     private func configureTabTearOutEvents() {
-        guard MainWindow.tabTearOutEnabled else { return }
+        guard PageTabView.tabTearOutEnabled else { return }
 
         // Native tear-out (CanTearOutTabs). The OS owns the drag visuals and the
-        // window-follow animation; these handlers only move our model — the 
+        // window-follow animation; these handlers only move our model — the
         // MainWindowTab plus its decoupled content frame — between windows.
 
         // Both the tab in flight and its receiving window are tracked in
@@ -109,7 +110,8 @@ extension MainWindow {
         // receiver. Once moved, the spare is no longer empty, so release it.
         tabView.tabTearOutRequested.addHandler { _, _ in
             guard var pending = MainWindow.pendingTearOut,
-                  pending.holder !== pending.receiver else { return }
+                pending.holder !== pending.receiver
+            else { return }
             pending.holder.releaseTab(pending.tab)
             pending.receiver.adoptTornTab(pending.tab)
             pending.holder = pending.receiver
@@ -117,7 +119,7 @@ extension MainWindow {
             MainWindow.spareReceiver = nil
         }
 
-        // A torn tab from another window is dragged over this strip. always 
+        // A torn tab from another window is dragged over this strip. always
         // allow it to drop.
         tabView.externalTornOutTabsDropping.addHandler { _, args in
             guard let args, MainWindow.pendingTearOut != nil else { return }

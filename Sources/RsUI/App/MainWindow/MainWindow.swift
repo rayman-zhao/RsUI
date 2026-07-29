@@ -1,9 +1,9 @@
 import Foundation
 import Observation
-import WindowsFoundation
 import UWP
 import WinAppSDK
 import WinUI
+import WindowsFoundation
 
 class MainWindow: Window {
     // MARK: - 属性
@@ -36,23 +36,16 @@ class MainWindow: Window {
     var awaitTransferredTab: Bool = false
     var isTearOutWindow: Bool = false
 
-    // Keep native TabView tear-out disabled for now. CanTearOutTabs currently
-    // has two blocking issues for this shell:
-    // - TabTearOutWindowRequested can make the receiver window visible briefly,
-    //   causing flicker and taskbar animation.
-    //   https://github.com/microsoft/microsoft-ui-xaml/issues/10155
-    // - With a custom title bar, switching tabs can corrupt the drag region so
-    //   dragging the title bar tears out a tab instead of moving the window.
-    //   https://github.com/microsoft/microsoft-ui-xaml/issues/11170
-    // Keep the tear-out handlers behind this same gate so the native path can
-    // be restored when the WinUI behavior is fixed.
-    static let tabTearOutEnabled = false
-    
+    // Native tear-out gate moved to PageTabView.tabTearOutEnabled (the single
+    // place controlling `canTearOutTabs`). The cross-window tear-out handlers /
+    // pending state below remain gated on it; see the comment there for the
+    // blocking WinUI bugs.
+
     // Tracks the single tab being torn out across windows. Drag is single-pointer
     // on the UI thread, so at most one is ever in flight. `holder` follows the tab
     // as it moves between windows during the drag; `receiver` is the floating
-    // window the native flow asked us to create. 
-    // The receiver is resolved from HERE, not from args.newWindowId — that property 
+    // window the native flow asked us to create.
+    // The receiver is resolved from HERE, not from args.newWindowId — that property
     // reads back 0 in the tabTearOutRequested event, so we remember it ourselves.
     struct PendingTearOut {
         let tab: MainWindowTab
@@ -107,8 +100,10 @@ class MainWindow: Window {
         }
         _ = btn.resources.insert("ButtonBackgroundPointerOver", hoverBrush)
         _ = btn.resources.insert("ButtonBackgroundPressed", pressedBrush)
-        for key in ["ButtonBorderBrush", "ButtonBorderBrushPointerOver",
-                     "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled"] {
+        for key in [
+            "ButtonBorderBrush", "ButtonBorderBrushPointerOver",
+            "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled",
+        ] {
             _ = btn.resources.insert(key, transparent)
         }
 
@@ -145,8 +140,10 @@ class MainWindow: Window {
         }
         _ = btn.resources.insert("ButtonBackgroundPointerOver", hoverBrush)
         _ = btn.resources.insert("ButtonBackgroundPressed", pressedBrush)
-        for key in ["ButtonBorderBrush", "ButtonBorderBrushPointerOver",
-                    "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled"] {
+        for key in [
+            "ButtonBorderBrush", "ButtonBorderBrushPointerOver",
+            "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled",
+        ] {
             _ = btn.resources.insert(key, transparent)
         }
         btn.click.addHandler { [weak self] _, _ in
@@ -171,12 +168,12 @@ class MainWindow: Window {
         // box.verticalAlignment = .center
         // return box
         return nil
-    } ()
+    }()
     lazy var titleBarRightHeader = {
         let panel = StackPanel()
         panel.orientation = .horizontal
         return panel
-    } ()
+    }()
     lazy var titleBar = {
         let bar = TitleBar()
         bar.height = 48
@@ -215,7 +212,7 @@ class MainWindow: Window {
         }
 
         return bar
-    } ()
+    }()
     lazy var tabView: TabView = {
         let tabs = TabView()
         tabs.isAddTabButtonVisible = true
@@ -226,11 +223,12 @@ class MainWindow: Window {
         tabs.margin = Thickness(left: 0, top: -1, right: 0, bottom: 0)
         tabs.canDragTabs = true
         tabs.canReorderTabs = true
-        // Mirrors tabTearOutEnabled; see the flag comment for why native
-        // tear-out is currently off.
-        tabs.canTearOutTabs = MainWindow.tabTearOutEnabled
+        // Mirrors the PageTabView-hosted native tear-out gate; tear-out itself
+        // is disabled for now. See PageTabView.tabTearOutEnabled above its
+        // inner strip for the WinUI bugs blocking it.
+        tabs.canTearOutTabs = PageTabView.tabTearOutEnabled
         return tabs
-    } ()
+    }()
     lazy var tabContentHost = Grid()
     lazy var navigationContentRoot: Grid = {
         let grid = Grid()
@@ -249,7 +247,7 @@ class MainWindow: Window {
         try? Grid.setRow(tabContentHost, 1)
 
         return grid
-    } ()
+    }()
     // TabView owns the tab strip — order, selection, add/remove/reorder all live
     // in tabView.tabItems. Each strip item is bridged to its navigation model and
     // content frame by a TabContext, keyed by the item's stable `name` (WinRT
@@ -269,14 +267,16 @@ class MainWindow: Window {
 
         let length = viewModel.windowLayout.navigationViewOpenPaneLength
         nav.compactModeThresholdWidth = 0
-        nav.expandedModeThresholdWidth = length + viewModel.windowLayout.navigationViewExpandedModeThresholdContentWidth
-        nav.isPaneOpen = initialNavigationViewPaneOpen ?? viewModel.windowLayout.navigationViewPaneOpen
+        nav.expandedModeThresholdWidth =
+            length + viewModel.windowLayout.navigationViewExpandedModeThresholdContentWidth
+        nav.isPaneOpen =
+            initialNavigationViewPaneOpen ?? viewModel.windowLayout.navigationViewPaneOpen
         nav.openPaneLength = length
         nav.isTitleBarAutoPaddingEnabled = false
         nav.content = navigationContentRoot
 
         return nav
-    } ()
+    }()
 
     // MARK: - 初始化
     override init() {
@@ -314,7 +314,9 @@ class MainWindow: Window {
         startObserving()
     }
 
-    private static func makeSlideTransition(effect: SlideNavigationTransitionEffect) -> NavigationTransitionInfo {
+    private static func makeSlideTransition(effect: SlideNavigationTransitionEffect)
+        -> NavigationTransitionInfo
+    {
         let transition = SlideNavigationTransitionInfo()
         transition.effect = effect
         return transition

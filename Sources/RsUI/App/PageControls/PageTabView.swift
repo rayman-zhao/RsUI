@@ -23,6 +23,22 @@ import WinUI
 /// 或塞进任意 WinUI 容器。它只暴露 add/close/select 与"作用于当前 tab"导航的
 /// 入口；具体 Page 的 header/content 由父层通过 `addTab` 注入。
 class PageTabView: Grid {
+    // Keep native TabView tear-out disabled for now. CanTearOutTabs currently
+    // has two blocking issues for this shell:
+    // - TabTearOutWindowRequested can make the receiver window visible briefly,
+    //   causing flicker and taskbar animation.
+    //   https://github.com/microsoft/microsoft-ui-xaml/issues/10155
+    // - With a custom title bar, switching tabs can corrupt the drag region so
+    //   dragging the title bar tears out a tab instead of moving the window.
+    //   https://github.com/microsoft/microsoft-ui-xaml/issues/11170
+    // Self-hosts the single place controlling `canTearOutTabs` of the inner strip.
+    // The actual cross-window tear-out handlers / pending state still live in
+    // `MainWindow` (`configureTabTearOutEvents`), gated on this same flag — the
+    // flow is inherently cross-window (creates a receiver window, moves the model
+    // between windows), so a windowless control can't own it yet. When the WinUI
+    // bugs are fixed, flip this flag in one place.
+    static let tabTearOutEnabled = false
+
     // MARK: - Bridging context
 
     /// 一个 strip item 到其导航 model 的桥接。注意：与 `MainWindow.TabContext`
@@ -311,7 +327,8 @@ class PageTabView: Grid {
         tabView.closeButtonOverlayMode = .onPointerOver
         tabView.canDragTabs = true
         tabView.canReorderTabs = true
-        tabView.canTearOutTabs = false
+        // Native tear-out gate — see PageTabView.tabTearOutEnabled above.
+        tabView.canTearOutTabs = PageTabView.tabTearOutEnabled
         tabView.padding = Thickness(left: 0, top: 0, right: 0, bottom: 0)
         tabView.margin = Thickness(left: 0, top: -1, right: 0, bottom: 0)
         // "关闭其它 tab"按钮挂在 strip 左侧 header；strip 整体在 tabCount ≤1 时收起，
