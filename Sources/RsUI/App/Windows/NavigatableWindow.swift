@@ -4,7 +4,7 @@ import WinAppSDK
 import WinUI
 import WindowsFoundation
 
-struct WindowLayout: PreferenceValue {
+private struct WindowLayout: PreferenceValue {
     var navigationViewMinPaneLength: Double = 100
     var navigationViewMaxPaneLength: Double = 400
     var navigationViewExpandedModeThresholdContentWidth: Double = 688  // MARK: 688 is from default size 1008 - 320
@@ -13,7 +13,7 @@ struct WindowLayout: PreferenceValue {
     var navigationViewOpenPaneLength: Double = 320
 }
 
-class NavigatableWindow: RestorableWindow {
+class NavigatableWindow: AppearanceWindow {
     // nil → 使用 windowLayout 中持久化的 NavPane 状态；否则强制覆盖初始展开/折叠
     var initialNavigationViewPaneOpen: Bool? = nil
     // true → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，
@@ -21,13 +21,13 @@ class NavigatableWindow: RestorableWindow {
     var suppressLayoutPersistence: Bool = false
 
     // Splitter state
-    var splitterBorder: Border!
-    var isDraggingSplitter = false
-    var dragStartX: Double = 0
-    var dragStartPaneLength: Double = 0
-    let splitterWidth: Double = 6
+    private var splitterBorder: Border!
+    private var isDraggingSplitter = false
+    private var dragStartX: Double = 0
+    private var dragStartPaneLength: Double = 0
+    private let splitterWidth: Double = 6
 
-    var windowLayout: WindowLayout
+    private var windowLayout: WindowLayout
     let root = Grid()
 
     lazy var backButton: Button = NavigatableWindow.makeNavButton(glyph: "\u{E72B}") {
@@ -115,9 +115,9 @@ class NavigatableWindow: RestorableWindow {
     // 全屏时整体 collapse，含 NavigationView + Splitter
     var navWrapper: Grid?
 
-    override init(_ restore: Bool = true) {
+    override init() {
         windowLayout = App.context.preferences.load(for: WindowLayout.self)
-        super.init(restore)
+        super.init()
 
         // 设置行定义
         let titleRowDef = RowDefinition()

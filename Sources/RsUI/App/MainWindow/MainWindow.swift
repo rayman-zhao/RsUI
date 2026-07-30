@@ -46,10 +46,6 @@ class MainWindow: NavigatableWindow {
     // windows.
     static var spareReceiver: MainWindow? = nil
 
-    // 持有 Observation Task 句柄，窗口关闭时 cancel，避免死窗口的 task 继续访问失效的 self.appWindow / self.viewModel
-    var envObservationTask: Task<Void, Never>?
-    var isApplyingAppearance = false
-
     // 全屏时挂到 root 的临时 overlay，退出时需摘除
     var fullscreenOverlay: Border?
     // reparent 出去的 frame，退出时挂回 tabContentHost
@@ -152,7 +148,7 @@ class MainWindow: NavigatableWindow {
     var isFirstNavigation = true
 
     // MARK: - 初始化
-    init() {
+    override init() {
         super.init()
         bootstrap()
     }
@@ -161,6 +157,7 @@ class MainWindow: NavigatableWindow {
     // 用 init 参数承接，否则 openDetachedWindow 在 MainWindow() 返回后再赋值就晚了。
     init(initialNavigationViewPaneOpen: Bool?, suppressLayoutPersistence: Bool) {
         super.init()
+        useRestoration()
         self.initialNavigationViewPaneOpen = initialNavigationViewPaneOpen
         self.suppressLayoutPersistence = suppressLayoutPersistence
         bootstrap()
@@ -168,6 +165,7 @@ class MainWindow: NavigatableWindow {
 
     init(forceHomeOnLaunch: Bool) {
         super.init()
+        useRestoration()
         self.forceHomeOnLaunch = forceHomeOnLaunch
         bootstrap()
     }
@@ -177,7 +175,8 @@ class MainWindow: NavigatableWindow {
     init(tearOutReceiver: Bool) {
         // A tear-out receiver is positioned by the OS as it follows the cursor —
         // don't restore the saved main-window rect over it.
-        super.init(!tearOutReceiver)
+        super.init()
+        useRestoration(!tearOutReceiver)
         self.awaitTransferredTab = tearOutReceiver
         bootstrap()
     }
@@ -187,7 +186,6 @@ class MainWindow: NavigatableWindow {
 
         setupWindow()
         setupContent()
-        startObserving()
     }
 
     override func onGoBack() {
@@ -200,5 +198,73 @@ class MainWindow: NavigatableWindow {
         guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
         ctx.frame.goForward()
         renderSelectedTab()
+    }
+
+    override func onAppearanceChanged() {
+        // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
+        guard viewModel != nil, appWindow != nil else { return }
+
+        // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
+        self.appWindow.titleBar.preferredTheme = App.context.theme.titleBarTheme
+
+        self.title = MainWindow.tr(App.context.productName)
+        titleBar.title = self.title
+        searchBox?.placeholderText = MainWindow.tr("searchControlsAndSamples")
+        applyCloseOthersTooltip(to: closeOtherTabsButton)
+
+        let context = WindowContext(owner: self)
+        titleBarRightHeader.children.clear()
+        navigationView.menuItems.clear()
+        navigationView.footerMenuItems.clear()
+        for module in App.context.modules {
+            if let item = module.titleBarRightHeaderItem(in: context) {
+                titleBarRightHeader.children.append(item)
+            }
+            for item in module.navigationViewMenuItems(in: context) {
+                appendNavigationItem(item, false)
+            }
+            for item in module.navigationViewFooterMenuItems(in: context) {
+                appendNavigationItem(item, true)
+            }
+        }
+
+        // An empty tear-out receiver: the torn tab is injected later by
+        // tabTearOutRequested, so skip all startup navigation and come up blank.
+        if awaitTransferredTab {
+            return
+        }
+
+        if let makeInitialPage = initialPageFactory {
+            initialPageFactory = nil
+            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+            initialNavigationTransitionInfoOverride = nil
+            navigate(to: makeInitialPage(context), transitionInfoOverride: transitionInfoOverride)
+            return
+        }
+
+        if let url = initialNavigationURL {
+            initialNavigationURL = nil
+            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+            initialNavigationTransitionInfoOverride = nil
+            _ = navigate(to: url, transitionInfoOverride: transitionInfoOverride)
+            return
+        }
+
+        // Taskbar "New Window" / --new-window: skip currentPage/lastPageURL,
+        // force-select the first NavigationView item (Home) without polluting
+        // routePreferences.
+        if forceHomeOnLaunch {
+            forceHomeOnLaunch = false
+            navigationView.selectFirstItem()
+            return
+        }
+
+        if let page = currentPage {
+            navigate(to: page)
+        } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
+            return
+        } else {
+            navigationView.selectFirstItem()
+        }
     }
 }
