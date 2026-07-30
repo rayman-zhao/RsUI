@@ -13,7 +13,7 @@ private struct WindowLayout: PreferenceValue {
     var navigationViewOpenPaneLength: Double = 320
 }
 
-class NavigatableWindow: AppearanceWindow {
+class NavigationViewWindow: AppearanceWindow {
     // nil → 使用 windowLayout 中持久化的 NavPane 状态；否则强制覆盖初始展开/折叠
     var initialNavigationViewPaneOpen: Bool? = nil
     // true → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，
@@ -30,11 +30,11 @@ class NavigatableWindow: AppearanceWindow {
     private var windowLayout: WindowLayout
     let root = Grid()
 
-    lazy var backButton: Button = NavigatableWindow.makeNavButton(glyph: "\u{E72B}") {
+    lazy var backButton: Button = NavigationViewWindow.makeNavButton(glyph: "\u{E72B}") {
         [weak self] in
         self?.onGoBack()
     }
-    lazy var forwardButton: Button = NavigatableWindow.makeNavButton(glyph: "\u{E72A}") {
+    lazy var forwardButton: Button = NavigationViewWindow.makeNavButton(glyph: "\u{E72A}") {
         [weak self] in
         self?.onGoForward()
     }

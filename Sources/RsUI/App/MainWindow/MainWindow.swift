@@ -5,7 +5,7 @@ import WinAppSDK
 import WinUI
 import WindowsFoundation
 
-class MainWindow: NavigatableWindow {
+class MainWindow: NavigationViewWindow {
     // MARK: - 属性
     var viewModel: MainWindowViewModel! = MainWindowViewModel()
     var isSyncingSelection = false

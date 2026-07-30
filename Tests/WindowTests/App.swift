@@ -8,7 +8,7 @@ final class App: SwiftApplication {
     }
 
     override func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
-        let window = NavigatableWindow()
+        let window = NavigationViewWindow()
         window.useMicaBackdrop()
         window.useRestoration()
         try! window.activate()
