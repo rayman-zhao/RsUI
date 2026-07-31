@@ -65,15 +65,15 @@ extension MainWindow {
         updateAllTabClosableStates()
 
         guard let ctx = selectedTabContext, let page = ctx.model.currentPage else {
-            navigationView.header = nil
+            ui.navigationView.header = nil
             hideAllTabFrames()
-            navigationView.selectedItem = nil
-            backButton.isEnabled = false
-            forwardButton.isEnabled = false
+            ui.navigationView.selectedItem = nil
+            ui.backButton.isEnabled = false
+            ui.forwardButton.isEnabled = false
             return
         }
 
-        navigationView.header = nil
+        ui.navigationView.header = nil
         updateTabTitle(ctx)
         let frame = showFrame(for: ctx)
 
@@ -89,8 +89,8 @@ extension MainWindow {
         }
 
         syncNavigationSelection(for: page.url)
-        backButton.isEnabled = !ctx.model.backwardPages.isEmpty
-        forwardButton.isEnabled = !ctx.model.forwardPages.isEmpty
+        ui.backButton.isEnabled = !ctx.model.backwardPages.isEmpty
+        ui.forwardButton.isEnabled = !ctx.model.forwardPages.isEmpty
         viewModel.routePreferences.lastPageURL = page.url
     }
 

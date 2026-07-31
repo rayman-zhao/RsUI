@@ -8,11 +8,11 @@ extension MainWindow {
         configureNavigationViewSelection()
         configureTabViewEvents()
 
-        installFullscreenEscapeAccelerator(on: root)
+        installFullscreenEscapeAccelerator(on: ui.root)
     }
 
     private func configureNavigationViewSelection() {
-        navigationView.selectionChanged.addHandler { [weak self] _, args in
+        ui.navigationView.selectionChanged.addHandler { [weak self] _, args in
             guard let self, let args, !self.isSyncingSelection else { return }
 
             if args.isSettingsSelected {

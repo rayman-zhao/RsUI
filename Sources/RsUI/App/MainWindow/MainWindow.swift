@@ -148,23 +148,25 @@ class MainWindow: NavigationViewWindow {
     var isFirstNavigation = true
 
     // MARK: - 初始化
-    override init() {
+    init() {
         super.init()
+        useMicaBackdrop()
+        useRestoration()
         bootstrap()
     }
 
     // setupContent 会触发 navigationView lazy var 求值，必须在那之前赋值。
     // 用 init 参数承接，否则 openDetachedWindow 在 MainWindow() 返回后再赋值就晚了。
     init(initialNavigationViewPaneOpen: Bool?, suppressLayoutPersistence: Bool) {
-        super.init()
+        super.init(initialNavigationViewPaneOpen!)
+        useMicaBackdrop()
         useRestoration()
-        self.initialNavigationViewPaneOpen = initialNavigationViewPaneOpen
-        self.suppressLayoutPersistence = suppressLayoutPersistence
         bootstrap()
     }
 
     init(forceHomeOnLaunch: Bool) {
         super.init()
+        useMicaBackdrop()
         useRestoration()
         self.forceHomeOnLaunch = forceHomeOnLaunch
         bootstrap()
@@ -176,13 +178,14 @@ class MainWindow: NavigationViewWindow {
         // A tear-out receiver is positioned by the OS as it follows the cursor —
         // don't restore the saved main-window rect over it.
         super.init()
+        useMicaBackdrop()
         useRestoration(!tearOutReceiver)
         self.awaitTransferredTab = tearOutReceiver
         bootstrap()
     }
 
     private func bootstrap() {
-        navigationView.content = navigationContentRoot
+        ui.navigationView.content = navigationContentRoot
 
         setupWindow()
         setupContent()
@@ -201,6 +204,8 @@ class MainWindow: NavigationViewWindow {
     }
 
     override func onAppearanceChanged() {
+        super.onAppearanceChanged()
+        /*
         // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
         guard viewModel != nil, appWindow != nil else { return }
 
@@ -210,15 +215,16 @@ class MainWindow: NavigationViewWindow {
         self.title = MainWindow.tr(App.context.productName)
         titleBar.title = self.title
         searchBox?.placeholderText = MainWindow.tr("searchControlsAndSamples")
+        */
         applyCloseOthersTooltip(to: closeOtherTabsButton)
 
         let context = WindowContext(owner: self)
-        titleBarRightHeader.children.clear()
-        navigationView.menuItems.clear()
-        navigationView.footerMenuItems.clear()
+        ui.titleBarRightHeader.children.clear()
+        ui.navigationView.menuItems.clear()
+        ui.navigationView.footerMenuItems.clear()
         for module in App.context.modules {
             if let item = module.titleBarRightHeaderItem(in: context) {
-                titleBarRightHeader.children.append(item)
+                ui.titleBarRightHeader.children.append(item)
             }
             for item in module.navigationViewMenuItems(in: context) {
                 appendNavigationItem(item, false)
@@ -255,7 +261,7 @@ class MainWindow: NavigationViewWindow {
         // routePreferences.
         if forceHomeOnLaunch {
             forceHomeOnLaunch = false
-            navigationView.selectFirstItem()
+            ui.navigationView.selectFirstItem()
             return
         }
 
@@ -264,7 +270,7 @@ class MainWindow: NavigationViewWindow {
         } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
             return
         } else {
-            navigationView.selectFirstItem()
+            ui.navigationView.selectFirstItem()
         }
     }
 }

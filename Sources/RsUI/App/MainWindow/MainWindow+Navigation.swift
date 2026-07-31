@@ -107,8 +107,8 @@ extension MainWindow {
 
 
     func firstNavigationItemURL() -> URL? {
-        return firstNavigationItemURL(in: navigationView.menuItems)
-            ?? firstNavigationItemURL(in: navigationView.footerMenuItems)
+        return firstNavigationItemURL(in: ui.navigationView.menuItems)
+            ?? firstNavigationItemURL(in: ui.navigationView.footerMenuItems)
     }
 
     private func firstNavigationItemURL(in items: AnyIVector<Any?>?) -> URL? {
@@ -134,7 +134,7 @@ extension MainWindow {
         isSyncingSelection = true
         defer { isSyncingSelection = false }
         
-        navigationView.selectItem(with: url)
+        ui.navigationView.selectItem(with: url)
     }
 
     private func captureOpenInNewTabRequested(_ args: PointerRoutedEventArgs?) {
@@ -151,9 +151,9 @@ extension MainWindow {
             self.openSelectedNavigationItemInNewTabIfNeeded(item, args)
         }
         if isFooter {
-            navigationView.footerMenuItems.append(item)
+            ui.navigationView.footerMenuItems.append(item)
         } else {
-            navigationView.menuItems.append(item)
+            ui.navigationView.menuItems.append(item)
         }
     }
 
@@ -185,7 +185,7 @@ extension MainWindow {
     }
 
     private func isNavigationItemSelected(_ item: NavigationViewItemBase) -> Bool {
-        guard let selectedItem = navigationView.selectedItem as? NavigationViewItemBase else { return false }
+        guard let selectedItem = ui.navigationView.selectedItem as? NavigationViewItemBase else { return false }
         return selectedItem === item
     }
 

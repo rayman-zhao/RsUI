@@ -39,8 +39,8 @@ extension MainWindow {
         try? Grid.setRowSpan(overlay, 2)
         try? Canvas.setZIndex(overlay, 100)
 
-        titleBar.visibility = .collapsed
-        navWrapper?.visibility = .collapsed
+        ui.titleBar.visibility = .collapsed
+        ui.navWrapper.visibility = .collapsed
 
         // setPresenter(.fullScreen) 不清除 caption 配置，顶部仍可拖动窗口，
         // 临时关掉 extendsContentIntoTitleBar，退出时恢复。
@@ -67,8 +67,8 @@ extension MainWindow {
             root.children.removeAt(idx)
         }
 
-        titleBar.visibility = .visible
-        navWrapper?.visibility = .visible
+        ui.titleBar.visibility = .visible
+        ui.navWrapper.visibility = .visible
         self.extendsContentIntoTitleBar = true
 
         try? appWindow.setPresenter(.overlapped)

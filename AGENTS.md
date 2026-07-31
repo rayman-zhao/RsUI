@@ -66,12 +66,22 @@ RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page →
 
    重构目标：MainWindow 不再内联 Frame/TabView 的实现细节，而是按上述三种模式之一装配 Content，自身只负责 NavigationView、TitleBar、生命周期与窗口级偏好。当前已抽出 `PageFrame` / `PageTabView` / `PageControl`（shell 职责与渲染已分离，`MainWindow+PageRendering.swift` 已并入 `PageFrame`），下一步是把 MainWindow 从 frame-per-tab 内联实现改为直接装配 `PageTabView`。
 
+6. **`NavigationViewWindow`（窗口壳 XAML-first 构建）** — 见 [`Sources/RsUI/App/Windows/NavigationViewWindow.swift`](./Sources/RsUI/App/Windows/NavigationViewWindow.swift)。`AppearanceWindow` 的子类、`MainWindow` 的父类，负责 TitleBar + NavigationView + 侧栏拖拽 Splitter 这三层窗口壳的构建与生命周期/偏好。当前已改为 **XAML 字符串 + `XamlReader.load` + `findName` 回填 + Swift 事件绑定** 的模式（参照 `Tests/PageControlTests/PageControlTestWindow.swift` 与 `TabViewPageFrameTestWindow.swift`），落地 WinUI Gallery "End to end TitleBar sample" 的 `Grid(Row0=Auto TitleBar, Row1=* NavigationView)` 结构：
+   - **静态结构在 XAML**（`shellXAML` 计算属性）：`Grid` 两行、`TitleBar`（含 `TitleBar.Content` 的 Back/Forward Button + 折叠 AutoSuggestBox、`TitleBar.RightHeader` 空占位）、`NavWrapper` 内的 `NavigationView`（`PaneDisplayMode`/`IsSettingsVisible`/`IsTitleBarAutoPaddingEnabled` 等创建期定值）+ 透明 `SplitterBorder` 占位。`swift-winrt` **无 `x:Name` 绑定**，统一以 XAML 默认命名空间的 `Name="..."` 声明，加载后 `findName` 取回。
+   - **运行时值与事件在 Swift**：`init` 里 `loadShellFromXAML()` → `applyRuntimeSettings()` → `bindEvents()`。`applyRuntimeSettings()` 回填依赖偏好的 `openPaneLength` / `expandedModeThresholdWidth` / `isPaneOpen`、条件性的 `iconSource`、Back/Forward 按钮的资源画刷 override + `isEnabled`/`allowFocusOnInteraction`、Splitter 的 `margin` + `protectedCursor` + 初始 `visibility`。`bindEvents()` 绑 `paneToggleRequested` / Back/Forward click / `paneClosed`/`paneOpened` / Splitter 的 `pointerPressed/Moved/Released/CaptureLost`。
+   - **为什么 Back/Forward 画刷保留 Swift**：原 `makeNavButton` 用 `UWP.Color(a:0x18,...)` 半透明灰手写画刷、既非主题资源也非 Fluent 推荐做法。为不改变行为并控制风险，XAML 只声明按钮结构（`IsEnabled=False`/`AllowFocusOnInteraction=False` 便于回读），画刷资源 override 仍在 Swift 注入。迁移到 `{ThemeResource}` 属独立后续任务。
+   - **对外 API 不变**：`titleBar` / `searchBox` / `titleBarRightHeader` / `navigationView` / `navWrapper` / `backButton` / `forwardButton` 依旧暴露（类型与原 `lazy var` 一致，只是从延迟求值改为 `init` 里一次性 `findName` 回填的 IUO），`MainWindow` 及其 extension 的所有访问点（`titleBar.visibility`、`titleBarRightHeader.children.clear/append`、`navigationView.menuItems`、`navWrapper?.visibility`、`backButton.isEnabled` 等）无需改动。`splitterBorder` 仍 `private`。
+   - **对未来 window shell 重构的约定**：XAML 表达静态结构 + 命名占位，动态值（运行时算出的长度/阈值/开关）与所有事件用 Swift 在 `findName` 之后回填/绑定；同样适用于未来把 `PageTabView` 装配进 `MainWindow` 时新写的窗口壳 XAML。
+
 ## File Organization
 
 ```
 Sources/RsUI/
   App/
     App.swift                         — Entry point, inherits SwiftApplication
+    Windows/
+      AppearanceWindow.swift          — Window base class, theme/language observation
+      NavigationViewWindow.swift      — TitleBar + NavigationView + Splitter window shell (XAML-first, see Core UI Composition Model §6)
     MainWindow/                       — Main window (split into extension files)
       MainWindow.swift                — Core properties, lazy UI controls, init
       MainWindow+Content.swift        — Layout assembly, event binding
@@ -80,7 +90,6 @@ Sources/RsUI/
       MainWindow+TabInteraction.swift — Close / tear-out / detach tabs
       MainWindow+TabFrames.swift      — Tab content frame visibility (tabContentHost)
       MainWindow+Fullscreen.swift     — Tab fullscreen mode
-      MainWindow+Splitter.swift       — NavigationView drag splitter
       MainWindow+WindowLifecycle.swift — Window lifecycle, appearance switching
       MainWindowModels.swift          — WindowPosition / WindowLayout / RoutePreferences
       MainWindowViewModel.swift       — MainWindowTab (nav history), MainWindowViewModel
