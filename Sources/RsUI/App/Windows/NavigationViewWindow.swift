@@ -31,14 +31,23 @@ class NavigationViewWindow: AppearanceWindow {
             splitterBorder: Border,
             fullscreenOverlay: Border,
         )! = nil
-    private var windowLayout = App.context.preferences.load(for: WindowLayout.self)
     private var splitterState = (
         isDraggingSplitter: false,
         dragStartX: Double(0),
         dragStartPaneLength: Double(0),
         splitterWidth: Double(6),
     )
-    private var saveLayoutPreferences: Bool = true  // false → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，避免一次性 viewer 窗口污染主窗口的下次启动状态
+
+    private(set) var isInFullscreen = false
+    private var fullscreen = (
+        preParent: UIElement?(nil),
+        preIndex: UInt32?(nil),
+        preWindowMaximized: false,
+        installedEscapeAcceleratorIndex: Int?(nil),
+    )
+
+    private var windowLayout = App.context.preferences.load(for: WindowLayout.self)
+    private var saveWindowLayoutPreferences: Bool = true  // false → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，避免一次性 viewer 窗口污染主窗口的下次启动状态
 
     init(_ forceMinimalMode: Bool = false) {
         super.init()
@@ -46,7 +55,7 @@ class NavigationViewWindow: AppearanceWindow {
         setupUI()
         if forceMinimalMode {
             ui.navigationView.paneDisplayMode = .leftMinimal
-            saveLayoutPreferences = false
+            saveWindowLayoutPreferences = false
         }
 
         bindEvents()
@@ -88,7 +97,7 @@ class NavigationViewWindow: AppearanceWindow {
             if self.ui.navigationView.paneDisplayMode != .auto {
                 self.ui.navigationView.paneDisplayMode = .auto
                 self.ui.navigationView.isPaneOpen = true
-                self.saveLayoutPreferences = true
+                self.saveWindowLayoutPreferences = true
             } else {
                 self.ui.navigationView.isPaneOpen.toggle()
             }
@@ -175,13 +184,115 @@ class NavigationViewWindow: AppearanceWindow {
 
         self.closed.addHandler { [weak self] _, _ in
             guard let self else { return }
-            guard self.saveLayoutPreferences else { return }
 
+            // 关窗时若是全屏，先退出，避免把窗口留在 .fullScreen presenter 上
+            if self.isInFullscreen {
+                self.exitFullscreen()
+            }
+
+            guard self.saveWindowLayoutPreferences else { return }
             self.windowLayout.navigationViewPaneOpen = self.ui.navigationView.isPaneOpen
             self.windowLayout.navigationViewOpenPaneLength = self.ui.navigationView.openPaneLength
-
             App.context.preferences.save(windowLayout)
         }
+    }
+
+    // MARK: - Generic fullscreen (any UIElement)
+
+    /// 把任意 UIElement 临时设为窗口全屏内容。
+    ///
+    /// 实现方法：
+    ///     OS 级: `appWindow.setPresenter(.fullScreen)`（隐藏 Windows TaskBar）。
+    ///     应用级: 从该 element 的当前 visual parent 上 detach（同时记录 parent + index），
+    ///     reparent 到窗口壳 XAML 中预声明的 `FullscreenOverlay`（跨行、ZIndex 100 的
+    ///     Border）并把 overlay 置可见；同时 collapsed 掉 titleBar 与 navWrapper，关掉
+    ///     `extendsContentIntoTitleBar`。
+    /// 退出：反向。Reparent 回原 parent 的原位置，overlay 收为 collapsed，还原
+    ///     titleBar/navWrapper/`extendsContentIntoTitleBar`/`.overlapped`；若进入前 window
+    ///     是 maximized，退出后还原 maximize 状态。
+    /// Esc 退出：内置 KeyboardAccelerator，仅 `isInFullscreen` 为真时拦截 + handled。
+    /// 已在全屏、或 element 已经无 parent（如已在 overlay 上），均为 no-op。
+    func enterFullscreen(for element: UIElement) {
+        guard !isInFullscreen else { return }
+        guard let hwnd = self.appWindow else { return }
+        guard let pre = element.detachFromVisualParent() else { return }
+
+        isInFullscreen = true
+        fullscreen.preParent = pre.parent
+        fullscreen.preIndex = pre.index
+        // setPresenter(.overlapped) 退出时不还原 maximize 状态，需要提前记录。
+        if let presenter = hwnd.presenter as? OverlappedPresenter {
+            fullscreen.preWindowMaximized = (presenter.state == .maximized)
+        } else {
+            fullscreen.preWindowMaximized = false
+        }
+        installEscapeAcceleratorIfNeeded()
+
+        ui.fullscreenOverlay.child = element
+        ui.fullscreenOverlay.visibility = .visible
+        ui.titleBar.visibility = .collapsed
+        ui.navWrapper.visibility = .collapsed
+        // setPresenter(.fullScreen) 不清除 caption 配置，顶部仍可拖动窗口，
+        // 临时关掉 extendsContentIntoTitleBar，退出时恢复。
+        self.extendsContentIntoTitleBar = false
+
+        try? hwnd.setPresenter(.fullScreen)
+    }
+
+    /// 退出 element 全屏，把 element reparent 回退出前的原 parent 原位置。
+    /// 未在全屏时为 no-op。
+    func exitFullscreen() {
+        guard
+            isInFullscreen,
+            let element = ui.fullscreenOverlay.child,
+            let parent = fullscreen.preParent
+        else { return }
+
+        ui.fullscreenOverlay.child = nil
+        element.attachToParent(parent, index: fullscreen.preIndex)
+        ui.fullscreenOverlay.visibility = .collapsed
+        ui.titleBar.visibility = .visible
+        ui.navWrapper.visibility = .visible
+        self.extendsContentIntoTitleBar = true
+
+        // 已关窗口时 appWindow 为 nil（IUO）—— 此时只清理本地状态，跳过 setPresenter。
+        if let hwnd = self.appWindow {
+            try? hwnd.setPresenter(.overlapped)
+            if fullscreen.preWindowMaximized, let presenter = hwnd.presenter as? OverlappedPresenter
+            {
+                try? presenter.maximize()
+            }
+        }
+
+        isInFullscreen = false
+        fullscreen.preParent = nil
+        fullscreen.preIndex = nil
+        fullscreen.preWindowMaximized = false
+        if let idx = fullscreen.installedEscapeAcceleratorIndex {
+            _ = ui.root.keyboardAccelerators.remove(at: idx)
+            fullscreen.installedEscapeAcceleratorIndex = nil
+        }
+    }
+
+    /// 首次进全屏时装一个 Esc accelerator；未在全屏时透传给其他处理者。
+    /// 用 `installedEscapeAccelerator` 守护，每个窗口最多装一次。
+    private func installEscapeAcceleratorIfNeeded() {
+        guard fullscreen.installedEscapeAcceleratorIndex == nil else { return }
+
+        let esc = KeyboardAccelerator()
+        esc.key = .escape
+        esc.invoked.addHandler { [weak self] _, args in
+            guard let self, self.isInFullscreen else { return }
+            self.exitFullscreen()
+            args?.handled = true
+        }
+        ui.root.keyboardAccelerators.append(esc)
+        fullscreen.installedEscapeAcceleratorIndex = ui.root.keyboardAccelerators.count - 1
+
+        // Can't see the problem. Keep for later check.
+        // WinUI auto-shows an "Esc" shortcut tooltip for elements owning a
+        // KeyboardAccelerator; suppress it since the accelerator is global.
+        // ui.root.keyboardAcceleratorPlacementMode = .hidden
     }
 
     // MARK: - XAML UI
