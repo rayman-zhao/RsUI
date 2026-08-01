@@ -29,6 +29,7 @@ class NavigationViewWindow: AppearanceWindow {
             navWrapper: Grid,
             navigationView: NavigationView,
             splitterBorder: Border,
+            fullscreenOverlay: Border,
         )! = nil
     private var windowLayout = App.context.preferences.load(for: WindowLayout.self)
     private var splitterState = (
@@ -37,7 +38,7 @@ class NavigationViewWindow: AppearanceWindow {
         dragStartPaneLength: Double(0),
         splitterWidth: Double(6),
     )
-    var saveLayoutPreferences: Bool = true  // false → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，避免一次性 viewer 窗口污染主窗口的下次启动状态
+    private var saveLayoutPreferences: Bool = true  // false → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，避免一次性 viewer 窗口污染主窗口的下次启动状态
 
     init(_ forceMinimalMode: Bool = false) {
         super.init()
@@ -66,6 +67,7 @@ class NavigationViewWindow: AppearanceWindow {
             navWrapper: (try? loaded.findName("NavWrapper")) as! Grid,
             navigationView: (try? loaded.findName("NavigationView")) as! NavigationView,
             splitterBorder: (try? loaded.findName("SplitterBorder")) as! Border,
+            fullscreenOverlay: (try? loaded.findName("FullscreenOverlay")) as! Border,
         )
 
         let paneOpen = windowLayout.navigationViewPaneOpen
@@ -234,6 +236,12 @@ class NavigationViewWindow: AppearanceWindow {
                         VerticalAlignment="Stretch"
                         Background="Transparent"/>
             </Grid>
+
+            <!-- Fullscreen overlay: spans the whole window above TitleBar +
+                 NavWrapper. Declared collapsed; fullscreen reparents a UIElement
+                 into it and flips this to Visible, exit does the reverse. -->
+            <Border Name="FullscreenOverlay" Grid.Row="0" Grid.RowSpan="2"
+                    Visibility="Collapsed"/>
         </Grid>
         """
     }
