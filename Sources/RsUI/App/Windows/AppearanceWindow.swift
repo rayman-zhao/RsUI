@@ -3,24 +3,9 @@ import Observation
 import RsFoundation
 import WinUI
 
-struct EventHandler<T> {
-    typealias Handler = (T) -> Void
-    private var handlers: [Handler] = []
-
-    mutating func addHandler(_ handler: @escaping Handler) {
-        handlers.append(handler)
-    }
-
-    func invoke(_ value: T) {
-        for handler in handlers {
-            handler(value)
-        }
-    }
-}
-
 /// FIXME: 我不确定这里的保护机制是必要的。从遗留代码迁移过来，应去确认测试有效果。
 class AppearanceWindow: Window {
-    public var appearanceChanged: EventHandler<AppearanceWindow> = EventHandler()
+    let appearanceChanged = EventHandler<AppearanceWindow>()
 
     // 持有 Observation Task 句柄，窗口关闭时 cancel，避免死窗口的 task 继续访问失效的 self.appWindow / self.viewModel
     private var observationTask: Task<Void, Never>? = nil

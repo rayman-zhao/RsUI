@@ -38,12 +38,13 @@ class NavigationViewWindow: AppearanceWindow {
         splitterWidth: Double(6),
     )
 
+    let fullscreenChanged = EventHandler<NavigationViewWindow>()
     private(set) var isInFullscreen = false
     private var fullscreen = (
         preParent: UIElement?(nil),
         preIndex: UInt32?(nil),
         preWindowMaximized: false,
-        installedEscapeAcceleratorIndex: Int?(nil),
+        installedEscapeAccelerator: false,
     )
 
     private var windowLayout = App.context.preferences.load(for: WindowLayout.self)
@@ -237,6 +238,7 @@ class NavigationViewWindow: AppearanceWindow {
         self.extendsContentIntoTitleBar = false
 
         try? hwnd.setPresenter(.fullScreen)
+        fullscreenChanged.invoke(self)
     }
 
     /// 退出 element 全屏，把 element reparent 回退出前的原 parent 原位置。
@@ -268,16 +270,13 @@ class NavigationViewWindow: AppearanceWindow {
         fullscreen.preParent = nil
         fullscreen.preIndex = nil
         fullscreen.preWindowMaximized = false
-        if let idx = fullscreen.installedEscapeAcceleratorIndex {
-            _ = ui.root.keyboardAccelerators.remove(at: idx)
-            fullscreen.installedEscapeAcceleratorIndex = nil
-        }
+        fullscreenChanged.invoke(self)
     }
 
     /// 首次进全屏时装一个 Esc accelerator；未在全屏时透传给其他处理者。
     /// 用 `installedEscapeAccelerator` 守护，每个窗口最多装一次。
     private func installEscapeAcceleratorIfNeeded() {
-        guard fullscreen.installedEscapeAcceleratorIndex == nil else { return }
+        guard !fullscreen.installedEscapeAccelerator else { return }
 
         let esc = KeyboardAccelerator()
         esc.key = .escape
@@ -287,12 +286,13 @@ class NavigationViewWindow: AppearanceWindow {
             args?.handled = true
         }
         ui.root.keyboardAccelerators.append(esc)
-        fullscreen.installedEscapeAcceleratorIndex = ui.root.keyboardAccelerators.count - 1
 
         // Can't see the problem. Keep for later check.
         // WinUI auto-shows an "Esc" shortcut tooltip for elements owning a
         // KeyboardAccelerator; suppress it since the accelerator is global.
         // ui.root.keyboardAcceleratorPlacementMode = .hidden
+
+        fullscreen.installedEscapeAccelerator = true
     }
 
     // MARK: - XAML UI
