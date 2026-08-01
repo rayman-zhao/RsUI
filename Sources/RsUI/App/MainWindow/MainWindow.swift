@@ -155,12 +155,7 @@ class MainWindow: NavigationViewWindow {
         bootstrap()
 
         /*
-        ui.backButton.click.addHandler { [weak self] _, _ in
-            self?.onGoBack()
-        }
-        ui.forwardButton.click.addHandler { [weak self] _, _ in
-            self?.onGoForward()
-        }
+
         */
     }
 
@@ -198,87 +193,90 @@ class MainWindow: NavigationViewWindow {
 
         setupWindow()
         setupContent()
+        bindEvents()
     }
 
-     func onGoBack() {
-        guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
-        ctx.frame.goBack()
-        renderSelectedTab()
-    }
-
-     func onGoForward() {
-        guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
-        ctx.frame.goForward()
-        renderSelectedTab()
-    }
-
-     func onAppearanceChanged() {
-        /*
+    private func bindEvents() {
+        self.appearanceChanged.addHandler { [weak self] _ in
+            guard let self else { return }
+            /*
         // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
         guard viewModel != nil, appWindow != nil else { return }
-
-        // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
-        self.appWindow.titleBar.preferredTheme = App.context.theme.titleBarTheme
-
-        self.title = MainWindow.tr(App.context.productName)
-        titleBar.title = self.title
-        searchBox?.placeholderText = MainWindow.tr("searchControlsAndSamples")
         */
-        applyCloseOthersTooltip(to: closeOtherTabsButton)
+            applyCloseOthersTooltip(to: closeOtherTabsButton)
 
-        let context = WindowContext(owner: self)
-        ui.titleBarRightHeader.children.clear()
-        ui.navigationView.menuItems.clear()
-        ui.navigationView.footerMenuItems.clear()
-        for module in App.context.modules {
-            if let item = module.titleBarRightHeaderItem(in: context) {
-                ui.titleBarRightHeader.children.append(item)
+            let context = WindowContext(owner: self)
+            ui.titleBarRightHeader.children.clear()
+            ui.navigationView.menuItems.clear()
+            ui.navigationView.footerMenuItems.clear()
+            for module in App.context.modules {
+                if let item = module.titleBarRightHeaderItem(in: context) {
+                    ui.titleBarRightHeader.children.append(item)
+                }
+                for item in module.navigationViewMenuItems(in: context) {
+                    appendNavigationItem(item, false)
+                }
+                for item in module.navigationViewFooterMenuItems(in: context) {
+                    appendNavigationItem(item, true)
+                }
             }
-            for item in module.navigationViewMenuItems(in: context) {
-                appendNavigationItem(item, false)
+
+            // An empty tear-out receiver: the torn tab is injected later by
+            // tabTearOutRequested, so skip all startup navigation and come up blank.
+            if awaitTransferredTab {
+                return
             }
-            for item in module.navigationViewFooterMenuItems(in: context) {
-                appendNavigationItem(item, true)
+
+            if let makeInitialPage = initialPageFactory {
+                initialPageFactory = nil
+                let transitionInfoOverride =
+                    initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+                initialNavigationTransitionInfoOverride = nil
+                navigate(
+                    to: makeInitialPage(context), transitionInfoOverride: transitionInfoOverride)
+                return
+            }
+
+            if let url = initialNavigationURL {
+                initialNavigationURL = nil
+                let transitionInfoOverride =
+                    initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
+                initialNavigationTransitionInfoOverride = nil
+                _ = navigate(to: url, transitionInfoOverride: transitionInfoOverride)
+                return
+            }
+
+            // Taskbar "New Window" / --new-window: skip currentPage/lastPageURL,
+            // force-select the first NavigationView item (Home) without polluting
+            // routePreferences.
+            if forceHomeOnLaunch {
+                forceHomeOnLaunch = false
+                ui.navigationView.selectFirstItem()
+                return
+            }
+
+            if let page = currentPage {
+                navigate(to: page)
+            } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
+                return
+            } else {
+                ui.navigationView.selectFirstItem()
             }
         }
 
-        // An empty tear-out receiver: the torn tab is injected later by
-        // tabTearOutRequested, so skip all startup navigation and come up blank.
-        if awaitTransferredTab {
-            return
-        }
+        ui.backButton.click.addHandler { [weak self] _, _ in
+            guard let self else { return }
 
-        if let makeInitialPage = initialPageFactory {
-            initialPageFactory = nil
-            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
-            initialNavigationTransitionInfoOverride = nil
-            navigate(to: makeInitialPage(context), transitionInfoOverride: transitionInfoOverride)
-            return
+            guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
+            ctx.frame.goBack()
+            renderSelectedTab()
         }
+        ui.forwardButton.click.addHandler { [weak self] _, _ in
+            guard let self else { return }
 
-        if let url = initialNavigationURL {
-            initialNavigationURL = nil
-            let transitionInfoOverride = initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
-            initialNavigationTransitionInfoOverride = nil
-            _ = navigate(to: url, transitionInfoOverride: transitionInfoOverride)
-            return
-        }
-
-        // Taskbar "New Window" / --new-window: skip currentPage/lastPageURL,
-        // force-select the first NavigationView item (Home) without polluting
-        // routePreferences.
-        if forceHomeOnLaunch {
-            forceHomeOnLaunch = false
-            ui.navigationView.selectFirstItem()
-            return
-        }
-
-        if let page = currentPage {
-            navigate(to: page)
-        } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
-            return
-        } else {
-            ui.navigationView.selectFirstItem()
+            guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
+            ctx.frame.goForward()
+            renderSelectedTab()
         }
     }
 }
