@@ -7,8 +7,6 @@ extension MainWindow {
     func setupContent() {
         configureNavigationViewSelection()
         configureTabViewEvents()
-
-        installFullscreenEscapeAccelerator(on: ui.root)
     }
 
     private func configureNavigationViewSelection() {

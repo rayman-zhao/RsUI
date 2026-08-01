@@ -46,13 +46,30 @@ class MainWindow: NavigationViewWindow {
     // windows.
     static var spareReceiver: MainWindow? = nil
 
-    // 全屏时挂到 root 的临时 overlay，退出时需摘除
-    var fullscreenOverlay: Border?
-    // reparent 出去的 frame，退出时挂回 tabContentHost
-    var fullscreenStashedFrame: PageFrame?
-    var isInTabFullscreen = false
-    // setPresenter(.overlapped) 退出时不还原 maximize
-    var preFullscreenMaximized = false
+    // MARK: - Tab Fullscreen
+    // Tab 全屏 = 把当前选中 tab 的 PageFrame 整页铺满窗口；底层复用父类
+    // `NavigationViewWindow.enterFullscreen(for:)` 的 element-reparent 全屏路径：
+    // `ctx.frame` 是 PageFrame（→ Grid → Panel → UIElement），其当前 parent 是
+    // `tabContentHost`（Grid/Panel），detach 时 Panel 分支命中并把 index 一并记下，
+    // 退出时按 index 插回——比原实现 exit 后 append 到末尾更精确保持原顺序。
+    // `WindowContext` 的 enterTabFullscreen / exitTabFullscreen / isInTabFullscreen
+    // 仍转发到此处以维持向后兼容。
+
+    /// 把当前选中 tab 的内容 frame 设为窗口全屏内容。无选中 tab 时为 no-op。
+    /// 真正的全屏逻辑（OS presenter / reparent / Esc accelerator）由父类
+    /// `enterFullscreen(for:)` 处理；重复进入由其内部 `!isInFullscreen` guard 挡掉。
+    func enterTabFullscreen() {
+        guard let ctx = selectedTabContext else { return }
+        enterFullscreen(for: ctx.frame)
+    }
+
+    /// 退出 tab 全屏。未在全屏时为 no-op。
+    func exitTabFullscreen() {
+        exitFullscreen()
+    }
+
+    /// 窗口是否处于 tab 全屏中。底层就是父类 `NavigationViewWindow.isInFullscreen`。
+    var isInTabFullscreen: Bool { isInFullscreen }
 
     /// UI 主要组件
     static func tr(_ keyAndValue: String) -> String {

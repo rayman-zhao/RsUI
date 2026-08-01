@@ -301,10 +301,10 @@ public struct WindowContext {
     /// Switches the OS-level presenter to fullscreen (hiding the system title bar and
     /// taskbar) and collapses the application chrome — title bar, NavigationView,
     /// TabView strip, and splitter — so the selected page's content occupies the entire
-    /// screen. The selected tab's `PageTransitionHost` is reparented to a root-level
-    /// overlay for the duration of fullscreen and restored to its tab content host on
-    /// exit. If the window was maximized before entering, the maximized state is
-    /// restored on exit.
+    /// screen. The selected tab's content frame (PageFrame) is reparented via the
+    /// window shell's predeclared `FullscreenOverlay` for the duration of fullscreen
+    /// and restored to its original position in the tab content host on exit. If the
+    /// window was maximized before entering, the maximized state is restored on exit.
     ///
     /// Fullscreen is exited automatically when the user presses `Esc`. Calling this
     /// method while already in fullscreen is a no-op. There is no selected tab when the
