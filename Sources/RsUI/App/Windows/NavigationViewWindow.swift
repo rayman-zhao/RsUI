@@ -51,27 +51,6 @@ class NavigationViewWindow: AppearanceWindow {
         bindEvents()
     }
 
-    override func onAppearanceChanged() {
-        // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
-        guard let hwnd = self.appWindow else { return }
-
-        // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
-        hwnd.titleBar.preferredTheme = App.context.theme.titleBarTheme
-
-        let str = App.context.tr(App.context.productName)
-        self.title = str
-        self.ui.titleBar.title = str
-        try? ToolTipService.setToolTip(self.ui.backButton, tr("Back"))
-        try? ToolTipService.setToolTip(self.ui.forwardButton, tr("Forward"))
-        self.ui.searchBox.placeholderText = App.context.tr("Search ...")
-    }
-
-    func onGoBack() {
-    }
-
-    func onGoForward() {
-    }
-
     private func setupUI() {
         let xaml = xmalUI.replacingOccurrences(
             of: "{x:IconPath}", with: App.context.iconPath ?? "")
@@ -112,12 +91,6 @@ class NavigationViewWindow: AppearanceWindow {
                 self.ui.navigationView.isPaneOpen.toggle()
             }
         }
-        ui.backButton.click.addHandler { [weak self] _, _ in
-            self?.onGoBack()
-        }
-        ui.forwardButton.click.addHandler { [weak self] _, _ in
-            self?.onGoForward()
-        }
         ui.navigationView.paneClosed.addHandler { [weak self] _, _ in
             self?.ui.splitterBorder.visibility = .collapsed
         }
@@ -126,16 +99,7 @@ class NavigationViewWindow: AppearanceWindow {
         }
 
         bindSplitterEvents()
-
-        self.closed.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            guard self.saveLayoutPreferences else { return }
-
-            self.windowLayout.navigationViewPaneOpen = self.ui.navigationView.isPaneOpen
-            self.windowLayout.navigationViewOpenPaneLength = self.ui.navigationView.openPaneLength
-
-            App.context.preferences.save(windowLayout)
-        }
+        bindWindowEvents()
     }
 
     private func bindSplitterEvents() {
@@ -188,6 +152,34 @@ class NavigationViewWindow: AppearanceWindow {
             left: length - splitterState.splitterWidth / 2,
             top: 0, right: 0, bottom: 0
         )
+    }
+
+    private func bindWindowEvents() {
+        self.appearanceChanged.addHandler { [weak self] _ in
+            guard let self else { return }
+            // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
+            guard let hwnd = self.appWindow else { return }
+
+            // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
+            hwnd.titleBar.preferredTheme = App.context.theme.titleBarTheme
+
+            let str = App.context.tr(App.context.productName)
+            self.title = str
+            self.ui.titleBar.title = str
+            try? ToolTipService.setToolTip(self.ui.backButton, tr("Back"))
+            try? ToolTipService.setToolTip(self.ui.forwardButton, tr("Forward"))
+            self.ui.searchBox.placeholderText = App.context.tr("Search ...")
+        }
+
+        self.closed.addHandler { [weak self] _, _ in
+            guard let self else { return }
+            guard self.saveLayoutPreferences else { return }
+
+            self.windowLayout.navigationViewPaneOpen = self.ui.navigationView.isPaneOpen
+            self.windowLayout.navigationViewOpenPaneLength = self.ui.navigationView.openPaneLength
+
+            App.context.preferences.save(windowLayout)
+        }
     }
 
     // MARK: - XAML UI

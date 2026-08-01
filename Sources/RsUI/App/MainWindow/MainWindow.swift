@@ -153,6 +153,15 @@ class MainWindow: NavigationViewWindow {
         useMicaBackdrop()
         useRestoration()
         bootstrap()
+
+        /*
+        ui.backButton.click.addHandler { [weak self] _, _ in
+            self?.onGoBack()
+        }
+        ui.forwardButton.click.addHandler { [weak self] _, _ in
+            self?.onGoForward()
+        }
+        */
     }
 
     // setupContent 会触发 navigationView lazy var 求值，必须在那之前赋值。
@@ -191,20 +200,19 @@ class MainWindow: NavigationViewWindow {
         setupContent()
     }
 
-    override func onGoBack() {
+     func onGoBack() {
         guard let ctx = selectedTabContext, ctx.frame.canGoBack else { return }
         ctx.frame.goBack()
         renderSelectedTab()
     }
 
-    override func onGoForward() {
+     func onGoForward() {
         guard let ctx = selectedTabContext, ctx.frame.canGoForward else { return }
         ctx.frame.goForward()
         renderSelectedTab()
     }
 
-    override func onAppearanceChanged() {
-        super.onAppearanceChanged()
+     func onAppearanceChanged() {
         /*
         // 死窗口防御：closed handler 把 viewModel 置为 nil，此时 appWindow 也已失效（IUO → nil）
         guard viewModel != nil, appWindow != nil else { return }

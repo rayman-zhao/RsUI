@@ -3,11 +3,28 @@ import Observation
 import RsFoundation
 import WinUI
 
-/// FIXME: 我不确定这里的保护机制是必要的。从遗留代码迁移过来，应确认测试有效。
+struct EventHandler<T> {
+    typealias Handler = (T) -> Void
+    private var handlers: [Handler] = []
+
+    mutating func addHandler(_ handler: @escaping Handler) {
+        handlers.append(handler)
+    }
+
+    func invoke(_ value: T) {
+        for handler in handlers {
+            handler(value)
+        }
+    }
+}
+
+/// FIXME: 我不确定这里的保护机制是必要的。从遗留代码迁移过来，应去确认测试有效果。
 class AppearanceWindow: Window {
+    public var appearanceChanged: EventHandler<AppearanceWindow> = EventHandler()
+
     // 持有 Observation Task 句柄，窗口关闭时 cancel，避免死窗口的 task 继续访问失效的 self.appWindow / self.viewModel
-    var observationTask: Task<Void, Never>? = nil
-    var isApplyingAppearance = false
+    private var observationTask: Task<Void, Never>? = nil
+    private var isApplyingAppearance = false
 
     override init() {
         super.init()
@@ -30,7 +47,7 @@ class AppearanceWindow: Window {
             self.isApplyingAppearance = true
             defer { self.isApplyingAppearance = false }
 
-            self.onAppearanceChanged()
+            appearanceChanged.invoke(self)
         }
 
         self.closed.addHandler { [weak self] _, _ in
@@ -40,8 +57,5 @@ class AppearanceWindow: Window {
             self.observationTask?.cancel()
             self.observationTask = nil
         }
-    }
-
-    func onAppearanceChanged() {
     }
 }
