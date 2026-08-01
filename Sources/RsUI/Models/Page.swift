@@ -8,9 +8,11 @@ public protocol Page: AnyObject {
     var title: String { get }
     var content: UIElement { get }
 
-    // Called when the page's tab is moved to another window (tab tear-out or
-    // merge). A page that caches window-scoped state from its WindowContext
-    // should rebind it here, else calls like fullscreen act on the old window.
+    /// Callback when the page is moved to another window (tab tear-out or
+    /// merge), or the window enter/exit fullscreen state.
+    /// 
+    /// A page that caches WindowContext should update it here，and change button
+    /// text or icon for fullscreen state.
     func onWindowContextChanged(to context: WindowContext)
 }
 

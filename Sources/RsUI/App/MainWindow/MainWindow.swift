@@ -295,5 +295,14 @@ class MainWindow: NavigationViewWindow {
             ctx.frame.goForward()
             renderSelectedTab()
         }
+        fullscreenChanged.addHandler { [weak self] _ in
+            guard let self else { return }
+
+            // let context = WindowContext(owner: self)
+            // for page in model.allPages {
+            //     page.onWindowContextChanged(to: context)
+            // }
+
+        }
     }
 }
