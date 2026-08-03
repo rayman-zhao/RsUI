@@ -5,6 +5,10 @@ import WinAppSDK
 import WinUI
 import WindowsFoundation
 
+private func tr(_ keyAndValue: String) -> String {
+    return App.context.tr(keyAndValue)
+}
+
 /// 主窗口壳：`NavigationViewWindow` 的子类，承载侧栏 + 标题栏 + 一个 `PageTabView`
 /// 作为内容容器（共享单 `PageFrame` + WinUI `TabView` strip）。
 ///
@@ -112,12 +116,6 @@ class MainWindow: NavigationViewWindow {
         bindEvents()
     }
 
-    // MARK: - Localization helper
-
-    static func tr(_ keyAndValue: String) -> String {
-        return App.context.tr(keyAndValue)
-    }
-
     // MARK: - Lifecycle & events
 
     private func setupContent() {
@@ -163,12 +161,12 @@ class MainWindow: NavigationViewWindow {
 
         // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
         pageTabView.setAddTabProvider { [weak self] in
-            guard let self else { return (SettingsPage(), MainWindow.tr("Settings")) }
+            guard let self else { return (SettingsPage(), tr("Settings")) }
             if let url = self.firstNavigationItemURL() {
                 let page = self.resolvePage(for: url) ?? SettingsPage()
                 return (page, page.title)
             }
-            return (SettingsPage(), MainWindow.tr("Settings"))
+            return (SettingsPage(), tr("Settings"))
         }
 
         configureTabTearOutEvents()
