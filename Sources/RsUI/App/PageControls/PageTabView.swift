@@ -84,7 +84,7 @@ class PageTabView: Grid {
 
     // MARK: - Init
 
-    init(maxHistoryPages: Int = 64) {
+    init(maxHistoryPages: Int = App.context.route.maxHistoryPages) {
         self.tabView = TabView()
         self.sharedFrame = PageFrame(model: MainWindowTab())
         self.maxHistoryPages = maxHistoryPages

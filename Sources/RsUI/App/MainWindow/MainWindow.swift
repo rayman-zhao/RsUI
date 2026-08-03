@@ -32,17 +32,10 @@ class MainWindow: NavigationViewWindow {
     var initialPageFactory: ((WindowContext) -> Page)? = nil
     var initialNavigationTransitionInfoOverride: NavigationTransitionInfo? = nil
 
-    // MARK: - Tab container
-
-    /// 唯一的 tab 容器：共享单 `PageFrame` + WinUI `TabView` strip 的组合控件。
-    /// `bootstrap()` 之前建好（`ui.navigationView.content` 赋值必须先有它），
-    /// `maxHistoryPages` 取自 `viewModel.routePreferences.maxHistoryPages`。
-    private lazy var pageTabView: PageTabView = PageTabView(
-        maxHistoryPages: App.context.route.maxHistoryPages
-    )
+    private lazy var pageTabView = PageTabView()
 
     // MARK: - Init
-    
+
     init(_ forceMinimalMode: Bool = false, initialURL: URL? = nil) {
         super.init(forceMinimalMode)
         useMicaBackdrop()
@@ -56,7 +49,8 @@ class MainWindow: NavigationViewWindow {
         super.init()
         useMicaBackdrop()
         useRestoration()
-        bootstrap()
+        setupUI()
+        bindEvents()
     }
 
     // setupContent 会触发 navigationView lazy var 求值，必须在那之前赋值。
@@ -65,7 +59,8 @@ class MainWindow: NavigationViewWindow {
         super.init(initialNavigationViewPaneOpen!)
         useMicaBackdrop()
         useRestoration()
-        bootstrap()
+        setupUI()
+        bindEvents()
     }
 
     init(forceHomeOnLaunch: Bool) {
@@ -73,72 +68,12 @@ class MainWindow: NavigationViewWindow {
         useMicaBackdrop()
         useRestoration()
         self.forceHomeOnLaunch = forceHomeOnLaunch
-        bootstrap()
-    }
-
-    private func setupUI() {
-
-    }
-
-    private func bootstrap() {
-        ui.navigationView.content = pageTabView
-
-        setupContent()
+        setupUI()
         bindEvents()
     }
 
-    // MARK: - Lifecycle & events
-
-    private func setupContent() {
-        configureNavigationViewSelection()
-        configureTabViewEvents()
-    }
-
-    private func configureNavigationViewSelection() {
-        ui.navigationView.selectionChanged.addHandler { [weak self] _, args in
-            guard let self, let args, !self.isSyncingSelection else { return }
-
-            if args.isSettingsSelected {
-                navigate(
-                    to: SettingsPage(), transitionInfoOverride: SuppressNavigationTransitionInfo())
-            } else if let item = args.selectedItem as? NavigationViewItem,
-                let tag = item.tag,
-                let str = tag as? HString,
-                let url = URL(string: String(hString: str))
-            {
-                _ = navigate(to: url, transitionInfoOverride: SuppressNavigationTransitionInfo())
-            }
-        }
-    }
-
-    private func configureTabViewEvents() {
-        // PageTabView 自管 strip：selectionChanged / tabCloseRequested / addTabButtonClick
-        // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
-        // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
-        pageTabView.onPageChanged = { [weak self] _, _, page in
-            guard let self else { return }
-            self.ui.navigationView.header = nil
-            self.syncNavigationSelection(for: page.url)
-            self.ui.backButton.isEnabled = self.pageTabView.canGoBack
-            self.ui.forwardButton.isEnabled = self.pageTabView.canGoForward
-            App.context.route.lastPageURL = page.url
-        }
-        pageTabView.onCleared = { [weak self] _, _ in
-            guard let self else { return }
-            self.ui.navigationView.header = nil
-            self.ui.backButton.isEnabled = false
-            self.ui.forwardButton.isEnabled = false
-        }
-
-        // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
-        pageTabView.setAddTabProvider { [weak self] in
-            guard let self else { return (SettingsPage(), tr("Settings")) }
-            if let url = self.firstNavigationItemURL() {
-                let page = self.resolvePage(for: url) ?? SettingsPage()
-                return (page, page.title)
-            }
-            return (SettingsPage(), tr("Settings"))
-        }
+    private func setupUI() {
+        ui.navigationView.content = pageTabView
     }
 
     private func bindEvents() {
@@ -200,6 +135,20 @@ class MainWindow: NavigationViewWindow {
             }
         }
 
+        ui.navigationView.selectionChanged.addHandler { [weak self] _, args in
+            guard let self, let args, !self.isSyncingSelection else { return }
+
+            if args.isSettingsSelected {
+                navigate(
+                    to: SettingsPage(), transitionInfoOverride: SuppressNavigationTransitionInfo())
+            } else if let item = args.selectedItem as? NavigationViewItem,
+                let tag = item.tag,
+                let str = tag as? HString,
+                let url = URL(string: String(hString: str))
+            {
+                _ = navigate(to: url, transitionInfoOverride: SuppressNavigationTransitionInfo())
+            }
+        }
         ui.backButton.click.addHandler { [weak self] _, _ in
             guard let self else { return }
             self.pageTabView.goBack()
@@ -208,11 +157,44 @@ class MainWindow: NavigationViewWindow {
             guard let self else { return }
             self.pageTabView.goForward()
         }
+        
         fullscreenChanged.addHandler { _ in
             // Fullscreen lifecycle hook: reserved for future "broadcast window
             // context to all pages of the selected tab" work. The old frame-per-tab
             // implementation had this commented-out body too; kept as a no-op for
             // API/observer continuity.
+        }
+
+        bindTabViewEvents()
+    }
+
+    private func bindTabViewEvents() {
+        // PageTabView 自管 strip：selectionChanged / tabCloseRequested / addTabButtonClick
+        // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
+        // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
+        pageTabView.onPageChanged = { [weak self] _, _, page in
+            guard let self else { return }
+            self.ui.navigationView.header = nil
+            self.syncNavigationSelection(for: page.url)
+            self.ui.backButton.isEnabled = self.pageTabView.canGoBack
+            self.ui.forwardButton.isEnabled = self.pageTabView.canGoForward
+            App.context.route.lastPageURL = page.url
+        }
+        pageTabView.onCleared = { [weak self] _, _ in
+            guard let self else { return }
+            self.ui.navigationView.header = nil
+            self.ui.backButton.isEnabled = false
+            self.ui.forwardButton.isEnabled = false
+        }
+
+        // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
+        pageTabView.setAddTabProvider { [weak self] in
+            guard let self else { return (SettingsPage(), tr("Settings")) }
+            if let url = self.firstNavigationItemURL() {
+                let page = self.resolvePage(for: url) ?? SettingsPage()
+                return (page, page.title)
+            }
+            return (SettingsPage(), tr("Settings"))
         }
     }
 

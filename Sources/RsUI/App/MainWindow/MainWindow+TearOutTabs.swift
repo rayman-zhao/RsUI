@@ -1,5 +1,4 @@
 /*
-
 class WindowContext {
     // MARK: - Detach / Restore
 
