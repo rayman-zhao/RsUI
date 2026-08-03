@@ -38,7 +38,7 @@ class NavigationViewWindow: AppearanceWindow {
         splitterWidth: Double(6),
     )
 
-    let fullscreenChanged = EventHandler<NavigationViewWindow>()
+    let fullscreenChanged = EventWithArgumentHandler<NavigationViewWindow, Bool>()
     private(set) var isInFullscreen = false
     private var fullscreen = (
         preParent: UIElement?(nil),
@@ -238,7 +238,7 @@ class NavigationViewWindow: AppearanceWindow {
         self.extendsContentIntoTitleBar = false
 
         try? hwnd.setPresenter(.fullScreen)
-        fullscreenChanged.invoke(self)
+        fullscreenChanged.invoke(self, true)
     }
 
     /// 退出 element 全屏，把 element reparent 回退出前的原 parent 原位置。
@@ -270,7 +270,7 @@ class NavigationViewWindow: AppearanceWindow {
         fullscreen.preParent = nil
         fullscreen.preIndex = nil
         fullscreen.preWindowMaximized = false
-        fullscreenChanged.invoke(self)
+        fullscreenChanged.invoke(self, false)
     }
 
     /// 首次进全屏时装一个 Esc accelerator；未在全屏时透传给其他处理者。

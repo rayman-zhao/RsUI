@@ -316,7 +316,7 @@ public struct WindowContext {
     /// context.enterTabFullscreen()
     /// ```
     public func enterTabFullscreen() {
-        owner?.enterTabFullscreen()
+        owner?.enterPageFullscreen()
     }
 
     /// Exits immersive fullscreen and restores the application chrome.
@@ -337,7 +337,7 @@ public struct WindowContext {
     /// }
     /// ```
     public func exitTabFullscreen() {
-        owner?.exitTabFullscreen()
+        owner?.exitFullscreen()
     }
 
     /// Whether the owning window is currently in tab fullscreen.
@@ -355,6 +355,6 @@ public struct WindowContext {
     /// }
     /// ```
     public var isInTabFullscreen: Bool {
-        owner?.isInTabFullscreen ?? false
+        owner?.isInFullscreen ?? false
     }
 }

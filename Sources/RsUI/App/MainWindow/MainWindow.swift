@@ -32,7 +32,7 @@ class MainWindow: NavigationViewWindow {
     var initialPageFactory: ((WindowContext) -> Page)? = nil
     var initialNavigationTransitionInfoOverride: NavigationTransitionInfo? = nil
 
-    private lazy var pageTabView = PageTabView()
+    private lazy var pageControl = PageTabView()
 
     // MARK: - Init
 
@@ -73,14 +73,14 @@ class MainWindow: NavigationViewWindow {
     }
 
     private func setupUI() {
-        ui.navigationView.content = pageTabView
+        ui.navigationView.content = pageControl
     }
 
     private func bindEvents() {
         self.appearanceChanged.addHandler { [weak self] _ in
             guard let self else { return }
-            // PageTabView 内部的 closeOthers tooltip 在语言切换后由它自己再应用。
-            self.pageTabView.reapplyCloseOthersTooltip()
+
+            self.pageControl.updateAppearance()
 
             let context = WindowContext(owner: self)
             ui.titleBarRightHeader.children.clear()
@@ -150,19 +150,13 @@ class MainWindow: NavigationViewWindow {
             }
         }
         ui.backButton.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            self.pageTabView.goBack()
+            self?.pageControl.goBack()
         }
         ui.forwardButton.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            self.pageTabView.goForward()
+            self?.pageControl.goForward()
         }
-        
-        fullscreenChanged.addHandler { _ in
-            // Fullscreen lifecycle hook: reserved for future "broadcast window
-            // context to all pages of the selected tab" work. The old frame-per-tab
-            // implementation had this commented-out body too; kept as a no-op for
-            // API/observer continuity.
+        fullscreenChanged.addHandler { [weak self] _, arg in
+            self?.pageControl.updateFullscreen(arg)
         }
 
         bindTabViewEvents()
@@ -172,15 +166,15 @@ class MainWindow: NavigationViewWindow {
         // PageTabView 自管 strip：selectionChanged / tabCloseRequested / addTabButtonClick
         // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
         // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
-        pageTabView.onPageChanged = { [weak self] _, _, page in
+        pageControl.onPageChanged = { [weak self] _, _, page in
             guard let self else { return }
             self.ui.navigationView.header = nil
             self.syncNavigationSelection(for: page.url)
-            self.ui.backButton.isEnabled = self.pageTabView.canGoBack
-            self.ui.forwardButton.isEnabled = self.pageTabView.canGoForward
+            self.ui.backButton.isEnabled = self.pageControl.canGoBack
+            self.ui.forwardButton.isEnabled = self.pageControl.canGoForward
             App.context.route.lastPageURL = page.url
         }
-        pageTabView.onCleared = { [weak self] _, _ in
+        pageControl.onCleared = { [weak self] _, _ in
             guard let self else { return }
             self.ui.navigationView.header = nil
             self.ui.backButton.isEnabled = false
@@ -188,7 +182,7 @@ class MainWindow: NavigationViewWindow {
         }
 
         // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
-        pageTabView.setAddTabProvider { [weak self] in
+        pageControl.setAddTabProvider { [weak self] in
             guard let self else { return (SettingsPage(), tr("Settings")) }
             if let url = self.firstNavigationItemURL() {
                 let page = self.resolvePage(for: url) ?? SettingsPage()
@@ -198,19 +192,23 @@ class MainWindow: NavigationViewWindow {
         }
     }
 
+    func enterPageFullscreen() {
+        enterFullscreen(for: pageControl.pageView)
+    }
+
     // MARK: - Tab accessors
 
-    var selectedTabContext: PageTabView.TabContext? { pageTabView.selectedTabContext }
-    var selectedTabModel: MainWindowTab? { pageTabView.selectedTabModel }
-    var currentPage: Page? { pageTabView.currentPage }
-    var tabCount: Int { pageTabView.tabCount }
-    var orderedTabContexts: [PageTabView.TabContext] { pageTabView.orderedTabContexts }
+    var selectedTabContext: PageTabView.TabContext? { pageControl.selectedTabContext }
+    var selectedTabModel: MainWindowTab? { pageControl.selectedTabModel }
+    var currentPage: Page? { pageControl.currentPage }
+    var tabCount: Int { pageControl.tabCount }
+    var orderedTabContexts: [PageTabView.TabContext] { pageControl.orderedTabContexts }
 
     // True once the window has no tabs, or after teardown nilled the viewModel.
-    var hasNoTabs: Bool { pageTabView.tabCount == 0 }
+    var hasNoTabs: Bool { pageControl.tabCount == 0 }
 
     func context(for model: MainWindowTab) -> PageTabView.TabContext? {
-        pageTabView.orderedTabContexts.first { $0.model === model }
+        pageControl.orderedTabContexts.first { $0.model === model }
     }
 
     // MARK: - Tab lifecycle
@@ -225,7 +223,7 @@ class MainWindow: NavigationViewWindow {
         switchToTab: Bool = true,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> PageTabView.TabContext {
-        pageTabView.addTab(
+        pageControl.addTab(
             page: page,
             header: page.title,
             transitionInfoOverride: transitionInfoOverride,
@@ -249,7 +247,7 @@ class MainWindow: NavigationViewWindow {
         contexts.reserveCapacity(pages.count)
         for page in pages {
             // 背景 add：switchToTab=false，让最后一个再统一选中。
-            let ctx = pageTabView.addTab(
+            let ctx = pageControl.addTab(
                 page: page,
                 header: page.title,
                 transitionInfoOverride: transitionInfoOverride,
@@ -271,34 +269,34 @@ class MainWindow: NavigationViewWindow {
             selection = nil
         }
         if let selection {
-            pageTabView.selectTab(selection)
+            pageControl.selectTab(selection)
         }
         return contexts
     }
 
     func closeTab(for item: TabViewItem) {
         guard
-            let ctx = pageTabView.orderedTabContexts.first(where: { $0.item === item })
+            let ctx = pageControl.orderedTabContexts.first(where: { $0.item === item })
                 ?? {
                     // WinRT identity unstable：再按 name 兜一次。
-                    pageTabView.orderedTabContexts.first { $0.item.name == item.name }
+                    pageControl.orderedTabContexts.first { $0.item.name == item.name }
                 }()
         else { return }
-        pageTabView.closeTab(ctx)
+        pageControl.closeTab(ctx)
     }
 
     func closeOtherTabs() {
-        pageTabView.closeOtherTabs()
+        pageControl.closeOtherTabs()
     }
 
     func focusTab(matchingURL url: URL) -> Bool {
         guard let ctx = findTabContext(matchingURL: url) else { return false }
-        pageTabView.selectTab(ctx)
+        pageControl.selectTab(ctx)
         return true
     }
 
     func findTabContext(matchingURL url: URL) -> PageTabView.TabContext? {
-        pageTabView.orderedTabContexts.first { $0.model.currentPage?.url == url }
+        pageControl.orderedTabContexts.first { $0.model.currentPage?.url == url }
     }
 
     func openNewTabFromTabStrip() {
@@ -311,23 +309,6 @@ class MainWindow: NavigationViewWindow {
                 transitionInfoOverride: SuppressNavigationTransitionInfo())
         }
     }
-
-    // MARK: - Tab Fullscreen
-    // Tab 全屏 = 把当前共享 frame（pageTabView.sharedFrame，private）整页铺满窗口。
-    // 底层复用父类 `NavigationViewWindow.enterFullscreen(for:)` 的 element-reparent
-    // 全屏路径，由 PageTabView 把 sharedFrame detach / reparent 进 FullscreenOverlay；
-    // 退出按 detach 时记录的 Row1 索引插回 PageTabView.children。`WindowContext` 的
-    // enterTabFullscreen / exitTabFullscreen / isInTabFullscreen 转发到此处。
-
-    func enterTabFullscreen() {
-        pageTabView.enterFullscreen(in: self)
-    }
-
-    func exitTabFullscreen() {
-        pageTabView.exitFullscreen(in: self)
-    }
-
-    var isInTabFullscreen: Bool { isInFullscreen }
 
     // MARK: - Navigation
 
@@ -390,7 +371,7 @@ class MainWindow: NavigationViewWindow {
             addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
             return
         }
-        pageTabView.navigateCurrent(to: page, transitionInfoOverride: transitionInfoOverride)
+        pageControl.navigateCurrent(to: page, transitionInfoOverride: transitionInfoOverride)
     }
 
     @discardableResult
@@ -534,7 +515,7 @@ class MainWindow: NavigationViewWindow {
     /// strip 顺序中按 name 找 index；tear-out 合并 / detach 用到。WinRT 投影 `===` 不
     /// 稳，故按 name。
     func indexOfItem(name: String) -> Int? {
-        guard let items = pageTabView.tearOutTabView.tabItems else { return nil }
+        guard let items = pageControl.tearOutTabView.tabItems else { return nil }
         var i: UInt32 = 0
         while i < items.size {
             if let it = items.getAt(i) as? TabViewItem, it.name == name {

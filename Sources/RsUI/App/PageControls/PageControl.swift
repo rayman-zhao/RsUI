@@ -38,10 +38,8 @@ protocol PageControl: AnyObject {
     var canGoBack: Bool { get }
     var canGoForward: Bool { get }
 
-    /// 用于把控件挂入 WinUI visual tree 的根元素。`PageFrame` 与 `PageTabView`
-    /// 均为 `Grid` 子类，各自返回 `self`（包成 `FrameworkElement` 抽象给宿主，
-    /// 不让宿主依赖具体类型）。
-    var rootView: FrameworkElement { get }
+    /// 用于进入全屏模式显示的元素。
+    var pageView: UIElement { get }
 
     /// 在当前栈上 navigate 一个新 Page 并即时渲染。
     ///
@@ -59,13 +57,16 @@ protocol PageControl: AnyObject {
 
     /// 当前栈内 Forward —— mutate + 自动渲染。
     func goForward()
+
+    func updateAppearance()
+    func updateFullscreen(_ inFullscreen: Bool)
 }
 
 // MARK: - PageFrame conformance
 
 extension PageFrame: PageControl {
     var currentModel: MainWindowTab? { model }
-    var rootView: FrameworkElement { self }
+    var pageView: UIElement { self }
 
     func pushPage(
         to page: Page,
@@ -97,13 +98,18 @@ extension PageFrame: PageControl {
         goForward(NavigationTransitionInfo.make(slideEffect: .fromRight))
         renderCurrentPageIfNeeded()
     }
+
+    func updateAppearance() {
+    }
+    func updateFullscreen(_ inFullscreen: Bool) {
+    }
 }
 
 // MARK: - PageTabView conformance
 
 extension PageTabView: PageControl {
     var currentModel: MainWindowTab? { selectedTabModel }
-    var rootView: FrameworkElement { self }
+    var pageView: UIElement { self.sharedFrame.pageView }
 
     func pushPage(
         to page: Page,
@@ -118,4 +124,10 @@ extension PageTabView: PageControl {
 
     func goBack() { goBackCurrent() }
     func goForward() { goForwardCurrent() }
+
+    func updateAppearance() {
+        reapplyCloseOthersTooltip()
+    }
+    func updateFullscreen(_ inFullscreen: Bool) {
+    }
 }

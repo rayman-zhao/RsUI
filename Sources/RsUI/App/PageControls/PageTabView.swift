@@ -61,7 +61,7 @@ class PageTabView: Grid {
     // WinUI.TabView 自身：只作 strip（行内不可见性的隐藏区 + 各 TabViewItem）。
     private let tabView: TabView
     // 全部 tab 共享的单 PageFrame，strip 隐藏后内容仍由它显示。
-    private let sharedFrame: PageFrame
+    let sharedFrame: PageFrame
     // 切换 TabView 时使用 Suppress 转场：transitionInfo == nil 的 rebind，row 索引在此。
     private let contentRow: Int32 = 1
 
@@ -525,21 +525,4 @@ class PageTabView: Grid {
     /// 个事件源暴露给宿主窗口。受 `PageTabView.tabTearOutEnabled` gate:`false` 时
     /// 宿主的 `configureTearOutEvents` 直接 early-return，永不读取本 accessor。
     var tearOutTabView: TabView { tabView }
-
-    /// 把共享 frame detach 后 reparent 进窗口壳的 `FullscreenOverlay` —— 沉浸式覆盖
-    /// 整个窗口（含 titleBar / navWrapper）。复用 `NavigationViewWindow.enterFullscreen(for:)`
-    /// 的通用 reparent 路径：`sharedFrame` 当前 parent 是 PageTabView Grid（Panel 分支），
-    /// detach 时按 `children.indexOf` 记录 Row1 索引，退出时 `attachToParent` 用
-    /// `insertAt(min(index, count))` 安全插回原位置。
-    ///
-    /// 全屏中切 strip 不会被额外阻止：`sharedFrame.rebind(to:)` 仍可切 model 并渲染，
-    /// 视觉上 strip 在全屏中已随 `navWrapper` collapsed 不可见，行为与旧 frame-per-tab
-    /// 实现的"全屏锁当前页"等价。
-    func enterFullscreen(in window: NavigationViewWindow) {
-        window.enterFullscreen(for: sharedFrame)
-    }
-
-    func exitFullscreen(in window: NavigationViewWindow) {
-        window.exitFullscreen()
-    }
 }
