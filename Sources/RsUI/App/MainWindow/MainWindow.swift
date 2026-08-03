@@ -19,9 +19,6 @@ private func tr(_ keyAndValue: String) -> String {
 /// 只持有控件 + 通过 `PageControl` 协议多态驱动（inplace back/forward/pushPage）+ 暴露
 /// `WindowContext` 所需的 tab 操作入口。
 class MainWindow: NavigationViewWindow {
-    // MARK: - Properties
-
-    var viewModel: MainWindowViewModel! = MainWindowViewModel()
     // NavView 程序化选中时挂起 selectionChanged，避免递归。（TabView strip 由
     // PageTabView 自管同步，本类不再持有 isSyncingTabSelection。）
     var isSyncingSelection = false
@@ -40,11 +37,20 @@ class MainWindow: NavigationViewWindow {
     /// 唯一的 tab 容器：共享单 `PageFrame` + WinUI `TabView` strip 的组合控件。
     /// `bootstrap()` 之前建好（`ui.navigationView.content` 赋值必须先有它），
     /// `maxHistoryPages` 取自 `viewModel.routePreferences.maxHistoryPages`。
-    private(set) lazy var pageTabView: PageTabView = PageTabView(
-        maxHistoryPages: viewModel.routePreferences.maxHistoryPages
+    private lazy var pageTabView: PageTabView = PageTabView(
+        maxHistoryPages: App.context.route.maxHistoryPages
     )
 
     // MARK: - Init
+    
+    init(_ forceMinimalMode: Bool = false, initialURL: URL? = nil) {
+        super.init(forceMinimalMode)
+        useMicaBackdrop()
+        useRestoration()
+
+        setupUI()
+        bindEvents()
+    }
 
     init() {
         super.init()
@@ -68,6 +74,10 @@ class MainWindow: NavigationViewWindow {
         useRestoration()
         self.forceHomeOnLaunch = forceHomeOnLaunch
         bootstrap()
+    }
+
+    private func setupUI() {
+
     }
 
     private func bootstrap() {
@@ -106,15 +116,15 @@ class MainWindow: NavigationViewWindow {
         // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
         // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
         pageTabView.onPageChanged = { [weak self] _, _, page in
-            guard let self, self.viewModel != nil else { return }
+            guard let self else { return }
             self.ui.navigationView.header = nil
             self.syncNavigationSelection(for: page.url)
             self.ui.backButton.isEnabled = self.pageTabView.canGoBack
             self.ui.forwardButton.isEnabled = self.pageTabView.canGoForward
-            self.viewModel.routePreferences.lastPageURL = page.url
+            App.context.route.lastPageURL = page.url
         }
         pageTabView.onCleared = { [weak self] _, _ in
-            guard let self, self.viewModel != nil else { return }
+            guard let self else { return }
             self.ui.navigationView.header = nil
             self.ui.backButton.isEnabled = false
             self.ui.forwardButton.isEnabled = false
@@ -183,7 +193,7 @@ class MainWindow: NavigationViewWindow {
 
             if let page = currentPage {
                 navigate(to: page)
-            } else if let lastURL = viewModel.routePreferences.lastPageURL, navigate(to: lastURL) {
+            } else if let lastURL = App.context.route.lastPageURL, navigate(to: lastURL) {
                 return
             } else {
                 ui.navigationView.selectFirstItem()
@@ -215,7 +225,7 @@ class MainWindow: NavigationViewWindow {
     var orderedTabContexts: [PageTabView.TabContext] { pageTabView.orderedTabContexts }
 
     // True once the window has no tabs, or after teardown nilled the viewModel.
-    var hasNoTabs: Bool { viewModel == nil || pageTabView.tabCount == 0 }
+    var hasNoTabs: Bool { pageTabView.tabCount == 0 }
 
     func context(for model: MainWindowTab) -> PageTabView.TabContext? {
         pageTabView.orderedTabContexts.first { $0.model === model }

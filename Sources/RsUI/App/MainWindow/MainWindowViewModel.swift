@@ -68,18 +68,3 @@ class MainWindowTab {
         currentPage = forwardPages.removeLast()
     }
 }
-
-// Window-scoped, non-tab state. The tab list/selection moved into TabView (the
-// strip is the source of truth), so this is now only persisted preferences.
-@Observable
-class MainWindowViewModel {
-    var routePreferences: RoutePreferences
-
-    init() {
-        routePreferences = App.context.preferences.load(for: RoutePreferences.self)
-    }
-
-    deinit {
-        App.context.preferences.save(routePreferences)
-    }
-}

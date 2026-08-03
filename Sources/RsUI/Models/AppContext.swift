@@ -34,6 +34,7 @@ public final class AppContext {
             preferences.save(language)
         }
     }
+    public var route = AppRoute()
 
     private var moduleTypes: [Module.Type] = []
     internal private(set) var modules: [any Module] = []
@@ -71,6 +72,7 @@ public final class AppContext {
         if case .undefined = language {
             language = (ApplicationLanguages.languages.first == "zh-Hans-CN") ? .zh_CN : .en_US
         }
+        route = preferences.load(for: AppRoute.self)
     }
 
     func initializeModules() {
@@ -79,6 +81,8 @@ public final class AppContext {
 
     func releaseModules() {
         modules = []
+
+        preferences.save(route)
     }
 
     public func tr(_ keyAndValue: String, table: String? = nil) -> String {
