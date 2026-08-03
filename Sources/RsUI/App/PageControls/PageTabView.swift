@@ -183,6 +183,37 @@ class PageTabView: Grid {
         return ctx
     }
 
+    /// 收养一个已含历史的 model（tear-out / 跨窗口迁移用）：直接用该 model 建
+    /// `TabContext` 插入 strip，不走 `MainWindowTab(page:)` 新建 —— 保留 back/forward
+    /// 历史与已渲染过的 `Page` 实例。`model.needsRender=true` 让 `applyTab` 渲染当前
+    /// 页；宿主需在调用前自行把 `model.allPages` 的 `Page` `onWindowContextChanged`
+    /// 重绑到本窗口（控件本身不知道窗口边界）。
+    @discardableResult
+    func adoptTab(model: MainWindowTab, header tabHeader: String?, at index: Int? = nil) -> TabContext {
+        let item = TabViewItem()
+        item.name = UUID().uuidString
+        item.minWidth = 100
+        item.isClosable = !tabContextsByName.isEmpty
+        if let tabHeader {
+            item.header = tabHeader
+        }
+
+        let ctx = TabContext(model: model, item: item)
+        tabContextsByName[item.name] = ctx
+        updateTabTitle(ctx)
+
+        insertItem(item, at: index)
+
+        // Tear-out 落地必选中 —— torn tab 跟随光标进入接收窗口后应立刻成为当前页。
+        selectItem(item)
+        model.needsRender = true
+        applyTab(ctx)
+
+        updateStripVisibility()
+        updateAllClosableStates()
+        return ctx
+    }
+
     /// 关闭一个 tab（`>1` tab 才允许；lone tab `isClosable=false`，由 `updateAllClosableStates` 维护）。
     func closeTab(_ ctx: TabContext) {
         guard tabContextsByName.count > 1 else { return }
@@ -485,5 +516,30 @@ class PageTabView: Grid {
             }
             i += 1
         }
+    }
+
+    // MARK: - Host-facing entry points (MainWindow cross-window tear-out & fullscreen)
+
+    /// 暴露内部 strip `TabView` 供宿主挂 cross-window tear-out 事件。Tear-out 本质跨
+    /// 窗口（创建接收窗、在窗口间迁移 model），windowless 控件无法自己拥有，故把这
+    /// 个事件源暴露给宿主窗口。受 `PageTabView.tabTearOutEnabled` gate:`false` 时
+    /// 宿主的 `configureTearOutEvents` 直接 early-return，永不读取本 accessor。
+    var tearOutTabView: TabView { tabView }
+
+    /// 把共享 frame detach 后 reparent 进窗口壳的 `FullscreenOverlay` —— 沉浸式覆盖
+    /// 整个窗口（含 titleBar / navWrapper）。复用 `NavigationViewWindow.enterFullscreen(for:)`
+    /// 的通用 reparent 路径：`sharedFrame` 当前 parent 是 PageTabView Grid（Panel 分支），
+    /// detach 时按 `children.indexOf` 记录 Row1 索引，退出时 `attachToParent` 用
+    /// `insertAt(min(index, count))` 安全插回原位置。
+    ///
+    /// 全屏中切 strip 不会被额外阻止：`sharedFrame.rebind(to:)` 仍可切 model 并渲染，
+    /// 视觉上 strip 在全屏中已随 `navWrapper` collapsed 不可见，行为与旧 frame-per-tab
+    /// 实现的"全屏锁当前页"等价。
+    func enterFullscreen(in window: NavigationViewWindow) {
+        window.enterFullscreen(for: sharedFrame)
+    }
+
+    func exitFullscreen(in window: NavigationViewWindow) {
+        window.exitFullscreen()
     }
 }
