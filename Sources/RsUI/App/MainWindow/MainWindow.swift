@@ -19,10 +19,6 @@ private func tr(_ keyAndValue: String) -> String {
 /// 只持有控件 + 通过 `PageControl` 协议多态驱动（inplace back/forward/pushPage）+ 暴露
 /// `WindowContext` 所需的 tab 操作入口。
 class MainWindow: NavigationViewWindow {
-    // NavView 程序化选中时挂起 selectionChanged，避免递归。（TabView strip 由
-    // PageTabView 自管同步，本类不再持有 isSyncingTabSelection。）
-    var isSyncingSelection = false
-
     // When true, launch skips currentPage/lastPageURL restore and selects the
     // first NavigationView item instead.
     var forceHomeOnLaunch: Bool = false
@@ -74,6 +70,8 @@ class MainWindow: NavigationViewWindow {
 
     private func setupUI() {
         ui.navigationView.content = pageControl
+        ui.backButton.isEnabled = false
+        ui.forwardButton.isEnabled = false
     }
 
     private func bindEvents() {
@@ -134,19 +132,22 @@ class MainWindow: NavigationViewWindow {
                 ui.navigationView.selectFirstItem()
             }
         }
+        fullscreenChanged.addHandler { [weak self] _, arg in
+            self?.pageControl.updateFullscreen(arg)
+        }
 
-        ui.navigationView.selectionChanged.addHandler { [weak self] _, args in
-            guard let self, let args, !self.isSyncingSelection else { return }
+        ui.navigationView.itemInvoked.addHandler { [weak self] _, arg in
+            guard let self, let arg, let url = resolveURL(for: arg) else { return }
 
-            if args.isSettingsSelected {
-                navigate(
-                    to: SettingsPage(), transitionInfoOverride: SuppressNavigationTransitionInfo())
-            } else if let item = args.selectedItem as? NavigationViewItem,
-                let tag = item.tag,
-                let str = tag as? HString,
-                let url = URL(string: String(hString: str))
-            {
-                _ = navigate(to: url, transitionInfoOverride: SuppressNavigationTransitionInfo())
+            let ctrlState =
+                (try? InputKeyboardSource.getKeyStateForCurrentThread(VirtualKey.control)) ?? .none
+            let ctrlDown =
+                ctrlState.rawValue & CoreVirtualKeyStates.down.rawValue
+                == CoreVirtualKeyStates.down.rawValue
+            guard ctrlDown || url != pageControl.currentPage?.url else { return }
+
+            Task { @MainActor [weak self] in
+                _ = self?.navigate(to: url, mode: ctrlDown ? .newTabBackground : .inplace)
             }
         }
         ui.backButton.click.addHandler { [weak self] _, _ in
@@ -154,9 +155,6 @@ class MainWindow: NavigationViewWindow {
         }
         ui.forwardButton.click.addHandler { [weak self] _, _ in
             self?.pageControl.goForward()
-        }
-        fullscreenChanged.addHandler { [weak self] _, arg in
-            self?.pageControl.updateFullscreen(arg)
         }
 
         bindTabViewEvents()
@@ -169,7 +167,7 @@ class MainWindow: NavigationViewWindow {
         pageControl.onPageChanged = { [weak self] _, _, page in
             guard let self else { return }
             self.ui.navigationView.header = nil
-            self.syncNavigationSelection(for: page.url)
+            self.ui.navigationView.selectItem(with: page.url)
             self.ui.backButton.isEnabled = self.pageControl.canGoBack
             self.ui.forwardButton.isEnabled = self.pageControl.canGoForward
             App.context.route.lastPageURL = page.url
@@ -434,60 +432,11 @@ class MainWindow: NavigationViewWindow {
         return nil
     }
 
-    func syncNavigationSelection(for url: URL) {
-        // isSyncingSelection = true
-        // defer { isSyncingSelection = false }
-
-        ui.navigationView.selectItem(with: url)
-    }
-
-    private func captureOpenInNewTabRequested(_ args: PointerRoutedEventArgs?) {
-        guard let args = args else { return }
-        let rawValue = Int(args.keyModifiers.rawValue)
-        openInNewTabRequested = (rawValue & 0x1) != 0
-    }
-
     func appendNavigationItem(_ item: NavigationViewItemBase, _ isFooter: Bool) {
-        item.pointerPressed.addHandler { [weak self, weak item] _, args in
-            guard let self else { return }
-            self.captureOpenInNewTabRequested(args)
-            guard self.openInNewTabRequested, let item else { return }
-            self.openSelectedNavigationItemInNewTabIfNeeded(item, args)
-        }
         if isFooter {
             ui.navigationView.footerMenuItems.append(item)
         } else {
             ui.navigationView.menuItems.append(item)
-        }
-    }
-
-    private func openSelectedNavigationItemInNewTabIfNeeded(
-        _ item: NavigationViewItemBase, _ args: PointerRoutedEventArgs?
-    ) {
-        guard isNavigationItemSelected(item), let url = url(for: item) else { return }
-
-        args?.handled = true
-        openInNewTabRequested = false
-
-        let queued =
-            (try? dispatcherQueue?.tryEnqueue { [weak self] in
-                guard let self else { return }
-                _ = self.navigate(
-                    to: url,
-                    mode: .newTab,
-                    transitionInfoOverride: SuppressNavigationTransitionInfo()
-                )
-            }) ?? false
-
-        if !queued {
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                _ = self.navigate(
-                    to: url,
-                    mode: .newTab,
-                    transitionInfoOverride: SuppressNavigationTransitionInfo()
-                )
-            }
         }
     }
 
@@ -508,6 +457,18 @@ class MainWindow: NavigationViewWindow {
         }
 
         return URL(string: String(hString: str))
+    }
+
+    private func resolveURL(for arg: NavigationViewItemInvokedEventArgs) -> URL? {
+        if arg.isSettingsInvoked {
+            return URL(string: "rs://ui/settings")
+        } else if let tag = arg.invokedItemContainer.tag,
+            let str = tag as? HString
+        {
+            return URL(string: String(hString: str))
+        }
+
+        return nil
     }
 
     // MARK: - Strip primitives (match items by stable name, not by ===)
