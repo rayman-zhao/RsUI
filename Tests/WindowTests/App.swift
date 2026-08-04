@@ -38,8 +38,8 @@ final class App: SwiftApplication {
         }
 
         window.ui.navigationView.content = toggle
-        window.fullscreenChanged.addHandler { window in
-            if window.isInFullscreen {
+        window.fullscreenChanged.addHandler { _, isInFullscreen in
+            if isInFullscreen {
                 toggle.content = "Exit Fullscreen (Esc)"
             } else {
                 toggle.content = "Enter Fullscreen"
