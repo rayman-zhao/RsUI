@@ -26,6 +26,18 @@ extension NavigationView {
         }
     }
 
+    public var firstItemURL: URL? {
+        if let item = self.first(where: { _ in true }),
+            let tag = item.tag,
+            let str = tag as? HString,
+            let url = URL(string: String(hString: str))
+        {
+            return url
+        } else {
+            return SettingsPage.url
+        }
+    }
+
     private func selectSettingsItem() {
         if self.isSettingsVisible, let item = (self.settingsItem as? NavigationViewItem) {
             item.isSelected = true
