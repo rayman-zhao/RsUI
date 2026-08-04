@@ -12,7 +12,6 @@ public enum NavigationOpenMode: Sendable {
     case inplace
     case newTab
     case newTabBackground
-    case newWindow
 }
 
 /// Information returned when a selected tab is detached from a main window.
@@ -233,13 +232,6 @@ public struct WindowContext {
         makePage: @escaping (WindowContext) -> Page
     ) {
         guard let owner else { return }
-        if mode == .newWindow {
-            MainWindow.openDetachedWindow(
-                transitionInfoOverride: transitionInfoOverride,
-                makePage: makePage
-            )
-            return
-        }
 
         let context = WindowContext(owner: owner)
         owner.navigate(
@@ -281,10 +273,6 @@ public struct WindowContext {
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
         guard let owner else { return false }
-        if mode == .newWindow {
-            return owner.navigate(
-                to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
-        }
         if owner.findTabContext(matchingURL: url) != nil {
             if focusExisting {
                 _ = owner.focusTab(matchingURL: url)

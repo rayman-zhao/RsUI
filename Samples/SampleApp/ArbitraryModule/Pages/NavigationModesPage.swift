@@ -47,8 +47,7 @@ final class NavigationModesPage: RsUI.Page {
             makeCard(
                 glyph: "\u{E78B}",
                 header: ".newWindow",
-                description: tr("Opens this page in a fresh MainWindow."),
-                mode: .newWindow
+                description: tr("Opens this page in a fresh MainWindow.")
             ),
         ]
         return featurePageContent(cards)
@@ -69,6 +68,24 @@ final class NavigationModesPage: RsUI.Page {
         card.click.addHandler { [weak self] _, _ in
             guard let self else { return }
             _ = self.context.open(self.url, mode: mode)
+        }
+        return card
+    }
+
+    private func makeCard(
+        glyph: String,
+        header: String,
+        description: String
+    ) -> SettingsCard {
+        let card = SettingsCard(
+            headerIconGlyph: glyph,
+            header: header,
+            description: description
+        )
+        card.isClickEnabled = true
+        card.click.addHandler { [weak self] _, _ in
+            guard let self else { return }
+            App.context.openNewWindow(with: self.url)
         }
         return card
     }

@@ -2,8 +2,8 @@ import Foundation
 import Observation
 import RsFoundation
 import UWP
-import WindowsFoundation
 import WinUI
+import WindowsFoundation
 
 @Observable
 public final class AppContext {
@@ -12,7 +12,7 @@ public final class AppContext {
     public private(set) var supportDirectory: URL
     public private(set) var preferences: Preferences
     public private(set) var resourceBundle: Bundle
-    
+
     public var iconPath: String? {
         resourceBundle.path(forResource: productName, ofType: "ico")
     }
@@ -106,25 +106,16 @@ public final class AppContext {
 
     /// Opens a brand-new `MainWindow` and navigates it to the given URL.
     ///
-    /// Use this when there is no `WindowContext` at hand (background work,
-    /// global callbacks, app-level shortcuts). For module code that already
-    /// holds a `WindowContext`, prefer `WindowContext.open(_:mode:.newWindow)`
-    /// so the route goes through the module's `navigationRequested`.
-    ///
     /// - Parameters:
     ///   - url: The route URL to resolve in the new window.
-    ///   - collapseNavigationPane: When `true`, the new window starts with
-    ///     the NavigationView pane collapsed and its closing handler skips
-    ///     persisting the layout, so the collapsed chrome does not leak into
-    ///     subsequent windows. Use for viewer-style windows (e.g. slide
-    ///     presenters) where chrome would distract from content.
+    ///   - forceMinimalMode: When `true`, the new window starts with
+    ///     the NavigationView pane minimized and its closing handler skips
+    ///     persisting the layout unless user expended it. Use for viewer-style
+    ///     windows (e.g. slide presenters) where chrome would distract from content.
     public func openNewWindow(
         with url: URL,
-        collapseNavigationPane: Bool = false
+        forceMinimalMode: Bool = false
     ) {
-        MainWindow.openDetachedWindow(
-            navigatingTo: url,
-            collapseNavigationPane: collapseNavigationPane
-        )
+        try! MainWindow(url, forceMinimalMode: forceMinimalMode).activate()
     }
 }

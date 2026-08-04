@@ -19,53 +19,30 @@ private func tr(_ keyAndValue: String) -> String {
 /// 只持有控件 + 通过 `PageControl` 协议多态驱动（inplace back/forward/pushPage）+ 暴露
 /// `WindowContext` 所需的 tab 操作入口。
 class MainWindow: NavigationViewWindow {
-    // When true, launch skips currentPage/lastPageURL restore and selects the
-    // first NavigationView item instead.
-    var forceHomeOnLaunch: Bool = false
-
-    var openInNewTabRequested: Bool = false
-    var initialNavigationURL: URL? = nil
-    var initialPageFactory: ((WindowContext) -> Page)? = nil
-    var initialNavigationTransitionInfoOverride: NavigationTransitionInfo? = nil
-
+    private var context: WindowContext {
+        WindowContext(owner: self)
+    }
     private lazy var pageControl = PageTabView()
 
     // MARK: - Init
 
-    init(_ forceMinimalMode: Bool = false, initialURL: URL? = nil) {
+    init(_ url: URL?, forceMinimalMode: Bool = false) {
         super.init(forceMinimalMode)
         useMicaBackdrop()
         useRestoration()
 
         setupUI()
         bindEvents()
-    }
 
-    init() {
-        super.init()
-        useMicaBackdrop()
-        useRestoration()
-        setupUI()
-        bindEvents()
-    }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
 
-    // setupContent 会触发 navigationView lazy var 求值，必须在那之前赋值。
-    // 用 init 参数承接，否则 openDetachedWindow 在 MainWindow() 返回后再赋值就晚了。
-    init(initialNavigationViewPaneOpen: Bool?, suppressLayoutPersistence: Bool) {
-        super.init(initialNavigationViewPaneOpen!)
-        useMicaBackdrop()
-        useRestoration()
-        setupUI()
-        bindEvents()
-    }
-
-    init(forceHomeOnLaunch: Bool) {
-        super.init()
-        useMicaBackdrop()
-        useRestoration()
-        self.forceHomeOnLaunch = forceHomeOnLaunch
-        setupUI()
-        bindEvents()
+            if let url, self.navigate(to: url) {
+                return
+            } else if let home = self.ui.navigationView.firstItemURL {
+                self.navigate(to: home)
+            }
+        }
     }
 
     private func setupUI() {
@@ -78,59 +55,22 @@ class MainWindow: NavigationViewWindow {
         self.appearanceChanged.addHandler { [weak self] _ in
             guard let self else { return }
 
-            self.pageControl.updateAppearance()
-
-            let context = WindowContext(owner: self)
             ui.titleBarRightHeader.children.clear()
             ui.navigationView.menuItems.clear()
             ui.navigationView.footerMenuItems.clear()
+            let context = self.context
             for module in App.context.modules {
                 if let item = module.titleBarRightHeaderItem(in: context) {
                     ui.titleBarRightHeader.children.append(item)
                 }
                 for item in module.navigationViewMenuItems(in: context) {
-                    appendNavigationItem(item, false)
+                    ui.navigationView.menuItems.append(item)
                 }
                 for item in module.navigationViewFooterMenuItems(in: context) {
-                    appendNavigationItem(item, true)
+                    ui.navigationView.footerMenuItems.append(item)
                 }
             }
-
-            if let makeInitialPage = initialPageFactory {
-                initialPageFactory = nil
-                let transitionInfoOverride =
-                    initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
-                initialNavigationTransitionInfoOverride = nil
-                navigate(
-                    to: makeInitialPage(context), transitionInfoOverride: transitionInfoOverride)
-                return
-            }
-
-            if let url = initialNavigationURL {
-                initialNavigationURL = nil
-                let transitionInfoOverride =
-                    initialNavigationTransitionInfoOverride ?? SuppressNavigationTransitionInfo()
-                initialNavigationTransitionInfoOverride = nil
-                _ = navigate(to: url, transitionInfoOverride: transitionInfoOverride)
-                return
-            }
-
-            // Taskbar "New Window" / --new-window: skip currentPage/lastPageURL,
-            // force-select the first NavigationView item (Home) without polluting
-            // routePreferences.
-            if forceHomeOnLaunch {
-                forceHomeOnLaunch = false
-                ui.navigationView.selectFirstItem()
-                return
-            }
-
-            if let page = currentPage {
-                navigate(to: page)
-            } else if let lastURL = App.context.route.lastPageURL, navigate(to: lastURL) {
-                return
-            } else {
-                ui.navigationView.selectFirstItem()
-            }
+            self.pageControl.updateAppearance()
         }
         fullscreenChanged.addHandler { [weak self] _, arg in
             self?.pageControl.updateFullscreen(arg)
@@ -157,10 +97,10 @@ class MainWindow: NavigationViewWindow {
             self?.pageControl.goForward()
         }
 
-        bindTabViewEvents()
+        bindPageControlEvents()
     }
 
-    private func bindTabViewEvents() {
+    private func bindPageControlEvents() {
         // PageTabView 自管 strip：selectionChanged / tabCloseRequested / addTabButtonClick
         // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
         // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
@@ -315,8 +255,7 @@ class MainWindow: NavigationViewWindow {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) {
-        let effective = resolveOpenMode(mode)
-        performNavigate(to: page, mode: effective, transitionInfoOverride: transitionInfoOverride)
+        performNavigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
     }
 
     @discardableResult
@@ -325,20 +264,8 @@ class MainWindow: NavigationViewWindow {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
-        let effective = resolveOpenMode(mode)
         return performNavigate(
-            to: url, mode: effective, transitionInfoOverride: transitionInfoOverride)
-    }
-
-    /// NavigationViewItem 上 Ctrl+click 设置的 `openInNewTabRequested` 标记会把
-    /// `.inplace` 升级为 `.newTab`；调用者显式指定的非 inplace 模式不被覆盖。
-    private func resolveOpenMode(_ requested: NavigationOpenMode) -> NavigationOpenMode {
-        let flag = openInNewTabRequested
-        openInNewTabRequested = false
-        if requested == .inplace && flag {
-            return .newTab
-        }
-        return requested
+            to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
     }
 
     private func performNavigate(
@@ -347,9 +274,6 @@ class MainWindow: NavigationViewWindow {
         transitionInfoOverride: NavigationTransitionInfo?
     ) {
         switch mode {
-        case .newWindow:
-            MainWindow.openDetachedWindow(
-                opening: page, transitionInfoOverride: transitionInfoOverride)
         case .inplace:
             navigateInSelectedTab(to: page, transitionInfoOverride: transitionInfoOverride)
         case .newTab:
@@ -378,11 +302,6 @@ class MainWindow: NavigationViewWindow {
         mode: NavigationOpenMode,
         transitionInfoOverride: NavigationTransitionInfo?
     ) -> Bool {
-        if mode == .newWindow {
-            MainWindow.openDetachedWindow(
-                navigatingTo: url, transitionInfoOverride: transitionInfoOverride)
-            return true
-        }
         // 仅在 inplace 模式下短路；其他模式（newTab / newTabBackground）允许重复打开同 URL
         if mode == .inplace, currentPage?.url == url {
             return true
@@ -432,21 +351,6 @@ class MainWindow: NavigationViewWindow {
         return nil
     }
 
-    func appendNavigationItem(_ item: NavigationViewItemBase, _ isFooter: Bool) {
-        if isFooter {
-            ui.navigationView.footerMenuItems.append(item)
-        } else {
-            ui.navigationView.menuItems.append(item)
-        }
-    }
-
-    private func isNavigationItemSelected(_ item: NavigationViewItemBase) -> Bool {
-        guard let selectedItem = ui.navigationView.selectedItem as? NavigationViewItemBase else {
-            return false
-        }
-        return selectedItem === item
-    }
-
     private func url(for item: NavigationViewItemBase) -> URL? {
         guard
             let navItem = item as? NavigationViewItem,
@@ -461,8 +365,9 @@ class MainWindow: NavigationViewWindow {
 
     private func resolveURL(for arg: NavigationViewItemInvokedEventArgs) -> URL? {
         if arg.isSettingsInvoked {
-            return URL(string: "rs://ui/settings")
-        } else if let tag = arg.invokedItemContainer.tag,
+            return SettingsPage.url
+        } else if let item = arg.invokedItemContainer,
+            let tag = item.tag,
             let str = tag as? HString
         {
             return URL(string: String(hString: str))
@@ -485,48 +390,5 @@ class MainWindow: NavigationViewWindow {
             i += 1
         }
         return nil
-    }
-
-    // MARK: - Window factory
-
-    static func openDetachedWindow(
-        navigatingTo url: URL,
-        transitionInfoOverride: NavigationTransitionInfo? = nil,
-        collapseNavigationPane: Bool = false
-    ) {
-        // 一次性 viewer 窗口：初始折叠 NavPane，且不把折叠状态回写到全局 windowLayout。
-        // 必须经 init 参数路径，因为 setupContent 一旦跑完 lazy navigationView 就定型了。
-        let window =
-            collapseNavigationPane
-            ? MainWindow(initialNavigationViewPaneOpen: false, suppressLayoutPersistence: true)
-            : MainWindow()
-        window.initialNavigationURL = url
-        window.initialNavigationTransitionInfoOverride = transitionInfoOverride
-        try? window.activate()
-    }
-
-    static func openDetachedWindow(
-        opening page: Page,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) {
-        openDetachedWindow(transitionInfoOverride: transitionInfoOverride) { _ in page }
-    }
-
-    static func openDetachedWindow(
-        transitionInfoOverride: NavigationTransitionInfo? = nil,
-        makePage: @escaping (WindowContext) -> Page
-    ) {
-        let window = MainWindow()
-        window.initialPageFactory = makePage
-        window.initialNavigationTransitionInfoOverride = transitionInfoOverride
-        try? window.activate()
-    }
-
-    // Opens a new top-level window in-process showing Home, skipping last-view
-    // restore. The taskbar "New Window" reaches this after being redirected to
-    // the primary instance.
-    static func openDetachedWindowAtHome() {
-        let window = MainWindow(forceHomeOnLaunch: true)
-        try? window.activate()
     }
 }

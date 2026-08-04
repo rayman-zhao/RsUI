@@ -34,17 +34,15 @@ open class App: SwiftApplication {
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
             logo: App.context.iconAppxUri)
 
-        let window: WinUI.Window
         if launchHasFlag("--new-window", args) {
-            window = MainWindow(forceHomeOnLaunch: true)
+            try? MainWindow(nil).activate()
         } else {
-            window = MainWindow()
+            try? MainWindow(App.context.route.lastPageURL).activate()
         }
-        try! window.activate()
     }
 
     open func onActivated(_ args: AppActivationArguments?) {
-        MainWindow.openDetachedWindowAtHome()
+        try? MainWindow(nil).activate()
     }
 
     override open func onShutdown(exitCode: Int32) {
