@@ -46,7 +46,7 @@ final class BatchOpenPage: RsUI.Page {
                 glyph: "\u{F22C}",
                 header: tr("Open all in background"),
                 description: tr("context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page."),
-                mode: .newTabBackground
+                mode: .newTabNoFocus
             ),
         ]
         return featurePageContent(cards)

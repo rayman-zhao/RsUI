@@ -87,7 +87,7 @@ class MainWindow: NavigationViewWindow {
             guard ctrlDown || url != pageControl.currentPage?.url else { return }
 
             Task { @MainActor [weak self] in
-                _ = self?.navigate(to: url, mode: ctrlDown ? .newTabBackground : .inplace)
+                _ = self?.navigate(to: url, mode: ctrlDown ? .newTabNoFocus : .inplace)
             }
         }
         ui.backButton.click.addHandler { [weak self] _, _ in
@@ -278,7 +278,7 @@ class MainWindow: NavigationViewWindow {
             navigateInSelectedTab(to: page, transitionInfoOverride: transitionInfoOverride)
         case .newTab:
             addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
-        case .newTabBackground:
+        case .newTabNoFocus:
             addTab(page: page, switchToTab: false, transitionInfoOverride: transitionInfoOverride)
         }
     }

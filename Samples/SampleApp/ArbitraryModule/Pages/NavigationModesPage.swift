@@ -42,7 +42,7 @@ final class NavigationModesPage: RsUI.Page {
                 glyph: "\u{F22C}",
                 header: ".newTabBackground",
                 description: tr("Opens a new tab without stealing focus (like Ctrl+Click)."),
-                mode: .newTabBackground
+                mode: .newTabNoFocus
             ),
             makeCard(
                 glyph: "\u{E78B}",

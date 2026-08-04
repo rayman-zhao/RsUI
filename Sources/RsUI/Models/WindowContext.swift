@@ -6,12 +6,12 @@ import WinUI
 ///
 /// - inplace: Open in the currently selected tab.
 /// - newTab: Open in a new tab and switch to it.
-/// - newTabBackground: Open in a new tab without switching to it.
+/// - newTabNoFocus: Open in a new tab without switching to it.
 /// - newWindow: Open in a new main window.
 public enum NavigationOpenMode: Sendable {
     case inplace
     case newTab
-    case newTabBackground
+    case newTabNoFocus
 }
 
 /// Information returned when a selected tab is detached from a main window.
@@ -70,7 +70,7 @@ public struct WindowContext {
     ///     the page stores a `WindowContext`, make sure it is valid for the destination
     ///     window; otherwise prefer `open(mode:makePage:)`.
     ///   - mode: Where to open the page. `.inplace` replaces the selected tab content,
-    ///     `.newTab` creates and selects a tab, `.newTabBackground` creates a tab
+    ///     `.newTab` creates and selects a tab, `.newTabNoFocus` creates a tab
     ///     without selecting it, and `.newWindow` opens a new main window.
     ///   - transitionInfoOverride: Optional WinUI navigation transition to use when the
     ///     destination renders the page.
@@ -98,7 +98,7 @@ public struct WindowContext {
     /// - Parameters:
     ///   - url: The route URL to resolve.
     ///   - mode: Where to open the resolved page. `.inplace` replaces the selected tab
-    ///     content, `.newTab` creates and selects a tab, `.newTabBackground` creates a
+    ///     content, `.newTab` creates and selects a tab, `.newTabNoFocus` creates a
     ///     tab without selecting it, and `.newWindow` opens a new main window.
     ///   - transitionInfoOverride: Optional WinUI navigation transition to use when the
     ///     destination renders the resolved page.
@@ -110,7 +110,7 @@ public struct WindowContext {
     /// ```swift
     /// _ = context.open(
     ///     URL(string: "rs://arbitrary/window-context-result?id=42")!,
-    ///     mode: .newTabBackground
+    ///     mode: .newTabNoFocus
     /// )
     /// ```
     @discardableResult
@@ -135,7 +135,7 @@ public struct WindowContext {
     ///     no-op. Each page is a separate tab; pass pre-built `Page` instances
     ///     bound to this window's context.
     ///   - mode: Controls selection only. `.newTab` (default) selects the last
-    ///     opened tab; `.newTabBackground` keeps the current selection (or lands
+    ///     opened tab; `.newTabNoFocus` keeps the current selection (or lands
     ///     on the first new tab if the window was empty). `.inplace` and
     ///     `.newWindow` are not batch modes and behave like `.newTab`.
     ///   - transitionInfoOverride: Optional WinUI navigation transition applied
@@ -155,7 +155,7 @@ public struct WindowContext {
         guard let owner else { return 0 }
         let contexts = owner.addTabs(
             pages: pages,
-            switchToLast: mode != .newTabBackground,
+            switchToLast: mode != .newTabNoFocus,
             transitionInfoOverride: transitionInfoOverride
         )
         return contexts.count
@@ -172,7 +172,7 @@ public struct WindowContext {
     ///   - urls: The route URLs to resolve and open, in tab order. An empty
     ///     array is a no-op.
     ///   - mode: Controls selection only, identical to the `[Page]` overload:
-    ///     `.newTab` (default) selects the last opened tab, `.newTabBackground`
+    ///     `.newTab` (default) selects the last opened tab, `.newTabNoFocus`
     ///     keeps the current selection. `.inplace` and `.newWindow` behave like
     ///     `.newTab`.
     ///   - transitionInfoOverride: Optional WinUI navigation transition applied
@@ -197,7 +197,7 @@ public struct WindowContext {
         let pages = urls.compactMap { owner.resolvePage(for: $0) }
         let contexts = owner.addTabs(
             pages: pages,
-            switchToLast: mode != .newTabBackground,
+            switchToLast: mode != .newTabNoFocus,
             transitionInfoOverride: transitionInfoOverride
         )
         return contexts.count
@@ -206,13 +206,13 @@ public struct WindowContext {
     /// Builds a page with the destination window context and opens it with the requested mode.
     ///
     /// Use this overload when the page should receive a `WindowContext` at construction
-    /// time. For `.inplace`, `.newTab`, and `.newTabBackground`, the target context
+    /// time. For `.inplace`, `.newTab`, and `.newTabNoFocus`, the target context
     /// belongs to the current `MainWindow`. For `.newWindow`, RsUI creates the new
     /// `MainWindow` first, then calls `makePage` with that destination window context.
     ///
     /// - Parameters:
     ///   - mode: Where to open the generated page. `.inplace` replaces the selected tab
-    ///     content, `.newTab` creates and selects a tab, `.newTabBackground` creates a
+    ///     content, `.newTab` creates and selects a tab, `.newTabNoFocus` creates a
     ///     tab without selecting it, and `.newWindow` opens a new main window.
     ///   - transitionInfoOverride: Optional WinUI navigation transition to use when the
     ///     destination renders the page.
@@ -256,7 +256,7 @@ public struct WindowContext {
     ///   - url: The route URL to resolve.
     ///   - mode: The fallback open mode when no existing tab is found.
     ///     Defaults to `.newTab`. Only `.inplace`, `.newTab`, and
-    ///     `.newTabBackground` are meaningful (`.newWindow` is passed through
+    ///     `.newTabNoFocus` are meaningful (`.newWindow` is passed through
     ///     to `open(_:mode:)` without deduplication).
     ///   - focusExisting: Whether an existing matching tab should be selected.
     ///     Pass `false` for background-open gestures that should avoid stealing focus.
