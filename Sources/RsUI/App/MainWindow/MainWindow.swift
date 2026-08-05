@@ -14,9 +14,9 @@ private func tr(_ keyAndValue: String) -> String {
 /// 本类主要功能在于处理导航URL与Page对象的映射，并协调UI元素的显示。
 ///
 /// 提供context接口用于隔离窗口具体类型。
-class MainWindow: NavigationViewWindow {
+class MainWindow: NavigationViewWindow, WindowContextHost {
     private var context: WindowContext {
-        WindowContext(owner: self)
+        WindowContext(host: self)
     }
     private lazy var pageControl = PageTabView()
 
@@ -33,10 +33,10 @@ class MainWindow: NavigationViewWindow {
         Task { @MainActor [weak self] in
             guard let self else { return }
 
-            if let url, self.navigate(to: url) {
+            if let url, self.context.open(url) {
                 return
             } else if let home = self.ui.navigationView.firstItemURL {
-                self.navigate(to: home)
+                self.context.open(home)
             }
         }
     }
@@ -77,7 +77,11 @@ class MainWindow: NavigationViewWindow {
         }
 
         ui.navigationView.itemInvoked.addHandler { [weak self] _, arg in
-            guard let self, let arg, let url = resolveURL(for: arg) else { return }
+            guard let self, let arg,
+                let url = arg.isSettingsInvoked ? SettingsPage.url : arg.invokedItemContainer?.url
+            else {
+                return
+            }
 
             let ctrlState =
                 (try? InputKeyboardSource.getKeyStateForCurrentThread(VirtualKey.control)) ?? .none
@@ -87,7 +91,9 @@ class MainWindow: NavigationViewWindow {
             guard ctrlDown || url != pageControl.currentPage?.url else { return }
 
             Task { @MainActor [weak self] in
-                _ = self?.navigate(to: url, mode: ctrlDown ? .newTabNoFocus : .inplace)
+                _ = self?.context.open(
+                    url, mode: ctrlDown ? .newTabNoFocus : .inplace,
+                    transitionInfoOverride: arg.recommendedNavigationTransitionInfo)
             }
         }
         ui.backButton.click.addHandler { [weak self] _, _ in
@@ -123,15 +129,11 @@ class MainWindow: NavigationViewWindow {
         pageControl.setAddTabProvider { [weak self] in
             guard let self else { return (SettingsPage(), tr("Settings")) }
             if let url = self.ui.navigationView.firstItemURL {
-                let page = self.resolvePage(for: url) ?? SettingsPage()
+                let page = self.context.resolvePage(from: url) ?? SettingsPage()
                 return (page, page.title)
             }
             return (SettingsPage(), tr("Settings"))
         }
-    }
-
-    func enterPageFullscreen() {
-        enterFullscreen(for: pageControl.pageView)
     }
 
     // MARK: - Tab accessors
@@ -150,67 +152,6 @@ class MainWindow: NavigationViewWindow {
     }
 
     // MARK: - Tab lifecycle
-
-    /// 新建一个 tab 并（默认）切过去。WindowContext.open / 模块路由的 newTab /
-    /// newTabBackground 共用本入口。`switchToTab=false` 用于背景加 tab；背景 tab 的
-    /// 渲染由 `PageTabView` 延迟到首次选中时触发，匹配原 frame-per-tab 的批处理语义。
-    @discardableResult
-    func addTab(
-        page: Page,
-        at index: Int? = nil,
-        switchToTab: Bool = true,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> PageTabView.TabContext {
-        pageControl.addTab(
-            page: page,
-            header: page.title,
-            transitionInfoOverride: transitionInfoOverride,
-            at: index,
-            switchToTab: switchToTab
-        )
-    }
-
-    /// 批量加 tab：循环 `addTab`、只切一次选中。`PageTabView.addTab` 自带单 tab 自动
-    /// Suppress + strip 可见性刷新，整体 O(N)；最后一次性落地选中（与原 addTabs 同）。
-    @discardableResult
-    func addTabs(
-        pages: [Page],
-        switchToLast: Bool = true,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> [PageTabView.TabContext] {
-        guard !pages.isEmpty else { return [] }
-        let hadSelection = selectedTabContext != nil
-
-        var contexts: [PageTabView.TabContext] = []
-        contexts.reserveCapacity(pages.count)
-        for page in pages {
-            // 背景 add：switchToTab=false，让最后一个再统一选中。
-            let ctx = pageControl.addTab(
-                page: page,
-                header: page.title,
-                transitionInfoOverride: transitionInfoOverride,
-                at: nil,
-                switchToTab: false
-            )
-            contexts.append(ctx)
-        }
-
-        // Mirror the looped-addTab selection: foreground lands on the last tab;
-        // a background batch into an empty window still needs a selection, so it
-        // lands on the first; an existing selection is otherwise preserved.
-        let selection: PageTabView.TabContext?
-        if switchToLast {
-            selection = contexts.last
-        } else if !hadSelection {
-            selection = contexts.first
-        } else {
-            selection = nil
-        }
-        if let selection {
-            pageControl.selectTab(selection)
-        }
-        return contexts
-    }
 
     func closeTab(for item: TabViewItem) {
         guard
@@ -237,117 +178,8 @@ class MainWindow: NavigationViewWindow {
         pageControl.orderedTabContexts.first { $0.model.currentPage?.url == url }
     }
 
-    func openNewTabFromTabStrip() {
-        if let url = ui.navigationView.firstItemURL {
-            _ = navigate(
-                to: url, mode: .newTab, transitionInfoOverride: SuppressNavigationTransitionInfo())
-        } else {
-            navigate(
-                to: SettingsPage(), mode: .newTab,
-                transitionInfoOverride: SuppressNavigationTransitionInfo())
-        }
-    }
+    // MARK: WindowContextHost protocol
 
-    // MARK: - Navigation
-
-    func navigate(
-        to page: Page,
-        mode: NavigationOpenMode = .inplace,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) {
-        performNavigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
-    }
-
-    @discardableResult
-    func navigate(
-        to url: URL,
-        mode: NavigationOpenMode = .inplace,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> Bool {
-        return performNavigate(
-            to: url, mode: mode, transitionInfoOverride: transitionInfoOverride)
-    }
-
-    private func performNavigate(
-        to page: Page,
-        mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
-    ) {
-        switch mode {
-        case .inplace:
-            navigateInSelectedTab(to: page, transitionInfoOverride: transitionInfoOverride)
-        case .newTab:
-            addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
-        case .newTabNoFocus:
-            addTab(page: page, switchToTab: false, transitionInfoOverride: transitionInfoOverride)
-        }
-    }
-
-    // In-place navigation: push onto the selected tab's history via PageControl
-    // 协议（mutate + 即时渲染）。无 tab 时（首次导航 / restore）开一个新 tab。
-    private func navigateInSelectedTab(
-        to page: Page,
-        transitionInfoOverride: NavigationTransitionInfo?
-    ) {
-        guard selectedTabContext != nil else {
-            addTab(page: page, switchToTab: true, transitionInfoOverride: transitionInfoOverride)
-            return
-        }
-        pageControl.navigateCurrent(to: page, transitionInfoOverride: transitionInfoOverride)
-    }
-
-    @discardableResult
-    private func performNavigate(
-        to url: URL,
-        mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
-    ) -> Bool {
-        // 仅在 inplace 模式下短路；其他模式（newTab / newTabBackground）允许重复打开同 URL
-        if mode == .inplace, currentPage?.url == url {
-            return true
-        }
-
-        guard let page = resolvePage(for: url) else { return false }
-        performNavigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
-        return true
-    }
-
-    // Resolves a route URL to a Page via Settings or a registered module, without
-    // performing any navigation. Returns nil when no module claims the URL.
-    func resolvePage(for url: URL) -> Page? {
-        if url == SettingsPage.url {
-            return SettingsPage()
-        }
-        let context = self.context
-        for module in App.context.modules {
-            if let page = module.onNavigationRequested(for: url, in: context) {
-                return page
-            }
-        }
-        return nil
-    }
-
-    private func resolveURL(for arg: NavigationViewItemInvokedEventArgs) -> URL? {
-        if arg.isSettingsInvoked {
-            return SettingsPage.url
-        } else {
-            return arg.invokedItemContainer?.url
-        }
-    }
-
-    // MARK: - Strip primitives (match items by stable name, not by ===)
-
-    /// strip 顺序中按 name 找 index；tear-out 合并 / detach 用到。WinRT 投影 `===` 不
-    /// 稳，故按 name。
-    func indexOfItem(name: String) -> Int? {
-        guard let items = pageControl.tearOutTabView.tabItems else { return nil }
-        var i: UInt32 = 0
-        while i < items.size {
-            if let it = items.getAt(i) as? TabViewItem, it.name == name {
-                return Int(i)
-            }
-            i += 1
-        }
-        return nil
-    }
+    var hwnd: WindowId { self.appWindow.id }
+    var currentPageControl: any PageControl { pageControl }
 }

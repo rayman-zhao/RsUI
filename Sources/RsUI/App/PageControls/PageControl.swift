@@ -60,6 +60,16 @@ protocol PageControl: AnyObject {
 
     func updateAppearance()
     func updateFullscreen(_ inFullscreen: Bool)
+    func navigate(
+        to page: Page,
+        mode: NavigationOpenMode,
+        transitionInfoOverride: NavigationTransitionInfo?
+    )
+    func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode,
+        transitionInfoOverride: NavigationTransitionInfo?
+    ) -> Int
 }
 
 // MARK: - PageFrame conformance
@@ -103,6 +113,17 @@ extension PageFrame: PageControl {
     }
     func updateFullscreen(_ inFullscreen: Bool) {
     }
+    func navigate(
+        to page: Page,
+        mode: NavigationOpenMode = .inplace,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
+    }
+    func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int { return 0 }
 }
 
 // MARK: - PageTabView conformance
@@ -129,5 +150,83 @@ extension PageTabView: PageControl {
         reapplyCloseOthersTooltip()
     }
     func updateFullscreen(_ inFullscreen: Bool) {
+    }
+
+    func navigate(
+        to page: Page,
+        mode: NavigationOpenMode = .inplace,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
+        switch mode {
+        case .inplace:
+            guard self.selectedTabContext != nil else {
+                addTab(
+                    page: page, header: page.title, transitionInfoOverride: transitionInfoOverride,
+                    at: nil, switchToTab: true)
+                return
+            }
+            navigateCurrent(to: page, transitionInfoOverride: transitionInfoOverride)
+            return
+        case .newTab:
+            addTab(
+                page: page, header: page.title, transitionInfoOverride: transitionInfoOverride,
+                at: nil, switchToTab: true)
+        case .newTabNoFocus:
+            addTab(
+                page: page, header: page.title, transitionInfoOverride: transitionInfoOverride,
+                at: nil, switchToTab: false)
+        }
+    }
+
+    func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int {
+        let contexts = addTabs(
+            pages: pages,
+            switchToLast: mode != .newTabNoFocus,
+            transitionInfoOverride: transitionInfoOverride
+        )
+        return contexts.count
+    }
+
+    private func addTabs(
+        pages: [Page],
+        switchToLast: Bool = true,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> [PageTabView.TabContext] {
+        guard !pages.isEmpty else { return [] }
+        let hadSelection = selectedTabContext != nil
+
+        var contexts: [PageTabView.TabContext] = []
+        contexts.reserveCapacity(pages.count)
+        for page in pages {
+            // 背景 add：switchToTab=false，让最后一个再统一选中。
+            let ctx = addTab(
+                page: page,
+                header: page.title,
+                transitionInfoOverride: transitionInfoOverride,
+                at: nil,
+                switchToTab: false
+            )
+            contexts.append(ctx)
+        }
+
+        // Mirror the looped-addTab selection: foreground lands on the last tab;
+        // a background batch into an empty window still needs a selection, so it
+        // lands on the first; an existing selection is otherwise preserved.
+        let selection: PageTabView.TabContext?
+        if switchToLast {
+            selection = contexts.last
+        } else if !hadSelection {
+            selection = contexts.first
+        } else {
+            selection = nil
+        }
+        if let selection {
+            selectTab(selection)
+        }
+        return contexts
     }
 }

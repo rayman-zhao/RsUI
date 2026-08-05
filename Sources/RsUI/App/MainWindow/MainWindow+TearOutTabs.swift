@@ -266,5 +266,21 @@ class MainWindow {
             MainWindow.pendingTearOut = nil
         }
     }
+
+    // MARK: - Strip primitives (match items by stable name, not by ===)
+
+    /// strip 顺序中按 name 找 index；tear-out 合并 / detach 用到。WinRT 投影 `===` 不
+    /// 稳，故按 name。
+    func indexOfItem(name: String) -> Int? {
+        guard let items = pageControl.tearOutTabView.tabItems else { return nil }
+        var i: UInt32 = 0
+        while i < items.size {
+            if let it = items.getAt(i) as? TabViewItem, it.name == name {
+                return Int(i)
+            }
+            i += 1
+        }
+        return nil
+    }
 }
 */
