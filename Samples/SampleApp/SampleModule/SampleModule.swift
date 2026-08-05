@@ -1,17 +1,17 @@
 import Foundation
 import Observation
-import WindowsFoundation
+import RsFoundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
-import RsFoundation
+import WindowsFoundation
 
 func tr(_ keyAndValue: String) -> String {
     return App.context.language == .zh_CN ? "翻译\(keyAndValue)" : keyAndValue
 }
 
 @Observable
-final class ArbitaryModule: Module {
+final class SampleModule: Module {
     let id = "arbitrary"
     var state = "loading"
 
@@ -44,14 +44,22 @@ final class ArbitaryModule: Module {
 
         let items: [NavigationViewItemBase] = [
             header,
-            NavigationViewItem.build(iconGlyph: "\u{E80F}", label: tr("Overview"), url: "rs://\(id)"),
-            NavigationViewItem.build(iconGlyph: "\u{E740}", label: tr("Tab Fullscreen"), url: "rs://\(id)/fullscreen"),
-            NavigationViewItem.build(iconGlyph: "\u{ECCD}", label: tr("Navigation Modes"), url: "rs://\(id)/navigation"),
-            NavigationViewItem.build(iconGlyph: "\u{E8A7}", label: tr("Open or Focus"), url: "rs://\(id)/openorfocus"),
-            NavigationViewItem.build(iconGlyph: "\u{E8FD}", label: tr("Batch Open"), url: "rs://\(id)/batch-open"),
-            NavigationViewItem.build(iconGlyph: "\u{E78B}", label: tr("New Window"), url: "rs://\(id)/new-window"),
-            NavigationViewItem.build(iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
-            NavigationViewItem.build(iconGlyph: "\u{E8B7}", label: tr("Folder Picker"), url: "rs://\(id)/folder-picker"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E80F}", label: tr("Overview"), url: "rs://\(id)"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E740}", label: tr("Tab Fullscreen"), url: "rs://\(id)/fullscreen"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{ECCD}", label: tr("Navigation Modes"), url: "rs://\(id)/navigation"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E8A7}", label: tr("Open or Focus"), url: "rs://\(id)/openorfocus"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E8FD}", label: tr("Batch Open"), url: "rs://\(id)/batch-open"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E78B}", label: tr("New Window"), url: "rs://\(id)/new-window"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E8B7}", label: tr("Folder Picker"), url: "rs://\(id)/folder-picker"),
         ]
         return items
     }
@@ -82,14 +90,17 @@ final class ArbitaryModule: Module {
         let basicCard = SettingsCard(
             headerIconGlyph: "\u{E946}",
             header: tr("Basic SettingsCard"),
-            description: tr("Header icon + description + right-side control. The minimal Fluent-style settings row."),
+            description: tr(
+                "Header icon + description + right-side control. The minimal Fluent-style settings row."
+            ),
             content: toggle
         )
 
         let clickableCard = SettingsCard(
             headerIconGlyph: "\u{E710}",
             header: tr("Clickable SettingsCard"),
-            description: tr("Set isClickEnabled = true to turn the whole row into a button. Logs on click.")
+            description: tr(
+                "Set isClickEnabled = true to turn the whole row into a button. Logs on click.")
         )
         clickableCard.isClickEnabled = true
         clickableCard.click.addHandler { _, _ in
