@@ -87,11 +87,12 @@ class SettingsPage: Page {
         combo.fontSize = 14
         combo.padding = WinUI.Thickness(left: 12, top: 6, right: 12, bottom: 6)
         combo.itemsSource = single_threaded_vector_inspectable(
-            AppLanguage.allCases.map { $0.displayName })
-        combo.selectedIndex = Int32(AppLanguage.allCases.firstIndex(of: App.context.language) ?? 0)
+            AppLanguage.availableCases.map { $0.displayName })
+        combo.selectedIndex = Int32(
+            AppLanguage.availableCases.firstIndex(of: App.context.language) ?? 0)
         combo.selectionChanged.addHandler { sender, _ in
             let index = (sender as! WinUI.ComboBox).selectedIndex
-            for (i, language) in AppLanguage.allCases.enumerated() {
+            for (i, language) in AppLanguage.availableCases.enumerated() {
                 if i == index {
                     if language != App.context.language {
                         App.context.language = language

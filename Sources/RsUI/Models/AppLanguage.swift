@@ -7,11 +7,20 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
     case zh_CN
     case auto
 
+    static var availableCases: [AppLanguage] {
+        return allCases.compactMap {
+            switch $0 {
+            case undefined, auto: return nil
+            default: return $0
+            }
+        }
+    }
+
     var displayName: String {
         switch self {
         case .en_US: return "English"
         case .zh_CN: return "简体中文"
-        default: return "English"
+        default: return ""
         }
     }
     var locale: Locale {
