@@ -7,19 +7,20 @@ import WinUI
 import WindowsFoundation
 
 func tr(_ keyAndValue: String) -> String {
-    return App.context.language == .zh_CN ? "翻译\(keyAndValue)" : keyAndValue
+    let text = App.context.tr(keyAndValue)
+    return (text == keyAndValue && App.context.language == .zh_CN) ? "待翻译\(keyAndValue)" : text
 }
 
 @Observable
 final class SampleModule: Module {
-    let id = "arbitrary"
+    let id = "sample"
     var state = "loading"
 
     init() {
-        log.info("ArbitaryModule init")
+        log.info("SampleModule init")
     }
     deinit {
-        log.info("ArbitaryModule deinit")
+        log.info("SampleModule deinit")
     }
 
     func titleBarRightHeaderItem(in context: WindowContext) -> UIElement? {
@@ -40,7 +41,7 @@ final class SampleModule: Module {
 
     func navigationViewMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
         let header = NavigationViewItemHeader()
-        header.content = tr("Arbitrary")
+        header.content = tr("samples")
 
         let items: [NavigationViewItemBase] = [
             header,
@@ -69,8 +70,8 @@ final class SampleModule: Module {
         header.content = tr("Footer")
         let pickerItem = NavigationViewItem.build(
             iconGlyph: "\u{E8B7}",
-            label: tr("Pick Folder…"),
-            url: "rs://\(id)/folder-picker",
+            label: tr("Folder Picker"),
+            url: "rs://\(id)/footer-picker",
             actionGlyph: "\u{E8F4}",
             actionTooltip: tr("Pick a folder right from the nav"),
             actionHandler: { _, _ in
@@ -144,7 +145,7 @@ final class SampleModule: Module {
             return NewWindowPage(context: context)
         case "/appearance":
             return AppearancePage(context: context)
-        case "/folder-picker":
+        case "/folder-picker", "/footer-picker":
             return FolderPickerPage(context: context)
         default:
             return nil

@@ -119,19 +119,19 @@
         }
       }
     },
-    "add_folder" : {
+    "Folder Picker" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Folder"
+            "value" : "Pick Folder"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加文件夹"
+            "value" : "选择文件夹"
           }
         }
       }
@@ -203,36 +203,36 @@
         }
       }
     },
-    "sample1" : {
+    "samples" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sample 1"
+            "value" : "Samples"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "示例1"
+            "value" : "导航示例"
           }
         }
       }
     },
-    "sample1Detail" : {
+    "Footer" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sample 1 Detail"
+            "value" : "Footer Samples"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "示例1详情"
+            "value" : "页脚导航示例"
           }
         }
       }
@@ -424,36 +424,36 @@
         }
       }
     },
-    "success" : {
+    "On" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Success"
+            "value" : "On"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "成功"
+            "value" : "开"
           }
         }
       }
     },
-    "warning" : {
+    "Off" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Warning"
+            "value" : "Off"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "警告"
+            "value" : "关"
           }
         }
       }
