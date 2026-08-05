@@ -9,15 +9,11 @@ private func tr(_ keyAndValue: String) -> String {
     return App.context.tr(keyAndValue)
 }
 
-/// 主窗口壳：`NavigationViewWindow` 的子类，承载侧栏 + 标题栏 + 一个 `PageTabView`
-/// 作为内容容器（共享单 `PageFrame` + WinUI `TabView` strip）。
+/// 主窗口壳：`NavigationViewWindow` + 一个 `PageControl (PageTabView)` 作为内容容器。
 ///
-/// 本类按 AGENTS.md "Core UI Composition Model" §5 第三态装配：内容区直接挂
-/// `pageTabView`（其自身是 Grid：Row0 = tab strip，Row1 = 共享 frame），故单 tab 时
-/// strip 自动隐藏、窗口看起来就是一个普通 PageFrame；多 tab 恢复 strip。Tab 生命周期
-/// / strip 行为 / 可见性切换 / closable 状态 / 标题同步全部由 `PageTabView` 自管，本类
-/// 只持有控件 + 通过 `PageControl` 协议多态驱动（inplace back/forward/pushPage）+ 暴露
-/// `WindowContext` 所需的 tab 操作入口。
+/// 本类主要功能在于处理导航URL与Page对象的映射，并协调UI元素的显示。
+///
+/// 提供context接口用于隔离窗口具体类型。
 class MainWindow: NavigationViewWindow {
     private var context: WindowContext {
         WindowContext(owner: self)
@@ -26,7 +22,7 @@ class MainWindow: NavigationViewWindow {
 
     // MARK: - Init
 
-    init(_ url: URL?, forceMinimalMode: Bool = false) {
+    init(url: URL? = nil, forceMinimalMode: Bool = false) {
         super.init(forceMinimalMode)
         useMicaBackdrop()
         useRestoration()
@@ -71,6 +67,10 @@ class MainWindow: NavigationViewWindow {
                 }
             }
             self.pageControl.updateAppearance()
+
+            if let page = pageControl.currentPage {
+                ui.navigationView.selectItem(with: page.url)
+            }
         }
         fullscreenChanged.addHandler { [weak self] _, arg in
             self?.pageControl.updateFullscreen(arg)

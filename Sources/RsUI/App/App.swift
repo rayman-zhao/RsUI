@@ -35,14 +35,14 @@ open class App: SwiftApplication {
             logo: App.context.iconAppxUri)
 
         if launchHasFlag("--new-window", args) {
-            try? MainWindow(nil).activate()
+            try? MainWindow().activate()
         } else {
-            try? MainWindow(App.context.route.lastPageURL).activate()
+            try? MainWindow(url: App.context.route.lastPageURL).activate()
         }
     }
 
     open func onActivated(_ args: AppActivationArguments?) {
-        try? MainWindow(nil).activate()
+        try? MainWindow().activate()
     }
 
     override open func onShutdown(exitCode: Int32) {

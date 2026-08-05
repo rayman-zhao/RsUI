@@ -2,31 +2,20 @@ import Foundation
 import WinAppSDK
 import WinUI
 
-/// Opening destination used by `WindowContext.open` and `MainWindow.navigate`.
+/// Destination when opening a URL or Page.
 ///
-/// - inplace: Open in the currently selected tab.
+/// - inplace: Open in the current page control.
 /// - newTab: Open in a new tab and switch to it.
 /// - newTabNoFocus: Open in a new tab without switching to it.
-/// - newWindow: Open in a new main window.
 public enum NavigationOpenMode: Sendable {
     case inplace
     case newTab
     case newTabNoFocus
 }
 
-/// Information returned when a selected tab is detached from a main window.
-public struct DetachedTabInfo: Sendable {
-    /// The page URL that identified the detached tab.
-    public let url: URL
-
-    /// The tab's original 0-based position in the source tab strip.
-    public let index: Int
-}
-
 /// Window-scoped services exposed to RsUI modules and pages.
 ///
-/// A `WindowContext` lets module code open pages, create tabs or windows,
-/// and use window-owned UI services without exposing `MainWindow` as public API.
+/// A `WindowContext` lets module works with main windows without knowing `MainWindow` specific type.
 public struct WindowContext {
     // Modules may keep this context from a Page, so the underlying window owner is weak.
     weak var owner: MainWindow?

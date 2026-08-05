@@ -1,4 +1,14 @@
 /*
+
+/// Information returned when a selected tab is detached from a main window.
+public struct DetachedTabInfo: Sendable {
+    /// The page URL that identified the detached tab.
+    public let url: URL
+
+    /// The tab's original 0-based position in the source tab strip.
+    public let index: Int
+}
+
 class WindowContext {
     // MARK: - Detach / Restore
 
