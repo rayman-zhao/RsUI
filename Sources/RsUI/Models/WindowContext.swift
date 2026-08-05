@@ -74,6 +74,9 @@ public struct WindowContext {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
+        guard mode != .inplace || url != host?.currentPageControl.currentPage?.url else {
+            return true
+        }
         guard let page = resolvePage(from: url) else { return false }
         open(page, mode: mode, transitionInfoOverride: transitionInfoOverride)
         return true
@@ -95,11 +98,13 @@ public struct WindowContext {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Int {
+        guard urls.count > 1 else {
+            return open(urls[0], mode: mode, transitionInfoOverride: transitionInfoOverride)
+                ? 1 : 0
+        }
         let pages = urls.compactMap { resolvePage(from: $0) }
         return open(pages, mode: mode, transitionInfoOverride: transitionInfoOverride)
     }
-
-    // MARK: - Open or Focus
 
     /// Opens a URL in a new tab, or focuses the existing tab if one is already
     /// displaying that URL.
@@ -107,37 +112,20 @@ public struct WindowContext {
     /// This is the primary "navigate-to-content" method for module code that
     /// wants deduplication: slides, documents, detail views, etc. When a tab
     /// with `url` already exists, it is selected and `true` is returned without
-    /// creating a duplicate. Otherwise a new tab is opened via the module's
-    /// `navigationRequested(for:in:)`.
+    /// creating a duplicate. Otherwise a new tab is opened.
     ///
     /// - Parameters:
     ///   - url: The route URL to resolve.
-    ///   - mode: The fallback open mode when no existing tab is found.
-    ///     Defaults to `.newTab`. Only `.inplace`, `.newTab`, and
-    ///     `.newTabNoFocus` are meaningful (`.newWindow` is passed through
-    ///     to `open(_:mode:)` without deduplication).
-    ///   - focusExisting: Whether an existing matching tab should be selected.
-    ///     Pass `false` for background-open gestures that should avoid stealing focus.
-    ///   - transitionInfoOverride: Optional navigation transition for newly
-    ///     created tabs.
-
     /// - Returns: `true` if an existing tab was focused or a new navigation
     ///   was accepted.
     @discardableResult
-    public func openOrFocus(
-        _ url: URL,
-        mode: NavigationOpenMode = .newTab,
-        focusExisting: Bool = true,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> Bool {
-        guard let owner = host as? MainWindow else { return false }
-        if owner.findTabContext(matchingURL: url) != nil {
-            if focusExisting {
-                _ = owner.focusTab(matchingURL: url)
-            }
+    public func openOrFocus(_ url: URL) -> Bool {
+        guard let host else { return false }
+        if host.currentPageControl.focus(matchingURL: url) {
             return true
+        } else {
+            return open(url, mode: .newTab)
         }
-        return open(url, mode: mode, transitionInfoOverride: transitionInfoOverride)
     }
 
     public var isInTabFullscreen: Bool {

@@ -1,4 +1,5 @@
 import WinUI
+import Foundation
 
 /// 一个承载"当前 Page + 单条导航栈"的可复用控件接口，统一宿主窗口对
 /// `PageFrame`（单页面栈）与 `PageTabView`（共享 frame + 多 tab）的驱动入口。
@@ -70,6 +71,7 @@ protocol PageControl: AnyObject {
         mode: NavigationOpenMode,
         transitionInfoOverride: NavigationTransitionInfo?
     ) -> Int
+    func focus(matchingURL url: URL) -> Bool
 }
 
 // MARK: - PageFrame conformance
@@ -124,6 +126,9 @@ extension PageFrame: PageControl {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Int { return 0 }
+    func focus(matchingURL url: URL) -> Bool {
+        return false
+    }
 }
 
 // MARK: - PageTabView conformance
@@ -189,6 +194,16 @@ extension PageTabView: PageControl {
             transitionInfoOverride: transitionInfoOverride
         )
         return contexts.count
+    }
+
+    func focus(matchingURL url: URL) -> Bool {
+        guard let ctx = findTabContext(matchingURL: url) else { return false }
+        selectTab(ctx)
+        return true
+    }
+
+    private func findTabContext(matchingURL url: URL) -> TabContext? {
+        orderedTabContexts.first { $0.model.currentPage?.url == url }
     }
 
     private func addTabs(

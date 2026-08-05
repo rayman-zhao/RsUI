@@ -136,48 +136,6 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
         }
     }
 
-    // MARK: - Tab accessors
-
-    var selectedTabContext: PageTabView.TabContext? { pageControl.selectedTabContext }
-    var selectedTabModel: MainWindowTab? { pageControl.selectedTabModel }
-    var currentPage: Page? { pageControl.currentPage }
-    var tabCount: Int { pageControl.tabCount }
-    var orderedTabContexts: [PageTabView.TabContext] { pageControl.orderedTabContexts }
-
-    // True once the window has no tabs, or after teardown nilled the viewModel.
-    var hasNoTabs: Bool { pageControl.tabCount == 0 }
-
-    func context(for model: MainWindowTab) -> PageTabView.TabContext? {
-        pageControl.orderedTabContexts.first { $0.model === model }
-    }
-
-    // MARK: - Tab lifecycle
-
-    func closeTab(for item: TabViewItem) {
-        guard
-            let ctx = pageControl.orderedTabContexts.first(where: { $0.item === item })
-                ?? {
-                    // WinRT identity unstable：再按 name 兜一次。
-                    pageControl.orderedTabContexts.first { $0.item.name == item.name }
-                }()
-        else { return }
-        pageControl.closeTab(ctx)
-    }
-
-    func closeOtherTabs() {
-        pageControl.closeOtherTabs()
-    }
-
-    func focusTab(matchingURL url: URL) -> Bool {
-        guard let ctx = findTabContext(matchingURL: url) else { return false }
-        pageControl.selectTab(ctx)
-        return true
-    }
-
-    func findTabContext(matchingURL url: URL) -> PageTabView.TabContext? {
-        pageControl.orderedTabContexts.first { $0.model.currentPage?.url == url }
-    }
-
     // MARK: WindowContextHost protocol
 
     var hwnd: WindowId { self.appWindow.id }
