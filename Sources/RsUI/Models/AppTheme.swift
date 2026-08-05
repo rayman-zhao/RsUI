@@ -25,7 +25,7 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     var titleBarTheme: WinAppSDK.TitleBarTheme {
         return isDark ? .dark : .light
     }
-    
+
     public init() {
         self = .undefined
     }

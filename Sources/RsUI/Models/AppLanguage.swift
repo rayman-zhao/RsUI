@@ -26,7 +26,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
         default: return LocaleConstants.en
         }
     }
-    
+
     public init() {
         self = .undefined
     }
