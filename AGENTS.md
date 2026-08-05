@@ -136,10 +136,6 @@ Tests/
 - **Logging**: RsFoundation's `log.info` / `log.warning`
 - **Threading**: UI on MainActor, background via `Task` + `dispatcherQueue`
 
-### Tooling Constraints
-
-- `swift-format` on Windows still has open issues; do not run it automatically — not as a pre-commit hook, an editor on-save trigger, or a CI step. Apply formatting only by manual invocation at an appropriate point, opportunistically. Until the upstream issues are fixed, treat formatting as a manual step rather than an enforced gate.
-
 ### UI & MVVM Conventions
 
 - **Architecture pattern — MVVM**: Follow Model-View-ViewModel. ViewModels are the source of truth for UI state. Mark ViewModel types with `@Observable` (see existing `AppContext` and `MainWindowViewModel`). Use the Swift `Observation` framework: UI observes ViewModel state changes and re-renders in response; in event handler closures, call ViewModel methods rather than mutating UI controls directly.
