@@ -15,24 +15,14 @@ extension NavigationView {
         if url == SettingsPage.url {
             selectSettingsItem()
         } else {
-            let urlString = url.absoluteString
-            let firstItem = self.first(where: { item in
-                if let tag = item.tag, let str = tag as? HString {
-                    return String(hString: str) == urlString
-                }
-                return false
-            })
+            let firstItem = self.first(where: { item in item.url == url })
             self.selectedItem = firstItem
         }
     }
 
     public var firstItemURL: URL? {
-        if let item = self.first(where: { _ in true }),
-            let tag = item.tag,
-            let str = tag as? HString,
-            let url = URL(string: String(hString: str))
-        {
-            return url
+        if let item = self.first(where: { item in item.url != nil }) {
+            return item.url
         } else {
             return SettingsPage.url
         }

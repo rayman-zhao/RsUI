@@ -122,7 +122,7 @@ class MainWindow: NavigationViewWindow {
         // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
         pageControl.setAddTabProvider { [weak self] in
             guard let self else { return (SettingsPage(), tr("Settings")) }
-            if let url = self.firstNavigationItemURL() {
+            if let url = self.ui.navigationView.firstItemURL {
                 let page = self.resolvePage(for: url) ?? SettingsPage()
                 return (page, page.title)
             }
@@ -238,7 +238,7 @@ class MainWindow: NavigationViewWindow {
     }
 
     func openNewTabFromTabStrip() {
-        if let url = firstNavigationItemURL() {
+        if let url = ui.navigationView.firstItemURL {
             _ = navigate(
                 to: url, mode: .newTab, transitionInfoOverride: SuppressNavigationTransitionInfo())
         } else {
@@ -318,7 +318,7 @@ class MainWindow: NavigationViewWindow {
         if url == SettingsPage.url {
             return SettingsPage()
         }
-        let context = WindowContext(owner: self)
+        let context = self.context
         for module in App.context.modules {
             if let page = module.onNavigationRequested(for: url, in: context) {
                 return page
@@ -327,53 +327,12 @@ class MainWindow: NavigationViewWindow {
         return nil
     }
 
-    func firstNavigationItemURL() -> URL? {
-        return firstNavigationItemURL(in: ui.navigationView.menuItems)
-            ?? firstNavigationItemURL(in: ui.navigationView.footerMenuItems)
-    }
-
-    private func firstNavigationItemURL(in items: AnyIVector<Any?>?) -> URL? {
-        guard let items else { return nil }
-
-        for item in items {
-            guard let navItem = item as? NavigationViewItem else { continue }
-            if let tag = navItem.tag,
-                let str = tag as? HString,
-                let url = URL(string: String(hString: str))
-            {
-                return url
-            }
-            if let url = firstNavigationItemURL(in: navItem.menuItems) {
-                return url
-            }
-        }
-
-        return nil
-    }
-
-    private func url(for item: NavigationViewItemBase) -> URL? {
-        guard
-            let navItem = item as? NavigationViewItem,
-            let tag = navItem.tag,
-            let str = tag as? HString
-        else {
-            return nil
-        }
-
-        return URL(string: String(hString: str))
-    }
-
     private func resolveURL(for arg: NavigationViewItemInvokedEventArgs) -> URL? {
         if arg.isSettingsInvoked {
             return SettingsPage.url
-        } else if let item = arg.invokedItemContainer,
-            let tag = item.tag,
-            let str = tag as? HString
-        {
-            return URL(string: String(hString: str))
+        } else {
+            return arg.invokedItemContainer?.url
         }
-
-        return nil
     }
 
     // MARK: - Strip primitives (match items by stable name, not by ===)
