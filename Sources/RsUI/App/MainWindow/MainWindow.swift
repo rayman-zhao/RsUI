@@ -2,10 +2,6 @@ import Foundation
 import UWP
 import WinAppSDK
 
-private func tr(_ keyAndValue: String) -> String {
-    return App.context.tr(keyAndValue)
-}
-
 /// 主窗口壳：`NavigationViewWindow` + 一个 `PageControl (PageTabView)` 作为内容容器。
 ///
 /// 本类主要功能在于处理导航URL与Page对象的映射，并协调UI元素的显示。
