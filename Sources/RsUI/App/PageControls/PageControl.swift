@@ -1,5 +1,5 @@
-import WinUI
 import Foundation
+import WinUI
 
 /// 一个承载"当前 Page + 单条导航栈"的可复用控件接口，统一宿主窗口对
 /// `PageFrame`（单页面栈）与 `PageTabView`（共享 frame + 多 tab）的驱动入口。
@@ -72,6 +72,8 @@ protocol PageControl: AnyObject {
         transitionInfoOverride: NavigationTransitionInfo?
     ) -> Int
     func focus(matchingURL url: URL) -> Bool
+
+    var pageChanged: EventWithArgumentHandler<PageControl, Page?> { get }
 }
 
 // MARK: - PageFrame conformance

@@ -1,9 +1,6 @@
 import Foundation
-import Observation
 import UWP
 import WinAppSDK
-import WinUI
-import WindowsFoundation
 
 private func tr(_ keyAndValue: String) -> String {
     return App.context.tr(keyAndValue)
@@ -15,10 +12,8 @@ private func tr(_ keyAndValue: String) -> String {
 ///
 /// 提供context接口用于隔离窗口具体类型。
 class MainWindow: NavigationViewWindow, WindowContextHost {
-    private var context: WindowContext {
-        WindowContext(host: self)
-    }
-    private lazy var pageControl = PageTabView()
+    private lazy var context = WindowContext(host: self)
+    private lazy var pageControl: PageControl = PageTabView()
 
     // MARK: - Init
 
@@ -42,6 +37,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     }
 
     private func setupUI() {
+        ui.navigationView.header = nil
         ui.navigationView.content = pageControl
         ui.backButton.isEnabled = false
         ui.forwardButton.isEnabled = false
@@ -103,36 +99,22 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
             self?.pageControl.goForward()
         }
 
-        bindPageControlEvents()
-    }
-
-    private func bindPageControlEvents() {
-        // PageTabView 自管 strip：selectionChanged / tabCloseRequested / addTabButtonClick
-        // 已在控件内部 wire。宿主只需挂 onPageChanged / onCleared 同步 NavView 选中 +
-        // 写 lastPageURL + 刷新 back/forward 按钮态，替代旧 renderSelectedTab 末尾刷新。
-        pageControl.onPageChanged = { [weak self] _, _, page in
+        pageControl.pageChanged.addHandler { [weak self] _, page in
             guard let self else { return }
-            self.ui.navigationView.header = nil
-            self.ui.navigationView.selectItem(with: page.url)
-            self.ui.backButton.isEnabled = self.pageControl.canGoBack
-            self.ui.forwardButton.isEnabled = self.pageControl.canGoForward
-            App.context.route.lastPageURL = page.url
-        }
-        pageControl.onCleared = { [weak self] _, _ in
-            guard let self else { return }
-            self.ui.navigationView.header = nil
-            self.ui.backButton.isEnabled = false
-            self.ui.forwardButton.isEnabled = false
-        }
 
-        // strip "+" 的 page 来源：返回首个 NavView 项的 URL，否则 Settings。
-        pageControl.setAddTabProvider { [weak self] in
-            guard let self else { return (SettingsPage(), tr("Settings")) }
-            if let url = self.ui.navigationView.firstItemURL {
-                let page = self.context.resolvePage(from: url) ?? SettingsPage()
-                return (page, page.title)
+            if let page {
+                self.ui.navigationView.selectItem(with: page.url)
+                self.ui.backButton.isEnabled = self.pageControl.canGoBack
+                self.ui.forwardButton.isEnabled = self.pageControl.canGoForward
+
+                App.context.route.lastPageURL = page.url
+            } else {
+                self.ui.backButton.isEnabled = false
+                self.ui.forwardButton.isEnabled = false
+                if let home = self.ui.navigationView.firstItemURL {
+                    self.context.open(home)
+                }
             }
-            return (SettingsPage(), tr("Settings"))
         }
     }
 

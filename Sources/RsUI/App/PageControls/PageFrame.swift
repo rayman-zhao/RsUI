@@ -22,6 +22,10 @@ class PageFrame: Grid {
     /// 当前 page 被清空时回调（如内容退出动画）。本回调在主线程上触发。
     var onCleared: ((PageFrame) -> Void)?
 
+    let pageChanged: EventWithArgumentHandler<PageControl, Page?> = EventWithArgumentHandler<
+        PageControl, Page?
+    >()
+
     init(model: MainWindowTab) {
         self.model = model
         self.transitionHost = PageTransitionHost()
@@ -49,11 +53,17 @@ class PageFrame: Grid {
         )
     }
 
-    func goBack(_ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(slideEffect: .fromLeft)) {
+    func goBack(
+        _ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(
+            slideEffect: .fromLeft)
+    ) {
         model.goBack(transitionInfoOverride)
     }
 
-    func goForward(_ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(slideEffect: .fromRight)) {
+    func goForward(
+        _ transitionInfoOverride: NavigationTransitionInfo = NavigationTransitionInfo.make(
+            slideEffect: .fromRight)
+    ) {
         model.goForward(transitionInfoOverride)
     }
 
@@ -191,7 +201,9 @@ class PageFrame: Grid {
         } else if let parentPresenter = parent as? ContentPresenter {
             parentPresenter.content = nil
         } else {
-            print("[RsUI] detachFromVisualParent: unsupported parent type \(type(of: parent)) for child \(type(of: element)) — 'Element is already the child of another element' may follow")
+            print(
+                "[RsUI] detachFromVisualParent: unsupported parent type \(type(of: parent)) for child \(type(of: element)) — 'Element is already the child of another element' may follow"
+            )
         }
     }
 }

@@ -1,8 +1,8 @@
 import Foundation
-import WindowsFoundation
 import UWP
 import WinAppSDK
 import WinUI
+import WindowsFoundation
 
 /// 组合 `WinUI.TabView`（仅作 tab strip）与一个共享 `PageFrame`（一个 frame，
 /// 切 tab 时通过 `PageFrame.rebind(to:)` 复用）的可复用控件，等同 AGENTS.md
@@ -76,11 +76,15 @@ class PageTabView: Grid {
     // 每个栈允许保留的最大历史页数。
     private let maxHistoryPages: Int
     // strip "+" 按钮的 page 来源；由宿主通过 setAddTabProvider 设置。
-    private var addNewTabProvider: (() -> (Page, String))?
+    // private var addNewTabProvider: (() -> (Page, String))?
 
     // strip 左侧"关闭其它 tab"按钮（图标按钮，挂 tabStripHeader）；当 strip 在
     // tabCount ≤1 整体收起时随之隐藏（参照 MainWindow.closeOtherTabsButton）。
     private lazy var closeOthersButton: Button = makeCloseOthersButton()
+
+    let pageChanged: EventWithArgumentHandler<PageControl, Page?> = EventWithArgumentHandler<
+        PageControl, Page?
+    >()
 
     // MARK: - Init
 
@@ -127,7 +131,8 @@ class PageTabView: Grid {
         var i: UInt32 = 0
         while i < items.size {
             if let item = items.getAt(i) as? TabViewItem,
-               let ctx = tabContextsByName[item.name] {
+                let ctx = tabContextsByName[item.name]
+            {
                 result.append(ctx)
             }
             i += 1
@@ -136,14 +141,14 @@ class PageTabView: Grid {
     }
 
     /// 注册 strip 顶部"+"按钮的 page 来源。宿主提供返回 `(Page, tabHeader)`。
-    func setAddTabProvider(_ provider: @escaping () -> (Page, String)) {
-        addNewTabProvider = provider
-    }
+    // func setAddTabProvider(_ provider: @escaping () -> (Page, String)) {
+    //     addNewTabProvider = provider
+    // }
 
     /// shell 在 page 渲染后回调（更新 external 同步、写 lastPageURL 等）。在主线程触发。
-    var onPageChanged: ((PageTabView, TabContext, Page) -> Void)?
+    // var onPageChanged: ((PageTabView, TabContext, Page) -> Void)?
     /// shell 在当前 page 被清空时回调（如内容退出动画）。
-    var onCleared: ((PageTabView, TabContext) -> Void)?
+    // var onCleared: ((PageTabView, TabContext) -> Void)?
 
     // MARK: - Tab lifecycle
 
@@ -152,16 +157,19 @@ class PageTabView: Grid {
     /// 延迟到首次被选中时由 `applyTab` 触发，符合 `MainWindow.addTabs` 批处理。
     @discardableResult
     func addTab(
-        page: Page,
-        header tabHeader: String,
+        page: Page?,
+        header tabHeader: String?,
         transitionInfoOverride: NavigationTransitionInfo? = nil,
         at index: Int? = nil,
         switchToTab: Bool = true
     ) -> TabContext {
-        let model = MainWindowTab(page: page, transitionInfoOverride: transitionInfoOverride)
+        let model =
+            page != nil
+            ? MainWindowTab(page: page!, transitionInfoOverride: transitionInfoOverride)
+            : MainWindowTab()
         let item = TabViewItem()
         item.name = UUID().uuidString
-        item.header = tabHeader
+        item.header = tabHeader ?? ""
         item.minWidth = 100
         // 已有 tab 才允许互关；lone tab 不可关（参照 MainWindow 规则）。
         item.isClosable = !tabContextsByName.isEmpty
@@ -189,7 +197,9 @@ class PageTabView: Grid {
     /// 页；宿主需在调用前自行把 `model.allPages` 的 `Page` `onWindowContextChanged`
     /// 重绑到本窗口（控件本身不知道窗口边界）。
     @discardableResult
-    func adoptTab(model: MainWindowTab, header tabHeader: String?, at index: Int? = nil) -> TabContext {
+    func adoptTab(model: MainWindowTab, header tabHeader: String?, at index: Int? = nil)
+        -> TabContext
+    {
         let item = TabViewItem()
         item.name = UUID().uuidString
         item.minWidth = 100
@@ -272,12 +282,12 @@ class PageTabView: Grid {
     }
 
     /// 主动触发 strip "+" 加 tab：调用宿主注册的 provider，没有则 no-op。
-    @discardableResult
-    func addNewTabFromProvider() -> TabContext? {
-        guard let provider = addNewTabProvider else { return nil }
-        let (page, header) = provider()
-        return addTab(page: page, header: header)
-    }
+    // @discardableResult
+    // func addNewTabFromProvider() -> TabContext? {
+    //     guard let provider = addNewTabProvider else { return nil }
+    //     let (page, header) = provider()
+    //     return addTab(page: page, header: header)
+    // }
 
     // MARK: - Current-tab navigation（作用于共享 frame 当前的 model）
 
@@ -322,16 +332,20 @@ class PageTabView: Grid {
         // 不设置 frame.visibility —— 始终可见（被选中的内容就靠它显示）。
         sharedFrame.onPageChanged = { [weak self] frame, page in
             guard let self else { return }
-            guard let name = self.visibleTabName,
-                  let ctx = self.tabContextsByName[name] else { return }
-            self.onPageChanged?(self, ctx, page)
+            // guard let name = self.visibleTabName
+            // let ctx = self.tabContextsByName[name]
+            // else { return }
+            // self.onPageChanged?(self, ctx, page)
+            self.pageChanged.invoke(self, page)
             _ = frame
         }
         sharedFrame.onCleared = { [weak self] frame in
             guard let self else { return }
-            guard let name = self.visibleTabName,
-                  let ctx = self.tabContextsByName[name] else { return }
-            self.onCleared?(self, ctx)
+            // guard let name = self.visibleTabName
+            // let ctx = self.tabContextsByName[name]
+            // else { return }
+            // self.onCleared?(self, ctx)
+            self.pageChanged.invoke(self, nil)
             _ = frame
         }
     }
@@ -396,8 +410,10 @@ class PageTabView: Grid {
         }
         _ = btn.resources.insert("ButtonBackgroundPointerOver", hoverBrush)
         _ = btn.resources.insert("ButtonBackgroundPressed", pressedBrush)
-        for key in ["ButtonBorderBrush", "ButtonBorderBrushPointerOver",
-                    "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled"] {
+        for key in [
+            "ButtonBorderBrush", "ButtonBorderBrushPointerOver",
+            "ButtonBorderBrushPressed", "ButtonBorderBrushDisabled",
+        ] {
             _ = btn.resources.insert(key, transparent)
         }
 
@@ -433,7 +449,9 @@ class PageTabView: Grid {
             self.closeTab(ctx)
         }
         tabView.addTabButtonClick.addHandler { [weak self] _, _ in
-            self?.addNewTabFromProvider()
+            // self?.addNewTabFromProvider()
+            self?.addTab(page: nil, header: nil)
+            //self?.pageChanged.invoke(self!, nil)
         }
     }
 
