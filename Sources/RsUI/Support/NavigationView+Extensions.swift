@@ -14,9 +14,12 @@ extension NavigationView {
     public func selectItem(with url: URL) {
         if url == SettingsPage.url {
             selectSettingsItem()
-        } else {
-            let firstItem = self.first(where: { item in item.url == url })
-            self.selectedItem = firstItem
+        } else if let item = self.first(where: { item in item.url == url }) {
+            if !item.isSelected {
+                item.isSelected = true
+            }
+        } else if self.selectedItem != nil {
+            self.selectedItem = nil
         }
     }
 
@@ -29,7 +32,9 @@ extension NavigationView {
     }
 
     private func selectSettingsItem() {
-        if self.isSettingsVisible, let item = (self.settingsItem as? NavigationViewItem) {
+        if self.isSettingsVisible, let item = (self.settingsItem as? NavigationViewItem),
+            !item.isSelected
+        {
             item.isSelected = true
         }
     }

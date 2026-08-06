@@ -60,8 +60,8 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
             }
             self.pageControl.updateAppearance()
 
-            if let page = pageControl.currentPage {
-                ui.navigationView.selectItem(with: page.url)
+            if let url = pageControl.currentPage?.url {
+                ui.navigationView.selectItem(with: url)
             }
         }
         fullscreenChanged.addHandler { [weak self] _, arg in
