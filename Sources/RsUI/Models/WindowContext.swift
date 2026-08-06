@@ -88,8 +88,8 @@ public struct WindowContext {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Int {
-        return host?.currentPageControl.open(
-            pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
+        return host?.currentPageControl.navigate(
+            to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
     }
 
     @discardableResult
@@ -121,7 +121,7 @@ public struct WindowContext {
     @discardableResult
     public func openOrFocus(_ url: URL) -> Bool {
         guard let host else { return false }
-        if host.currentPageControl.focus(matchingURL: url) {
+        if host.currentPageControl.selectPage(matchingURL: url) {
             return true
         } else {
             return open(url, mode: .newTab)
@@ -134,7 +134,7 @@ public struct WindowContext {
 
     public func enterTabFullscreen() {
         guard let host else { return }
-        host.enterFullscreen(for: host.currentPageControl.pageView)
+        host.enterFullscreen(for: host.currentPageControl.fullscreenView)
     }
 
     public func exitTabFullscreen() {

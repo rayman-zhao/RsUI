@@ -34,7 +34,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
 
     private func setupUI() {
         ui.navigationView.header = nil
-        ui.navigationView.content = pageControl
+        ui.navigationView.content = pageControl.rootView
         ui.backButton.isEnabled = false
         ui.forwardButton.isEnabled = false
     }
