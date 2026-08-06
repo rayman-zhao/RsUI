@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import WinUI
+
 @testable import RsUI
 
 private final class MockView: RsUI.Page {
@@ -10,7 +11,7 @@ private final class MockView: RsUI.Page {
         self.id = id
     }
 
-    var url: URL { return URL(string: "rs://ui/mainwindow/test/\(id)")! }
+    var url: URL { return URL(string: "rs://ui/test/\(id)")! }
 
     var title: String { "Mock \(id)" }
 
@@ -19,17 +20,12 @@ private final class MockView: RsUI.Page {
     }
 }
 
-// Per-tab navigation history. The tab list / selection moved into TabView (the
-// strip is the source of truth and needs a live window), so these cover only the
-// window-independent history logic of a single MainWindowTab.
 @Suite
-struct MainWindowTabTests {
-    private let maxHistory = 32
-
+struct PageModelTests {
     @Test
     func initialState() {
         let view = MockView()
-        let tab = MainWindowTab(page: view)
+        let tab = PageModel(page: view)
 
         #expect(tab.currentPage === view)
         #expect(tab.backwardPages.isEmpty)
@@ -40,9 +36,9 @@ struct MainWindowTabTests {
     func navigateToDifferentPageAddsHistory() {
         let view1 = MockView()
         let view2 = MockView()
-        let tab = MainWindowTab(page: view1)
+        let tab = PageModel(page: view1)
 
-        tab.navigate(to: view2, maxHistoryPages: maxHistory)
+        tab.navigate(to: view2)
 
         #expect(tab.currentPage === view2)
         #expect(tab.backwardPages.count == 1)
@@ -53,9 +49,9 @@ struct MainWindowTabTests {
     @Test
     func navigateToSamePageRefreshesWithoutHistory() {
         let view = MockView()
-        let tab = MainWindowTab(page: view)
+        let tab = PageModel(page: view)
 
-        tab.navigate(to: view, maxHistoryPages: maxHistory)
+        tab.navigate(to: view)
 
         #expect(tab.currentPage === view)
         #expect(tab.backwardPages.isEmpty)
@@ -64,28 +60,31 @@ struct MainWindowTabTests {
 
     @Test
     func historyLimitEnforced() {
+        App.context.route.maxHistoryPages = 3
         let view1 = MockView()
         let view2 = MockView()
         let view3 = MockView()
         let view4 = MockView()
-        let tab = MainWindowTab(page: view1)
+        let view5 = MockView()
+        let tab = PageModel(page: view1)
 
-        tab.navigate(to: view2, maxHistoryPages: 2)
-        tab.navigate(to: view3, maxHistoryPages: 2)
-        tab.navigate(to: view4, maxHistoryPages: 2)
+        tab.navigate(to: view2)
+        tab.navigate(to: view3)
+        tab.navigate(to: view4)
+        tab.navigate(to: view5)
 
-        #expect(tab.backwardPages.count == 2)
+        #expect(tab.backwardPages.count == App.context.route.maxHistoryPages)
         #expect(tab.backwardPages[0] === view2)
         #expect(tab.backwardPages[1] === view3)
-        #expect(tab.currentPage === view4)
+        #expect(tab.currentPage === view5)
     }
 
     @Test
     func goBack() {
         let view1 = MockView()
         let view2 = MockView()
-        let tab = MainWindowTab(page: view1)
-        tab.navigate(to: view2, maxHistoryPages: maxHistory)
+        let tab = PageModel(page: view1)
+        tab.navigate(to: view2)
 
         tab.goBack()
 
@@ -98,7 +97,7 @@ struct MainWindowTabTests {
     @Test
     func goBackWhenEmptyIsNoOp() {
         let view = MockView()
-        let tab = MainWindowTab(page: view)
+        let tab = PageModel(page: view)
 
         tab.goBack()
 
@@ -113,10 +112,10 @@ struct MainWindowTabTests {
         let view2 = MockView()
         let view3 = MockView()
         let view4 = MockView()
-        let tab = MainWindowTab(page: view1)
-        tab.navigate(to: view2, maxHistoryPages: maxHistory)
-        tab.navigate(to: view3, maxHistoryPages: maxHistory)
-        tab.navigate(to: view4, maxHistoryPages: maxHistory)
+        let tab = PageModel(page: view1)
+        tab.navigate(to: view2)
+        tab.navigate(to: view3)
+        tab.navigate(to: view4)
         tab.goBack()
         tab.goBack()
 
@@ -130,7 +129,7 @@ struct MainWindowTabTests {
     @Test
     func goForwardWhenEmptyIsNoOp() {
         let view = MockView()
-        let tab = MainWindowTab(page: view)
+        let tab = PageModel(page: view)
 
         tab.goForward()
 
@@ -143,13 +142,13 @@ struct MainWindowTabTests {
         let view1 = MockView()
         let view2 = MockView()
         let view3 = MockView()
-        let tab = MainWindowTab(page: view1)
-        tab.navigate(to: view2, maxHistoryPages: maxHistory)
+        let tab = PageModel(page: view1)
+        tab.navigate(to: view2)
         tab.goBack()
 
         #expect(tab.forwardPages.count == 1)
 
-        tab.navigate(to: view3, maxHistoryPages: maxHistory)
+        tab.navigate(to: view3)
 
         #expect(tab.forwardPages.isEmpty)
         #expect(tab.backwardPages.count == 1)
@@ -161,11 +160,13 @@ struct MainWindowTabTests {
         let view1 = MockView()
         let view2 = MockView()
         let view3 = MockView()
-        let tab = MainWindowTab(page: view1)
-        tab.navigate(to: view2, maxHistoryPages: maxHistory)
-        tab.navigate(to: view3, maxHistoryPages: maxHistory)
+        let tab = PageModel(page: view1)
+        tab.navigate(to: view2)
+        tab.navigate(to: view3)
         tab.goBack()
 
-        #expect(tab.allPages.count == 3)
+        #expect(
+            tab.backwardPages.count + tab.forwardPages.count + (tab.currentPage != nil ? 1 : 0) == 3
+        )
     }
 }
