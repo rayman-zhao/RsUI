@@ -1,7 +1,7 @@
 import Foundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
 
 final class BatchOpenPage: RsUI.Page {
     var context: WindowContext
@@ -14,23 +14,25 @@ final class BatchOpenPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://arbitrary/batch-open")! }
+    var url: URL { URL(string: "rs://sample/batch-open")! }
     var title: String { tr("Batch Open") }
 
     // The routes opened by the batch demo, in tab order.
     private var routes: [URL] {
         [
-            "rs://arbitrary/navigation",
-            "rs://arbitrary/openorfocus",
-            "rs://arbitrary/appearance",
-            "rs://arbitrary/fullscreen",
+            "rs://sample/navigation",
+            "rs://sample/openorfocus",
+            "rs://sample/appearance",
+            "rs://sample/fullscreen",
         ].compactMap { URL(string: $0) }
     }
 
     var header: Any? {
         featurePageHeader(
             title: tr("Batch Open"),
-            description: tr("context.open([URL]) opens many tabs in one render instead of looping over open(_:mode:).")
+            description: tr(
+                "context.open([URL]) opens many tabs in one render instead of looping over open(_:mode:)."
+            )
         )
     }
 
@@ -39,13 +41,16 @@ final class BatchOpenPage: RsUI.Page {
             makeCard(
                 glyph: "\u{ECCD}",
                 header: tr("Open all in foreground"),
-                description: tr("context.open(routes) — opens every route as a tab and selects the last one."),
+                description: tr(
+                    "context.open(routes) — opens every route as a tab and selects the last one."),
                 mode: .newTab
             ),
             makeCard(
                 glyph: "\u{F22C}",
                 header: tr("Open all in background"),
-                description: tr("context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page."),
+                description: tr(
+                    "context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page."
+                ),
                 mode: .newTabNoFocus
             ),
         ]

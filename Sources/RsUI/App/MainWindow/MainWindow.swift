@@ -85,7 +85,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
             guard ctrlDown || url != pageControl.currentPage?.url else { return }
 
             Task { @MainActor [weak self] in
-                _ = self?.context.open(
+                self?.context.open(
                     url, mode: ctrlDown ? .newTabNoFocus : .inplace,
                     transitionInfoOverride: arg.recommendedNavigationTransitionInfo)
             }
