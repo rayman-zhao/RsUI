@@ -8,7 +8,7 @@ import WindowsFoundation
 
 func tr(_ keyAndValue: String) -> String {
     let text = App.context.tr(keyAndValue)
-    return (text == keyAndValue && App.context.language == .zh_CN) ? "待翻译\(keyAndValue)" : text
+    return (text == keyAndValue && App.context.language == .zh_CN) ? "待翻译（\(keyAndValue)）" : text
 }
 
 @Observable
@@ -41,7 +41,7 @@ final class SampleModule: Module {
 
     func navigationViewMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
         let header = NavigationViewItemHeader()
-        header.content = tr("samples")
+        header.content = tr("Samples")
 
         let items: [NavigationViewItemBase] = [
             header,
@@ -146,7 +146,7 @@ final class SampleModule: Module {
         case "/appearance":
             return AppearancePage(context: context)
         case "/folder-picker", "/footer-picker":
-            return FolderPickerPage(context: context)
+            return FolderPickerPage(context: context, path: url.path)
         default:
             return nil
         }

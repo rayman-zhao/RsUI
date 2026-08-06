@@ -1,20 +1,22 @@
 import Foundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
 
 final class FolderPickerPage: RsUI.Page {
     var context: WindowContext
+    let path: String
 
-    init(context: WindowContext) {
+    init(context: WindowContext, path: String) {
         self.context = context
+        self.path = path
     }
 
     func onWindowContextChanged(to context: WindowContext) {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://arbitrary/folder-picker")! }
+    var url: URL { URL(string: "rs://sample\(path)")! }
     var title: String { tr("Folder Picker") }
 
     var header: Any? {
@@ -29,14 +31,16 @@ final class FolderPickerPage: RsUI.Page {
         resultBlock.text = tr("No folder selected yet.")
         resultBlock.fontSize = 12
         resultBlock.textWrapping = .wrap
-        resultBlock.foreground = SolidColorBrush(App.context.theme.isDark
-            ? UWP.Color(a: 255, r: 160, g: 160, b: 160)
-            : UWP.Color(a: 255, r: 120, g: 120, b: 120))
+        resultBlock.foreground = SolidColorBrush(
+            App.context.theme.isDark
+                ? UWP.Color(a: 255, r: 160, g: 160, b: 160)
+                : UWP.Color(a: 255, r: 120, g: 120, b: 120))
 
         let card = SettingsCard(
             headerIconGlyph: "\u{E8B7}",
             header: tr("Pick a folder"),
-            description: tr("Click anywhere on this card to open the picker. Selected path appears below."),
+            description: tr(
+                "Click anywhere on this card to open the picker. Selected path appears below."),
             content: resultBlock
         )
         card.contentAlignment = .vertical

@@ -1,7 +1,7 @@
 import Foundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
 
 final class OverviewPage: RsUI.Page {
     var context: WindowContext
@@ -14,13 +14,15 @@ final class OverviewPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://arbitrary")! }
+    var url: URL { URL(string: "rs://sample")! }
     var title: String { tr("Overview") }
 
     var header: Any? {
         featurePageHeader(
-            title: tr("Arbitrary"),
-            description: tr("SampleApp demo module. Each item in the navigation pane focuses on one public RsUI surface. Tap a card below to jump straight to it.")
+            title: tr("Samples"),
+            description: tr(
+                "SampleApp demo module. Each item in the navigation pane focuses on one public RsUI surface. Tap a card below to jump straight to it."
+            )
         )
     }
 
@@ -41,13 +43,16 @@ final class OverviewPage: RsUI.Page {
             makeJumpCard(
                 glyph: "\u{E8A7}",
                 header: tr("Open or Focus"),
-                description: tr("Focuses an existing tab if its URL matches, otherwise opens a new one."),
+                description: tr(
+                    "Focuses an existing tab if its URL matches, otherwise opens a new one."),
                 path: "/openorfocus"
             ),
             makeJumpCard(
                 glyph: "\u{E78B}",
                 header: tr("New Window"),
-                description: tr("AppContext.openNewWindow, with optional collapsed NavPane for viewer-style windows."),
+                description: tr(
+                    "AppContext.openNewWindow, with optional collapsed NavPane for viewer-style windows."
+                ),
                 path: "/new-window"
             ),
             makeJumpCard(
@@ -78,7 +83,7 @@ final class OverviewPage: RsUI.Page {
             description: description
         )
         card.isClickEnabled = true
-        let targetURL = URL(string: "rs://arbitrary\(path)")!
+        let targetURL = URL(string: "rs://sample\(path)")!
         card.click.addHandler { [weak self] _, _ in
             _ = self?.context.open(targetURL, mode: .inplace)
         }
