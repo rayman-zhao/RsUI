@@ -128,7 +128,7 @@ public struct WindowContext {
         }
     }
 
-    public var isInTabFullscreen: Bool {
+    public var isInFullscreen: Bool {
         host?.isInFullscreen ?? false
     }
 

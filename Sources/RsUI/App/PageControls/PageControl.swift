@@ -60,7 +60,7 @@ protocol PageControl: AnyObject {
     func goForward()
 
     func updateAppearance()
-    func updateFullscreen(_ inFullscreen: Bool)
+    func updateWindowContext(_ context: WindowContext)
     func navigate(
         to page: Page,
         mode: NavigationOpenMode,
@@ -115,7 +115,7 @@ extension PageFrame: PageControl {
 
     func updateAppearance() {
     }
-    func updateFullscreen(_ inFullscreen: Bool) {
+    func updateWindowContext(_ context: WindowContext) {
     }
     func navigate(
         to page: Page,
@@ -156,7 +156,8 @@ extension PageTabView: PageControl {
     func updateAppearance() {
         reapplyCloseOthersTooltip()
     }
-    func updateFullscreen(_ inFullscreen: Bool) {
+    func updateWindowContext(_ context: WindowContext) {
+        currentPage?.onWindowContextChanged(to: context)
     }
 
     func navigate(

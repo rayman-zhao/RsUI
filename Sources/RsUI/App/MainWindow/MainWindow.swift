@@ -64,8 +64,10 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
                 ui.navigationView.selectItem(with: url)
             }
         }
-        fullscreenChanged.addHandler { [weak self] _, arg in
-            self?.pageControl.updateFullscreen(arg)
+        fullscreenChanged.addHandler { [weak self] _, _ in
+            guard let self else { return }
+
+            self.pageControl.updateWindowContext(self.context)
         }
 
         ui.navigationView.itemInvoked.addHandler { [weak self] _, arg in
