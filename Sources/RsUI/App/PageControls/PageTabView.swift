@@ -314,6 +314,7 @@ class PageTabView: Grid {
     func goBackCurrent() {
         guard let ctx = selectedTabContext, !ctx.model.backwardPages.isEmpty else { return }
         ctx.model.goBack(NavigationTransitionInfo.make(slideEffect: .fromLeft))
+        updateTabTitle(ctx)
         // 触发回调链同 navigateCurrent 的说明：由 sharedFrame 内回调转发。
         sharedFrame.renderCurrentPageIfNeeded()
     }
@@ -322,6 +323,7 @@ class PageTabView: Grid {
     func goForwardCurrent() {
         guard let ctx = selectedTabContext, !ctx.model.forwardPages.isEmpty else { return }
         ctx.model.goForward(NavigationTransitionInfo.make(slideEffect: .fromRight))
+        updateTabTitle(ctx)
         sharedFrame.renderCurrentPageIfNeeded()
     }
 
