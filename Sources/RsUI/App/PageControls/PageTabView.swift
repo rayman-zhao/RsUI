@@ -302,6 +302,7 @@ class PageTabView: Grid {
             transitionInfoOverride: transitionInfoOverride,
             maxHistoryPages: maxHistoryPages
         )
+        updateTabTitle(ctx)
         // sharedFrame 当前已 rebind 到 ctx.model，直接走 needsRender 路径，让其用
         // navigate 时记录的 transitionInfo 播放栈内动画。renderCurrentPage 会同步
         // 触发 sharedFrame.onPageChanged → 经由 configureSharedFrame 中转回
