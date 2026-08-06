@@ -18,7 +18,7 @@
         }
       }
     },
-    "darkMode" : {
+    "Dark" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -52,69 +52,87 @@
         }
       }
     },
-    "dynamicSample" : {
+    "Overview" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dynamic Sample"
+            "value" : "Overview"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "动态示例"
+            "value" : "总览"
           }
         }
       }
     },
-    "error" : {
+    "Back" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error"
+            "value" : "Back"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "错误"
+            "value" : "后退"
           }
         }
       }
     },
-    "home" : {
+    "Forward" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Home"
+            "value" : "Forward"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主页"
+            "value" : "前进"
           }
         }
       }
-    },    "triage" : {
+    },
+    "Fullscreen" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Triage"
+            "value" : "Fullscreen"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "图库"
+            "value" : "全屏"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
           }
         }
       }
@@ -152,7 +170,8 @@
           }
         }
       }
-    },    "lightMode" : {
+    },
+    "Light" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -203,7 +222,7 @@
         }
       }
     },
-    "samples" : {
+    "Samples" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -356,19 +375,19 @@
         }
       }
     },
-    "searchControlsAndSamples" : {
+    "Search ..." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search controls and samples..."
+            "value" : "Search ..."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "搜索控件和示例..."
+            "value" : "搜索 ..."
           }
         }
       }

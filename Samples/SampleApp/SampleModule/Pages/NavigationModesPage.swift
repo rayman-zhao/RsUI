@@ -1,7 +1,7 @@
 import Foundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
 
 final class NavigationModesPage: RsUI.Page {
     var context: WindowContext
@@ -14,13 +14,15 @@ final class NavigationModesPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://arbitrary/navigation")! }
+    var url: URL { URL(string: "rs://sample/navigation")! }
     var title: String { tr("Navigation Modes") }
 
     var header: Any? {
         featurePageHeader(
             title: tr("NavigationOpenMode"),
-            description: tr("Each card opens this same page through context.open(_:mode:) using a different mode.")
+            description: tr(
+                "Each card opens this same page through context.open(_:mode:) using a different mode."
+            )
         )
     }
 
@@ -67,7 +69,7 @@ final class NavigationModesPage: RsUI.Page {
         card.isClickEnabled = true
         card.click.addHandler { [weak self] _, _ in
             guard let self else { return }
-            _ = self.context.open(self.url, mode: mode)
+            _ = self.context.open(URL(string: "rs://ui/settings")!, mode: mode)
         }
         return card
     }
@@ -85,7 +87,7 @@ final class NavigationModesPage: RsUI.Page {
         card.isClickEnabled = true
         card.click.addHandler { [weak self] _, _ in
             guard let self else { return }
-            App.context.openNewWindow(with: self.url)
+            App.context.openNewWindow(with: URL(string: "rs://ui/settings")!)
         }
         return card
     }
