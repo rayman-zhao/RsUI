@@ -1,7 +1,7 @@
 import Foundation
+import RsUI
 import UWP
 import WinUI
-import RsUI
 
 final class AppearancePage: RsUI.Page {
     var context: WindowContext
@@ -14,13 +14,15 @@ final class AppearancePage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://arbitrary/appearance")! }
+    var url: URL { URL(string: "rs://sample/appearance")! }
     var title: String { tr("Appearance") }
 
     var header: Any? {
         featurePageHeader(
             title: tr("Theme & Language"),
-            description: tr("App.context.theme and App.context.language are @Observable. Setting them rebuilds the chrome of every open window and persists to preferences.")
+            description: tr(
+                "App.context.theme and App.context.language are @Observable. Setting them rebuilds the chrome of every open window and persists to preferences."
+            )
         )
     }
 
@@ -51,7 +53,8 @@ final class AppearancePage: RsUI.Page {
         let langCard = SettingsCard(
             headerIconGlyph: "\u{F2B7}",
             header: tr("Language"),
-            description: tr("Sets App.context.language; the tr() helper prefixes \"翻译\" when in zh_CN."),
+            description: tr(
+                "Sets App.context.language; the tr() helper prefixes \"翻译\" when in zh_CN."),
             content: langToggle
         )
 

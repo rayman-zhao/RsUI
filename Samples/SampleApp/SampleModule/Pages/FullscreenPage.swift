@@ -21,7 +21,7 @@ final class FullscreenPage: RsUI.Page {
 
     var header: Any? {
         featurePageHeader(
-            title: tr("Tab Fullscreen"),
+            title: tr("Fullscreen"),
             description: tr(
                 "Hides chrome and reparents the selected tab content to a root overlay. Press Esc to exit."
             )

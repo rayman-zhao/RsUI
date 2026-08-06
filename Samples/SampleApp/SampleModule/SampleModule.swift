@@ -48,7 +48,7 @@ final class SampleModule: Module {
             NavigationViewItem.build(
                 iconGlyph: "\u{E80F}", label: tr("Overview"), url: "rs://\(id)"),
             NavigationViewItem.build(
-                iconGlyph: "\u{E740}", label: tr("Tab Fullscreen"), url: "rs://\(id)/fullscreen"),
+                iconGlyph: "\u{E740}", label: tr("Fullscreen"), url: "rs://\(id)/fullscreen"),
             NavigationViewItem.build(
                 iconGlyph: "\u{ECCD}", label: tr("Navigation Modes"), url: "rs://\(id)/navigation"),
             NavigationViewItem.build(
