@@ -42,7 +42,7 @@ final class FullscreenPage: RsUI.Page {
         )
         enterCard.isClickEnabled = true
         enterCard.click.addHandler { [weak self] _, _ in
-            self?.context.enterTabFullscreen()
+            self?.context.enterFullscreen()
         }
 
         let exitCard = SettingsCard(
@@ -52,7 +52,7 @@ final class FullscreenPage: RsUI.Page {
         )
         exitCard.isClickEnabled = true
         exitCard.click.addHandler { [weak self] _, _ in
-            self?.context.exitTabFullscreen()
+            self?.context.exitFullscreen()
         }
 
         return featurePageContent([statusCard, enterCard, exitCard])

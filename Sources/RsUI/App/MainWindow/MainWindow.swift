@@ -1,6 +1,7 @@
 import Foundation
 import UWP
 import WinAppSDK
+import WinUI
 
 /// 主窗口壳：`NavigationViewWindow` + 一个 `PageControl (PageTabView)` 作为内容容器。
 ///
@@ -119,5 +120,37 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     // MARK: WindowContextHost protocol
 
     var hwnd: WindowId { self.appWindow.id }
-    var currentPageControl: any PageControl { pageControl }
+
+    var isInFullscreenPage: Bool {
+        return isInFullscreen
+    }
+    func enterFullscreenPage() {
+        enterFullscreen(for: pageControl.fullscreenView)
+    }
+    func exitFullscreenPage() {
+        exitFullscreen()
+    }
+
+    func open(
+        _ page: Page,
+        mode: NavigationOpenMode = .inplace,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) {
+        pageControl.navigate(
+            to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
+    }
+
+    @discardableResult
+    public func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int {
+        return pageControl.navigate(
+            to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride)
+    }
+
+    func selectPage(matchingURL url: URL) -> Bool {
+        return pageControl.selectPage(matchingURL: url)
+    }
 }

@@ -17,7 +17,7 @@ private struct WindowLayout: PreferenceValue {
     var navigationViewOpenPaneLength: Double = 320
 }
 
-class NavigationViewWindow: AppearanceWindow, FullscreenableWindow {
+class NavigationViewWindow: AppearanceWindow {
     private(set) var ui:
         (
             root: Grid,

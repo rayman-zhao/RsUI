@@ -2,17 +2,6 @@ import Foundation
 import WinAppSDK
 import WinUI
 
-protocol FullscreenableWindow {
-    var isInFullscreen: Bool { get }
-    func enterFullscreen(for element: UIElement)
-    func exitFullscreen()
-}
-
-protocol WindowContextHost: AnyObject, FullscreenableWindow {
-    var hwnd: WindowId { get }
-    var currentPageControl: PageControl { get }
-}
-
 /// Destination when opening a URL or Page.
 ///
 /// - inplace: Open in the current page control.
@@ -29,7 +18,11 @@ public enum NavigationOpenMode: Sendable {
 /// A `WindowContext` lets module works with main windows without knowing `MainWindow` specific type.
 public struct WindowContext {
     // Modules may keep this context from a Page, so the underlying window owner is weak.
-    weak var host: WindowContextHost?
+    private weak var host: WindowContextHost?
+
+    init(host: WindowContextHost) {
+        self.host = host
+    }
 
     /// Opens the system folder picker owned by this window.
     ///
@@ -64,8 +57,15 @@ public struct WindowContext {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) {
-        host?.currentPageControl.navigate(
-            to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
+        host?.open(page, mode: mode, transitionInfoOverride: transitionInfoOverride)
+    }
+
+    @discardableResult public func open(
+        _ pages: [Page],
+        mode: NavigationOpenMode = .newTab,
+        transitionInfoOverride: NavigationTransitionInfo? = nil
+    ) -> Int {
+        return host?.open(pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
     }
 
     @discardableResult
@@ -74,22 +74,9 @@ public struct WindowContext {
         mode: NavigationOpenMode = .inplace,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> Bool {
-        guard mode != .inplace || url != host?.currentPageControl.currentPage?.url else {
-            return true
-        }
         guard let page = resolvePage(from: url) else { return false }
         open(page, mode: mode, transitionInfoOverride: transitionInfoOverride)
         return true
-    }
-
-    @discardableResult
-    public func open(
-        _ pages: [Page],
-        mode: NavigationOpenMode = .newTab,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> Int {
-        return host?.currentPageControl.navigate(
-            to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
     }
 
     @discardableResult
@@ -120,8 +107,7 @@ public struct WindowContext {
     ///   was accepted.
     @discardableResult
     public func openOrFocus(_ url: URL) -> Bool {
-        guard let host else { return false }
-        if host.currentPageControl.selectPage(matchingURL: url) {
+        if host?.selectPage(matchingURL: url) == true {
             return true
         } else {
             return open(url, mode: .newTab)
@@ -129,16 +115,15 @@ public struct WindowContext {
     }
 
     public var isInFullscreen: Bool {
-        host?.isInFullscreen ?? false
+        host?.isInFullscreenPage ?? false
     }
 
-    public func enterTabFullscreen() {
-        guard let host else { return }
-        host.enterFullscreen(for: host.currentPageControl.fullscreenView)
+    public func enterFullscreen() {
+        host?.enterFullscreenPage()
     }
 
-    public func exitTabFullscreen() {
-        host?.exitFullscreen()
+    public func exitFullscreen() {
+        host?.exitFullscreenPage()
     }
 
     func resolvePage(from url: URL) -> Page? {
