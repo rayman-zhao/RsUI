@@ -63,7 +63,7 @@ class NavigationViewWindow: AppearanceWindow {
     }
 
     private func setupUI() {
-        let xaml = xmalUI.replacingOccurrences(
+        let xaml = xamlUI.replacingOccurrences(
             of: "{x:IconPath}", with: App.context.iconPath ?? "")
         let loaded = (try? XamlReader.load(xaml)) as! Grid
 
@@ -300,7 +300,7 @@ class NavigationViewWindow: AppearanceWindow {
     /// 窗口壳静态结构。对照 WinUI Gallery "End to end TitleBar sample"：
     /// `Grid(Row0=Auto TitleBar, Row1=* NavigationView)`，标题栏内容 + 右标题头 +
     /// 面板开关按钮都在这里声明。Splitter 仅声明透明占位 Border，几何与事件由 Swift 回填。
-    private var xmalUI: String {
+    private var xamlUI: String {
         """
         <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
             <Grid.RowDefinitions>
