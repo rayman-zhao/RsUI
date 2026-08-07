@@ -12,12 +12,12 @@ protocol WindowContextHost: AnyObject {
     func open(
         _ page: Page,
         mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
+        transitionInfoOverride: NavigationTransitionInfo
     )
     @discardableResult func open(
         _ pages: [Page],
         mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
+        transitionInfoOverride: NavigationTransitionInfo
     ) -> Int
     func selectPage(matchingURL url: URL) -> Bool
 }

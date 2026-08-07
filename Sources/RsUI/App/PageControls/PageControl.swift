@@ -16,12 +16,12 @@ protocol PageControl {
     func navigate(
         to page: Page,
         mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
+        transitionInfoOverride: NavigationTransitionInfo
     )
     func navigate(
         to pages: [Page],
         mode: NavigationOpenMode,
-        transitionInfoOverride: NavigationTransitionInfo?
+        transitionInfoOverride: NavigationTransitionInfo
     ) -> Int
     func selectPage(matchingURL url: URL) -> Bool
 

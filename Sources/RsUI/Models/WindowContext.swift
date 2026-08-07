@@ -55,7 +55,7 @@ public struct WindowContext {
     public func open(
         _ page: Page,
         mode: NavigationOpenMode = .inplace,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) {
         host?.open(page, mode: mode, transitionInfoOverride: transitionInfoOverride)
     }
@@ -63,7 +63,7 @@ public struct WindowContext {
     @discardableResult public func open(
         _ pages: [Page],
         mode: NavigationOpenMode = .newTab,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
         return host?.open(pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
     }
@@ -72,7 +72,7 @@ public struct WindowContext {
     public func open(
         _ url: URL,
         mode: NavigationOpenMode = .inplace,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Bool {
         guard let page = resolvePage(from: url) else { return false }
         open(page, mode: mode, transitionInfoOverride: transitionInfoOverride)
@@ -83,7 +83,7 @@ public struct WindowContext {
     public func open(
         _ urls: [URL],
         mode: NavigationOpenMode = .newTab,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
         guard urls.count > 1 else {
             return open(urls[0], mode: mode, transitionInfoOverride: transitionInfoOverride)

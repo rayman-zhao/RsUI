@@ -9,9 +9,12 @@ class PageTransitionHost: Grid {
 
     private var isAnimating = false
     private var currentWrapper: Border?
-    private var pendingTransition: (content: UIElement?, transitionInfo: NavigationTransitionInfo?)?
+    private var pendingTransition: (content: UIElement?, transitionInfo: NavigationTransitionInfo)?
 
-    func transition(to newContent: UIElement?, transitionInfo: NavigationTransitionInfo? = nil) {
+    func transition(
+        to newContent: UIElement?,
+        transitionInfo: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
+    ) {
         if isAnimating {
             pendingTransition = (newContent, transitionInfo)
             return
@@ -72,16 +75,27 @@ class PageTransitionHost: Grid {
         let easing = CubicEase()
         easing.easingMode = .easeOut
 
-        addOpacityAnimation(to: storyboard, target: newWrapper, from: 0, to: 1, duration: duration, easing: easing)
-        addSlideAnimation(to: storyboard, target: newTransform, property: "TranslateX", from: offset.x, to: 0, duration: duration, easing: easing)
-        addSlideAnimation(to: storyboard, target: newTransform, property: "TranslateY", from: offset.y, to: 0, duration: duration, easing: easing)
+        addOpacityAnimation(
+            to: storyboard, target: newWrapper, from: 0, to: 1, duration: duration, easing: easing)
+        addSlideAnimation(
+            to: storyboard, target: newTransform, property: "TranslateX", from: offset.x, to: 0,
+            duration: duration, easing: easing)
+        addSlideAnimation(
+            to: storyboard, target: newTransform, property: "TranslateY", from: offset.y, to: 0,
+            duration: duration, easing: easing)
 
         if let oldWrapper {
-            addOpacityAnimation(to: storyboard, target: oldWrapper, from: 1, to: 0, duration: duration, easing: easing)
+            addOpacityAnimation(
+                to: storyboard, target: oldWrapper, from: 1, to: 0, duration: duration,
+                easing: easing)
 
             if let oldTransform = oldWrapper.renderTransform as? CompositeTransform {
-                addSlideAnimation(to: storyboard, target: oldTransform, property: "TranslateX", from: 0, to: -offset.x, duration: duration, easing: easing)
-                addSlideAnimation(to: storyboard, target: oldTransform, property: "TranslateY", from: 0, to: -offset.y, duration: duration, easing: easing)
+                addSlideAnimation(
+                    to: storyboard, target: oldTransform, property: "TranslateX", from: 0,
+                    to: -offset.x, duration: duration, easing: easing)
+                addSlideAnimation(
+                    to: storyboard, target: oldTransform, property: "TranslateY", from: 0,
+                    to: -offset.y, duration: duration, easing: easing)
             }
         }
 
@@ -115,7 +129,8 @@ class PageTransitionHost: Grid {
         let easing = CubicEase()
         easing.easingMode = .easeOut
 
-        addOpacityAnimation(to: storyboard, target: wrapper, from: 1, to: 0, duration: duration, easing: easing)
+        addOpacityAnimation(
+            to: storyboard, target: wrapper, from: 1, to: 0, duration: duration, easing: easing)
 
         storyboard.completed.addHandler { [weak self] _, _ in
             guard let self else { return }
@@ -138,7 +153,9 @@ class PageTransitionHost: Grid {
         transition(to: pending.content, transitionInfo: pending.transitionInfo)
     }
 
-    private func transitionOffset(for transitionInfo: NavigationTransitionInfo?) -> (x: Double, y: Double) {
+    private func transitionOffset(for transitionInfo: NavigationTransitionInfo?) -> (
+        x: Double, y: Double
+    ) {
         guard let slide = transitionInfo as? SlideNavigationTransitionInfo else {
             return (0, 0)
         }

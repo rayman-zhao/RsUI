@@ -134,7 +134,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     func open(
         _ page: Page,
         mode: NavigationOpenMode = .inplace,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo
     ) {
         pageControl.navigate(
             to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
@@ -144,7 +144,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     public func open(
         _ pages: [Page],
         mode: NavigationOpenMode = .newTab,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
+        transitionInfoOverride: NavigationTransitionInfo
     ) -> Int {
         return pageControl.navigate(
             to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride)
