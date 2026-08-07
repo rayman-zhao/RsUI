@@ -30,9 +30,6 @@ final class PageControlTestWindow: Window {
     /// 统一驱动入口——Back/Forward/+Page 全在此调多态方法。在 super.init 之前定型，
     /// 故为 `let` 非可选，避免 IUO 在 Swift 6 严格可选规则下仍被当作 Optional 而需解包。
     private let control: any PageControl
-    /// 仅在 `tabView` 模式下持有，用于 strip "+" provider、+NewTab、tabCount 显示等
-    /// PageTabView 特有行为。
-    private let pageTabView: PageTabView?
 
     // 工具栏控件（XAML 加载后用 findName 取回）。
     private var backButton: Button!
@@ -48,13 +45,9 @@ final class PageControlTestWindow: Window {
         // 在 super.init() 之后再挂。
         switch mode {
         case .frame:
-            let frame = PageFrame(model: MainWindowTab())
-            self.control = frame
-            self.pageTabView = nil
+            self.control = PageFrame()
         case .tabView:
-            let tv = PageTabView(maxHistoryPages: 64)
-            self.control = tv
-            self.pageTabView = tv
+            self.control = PageTabView(maxHistoryPages: 64)
         }
 
         super.init()
@@ -70,45 +63,22 @@ final class PageControlTestWindow: Window {
         content = makeRoot()
 
         // 回调捕获 self，必须在 super.init() 之后赋值，把 page 渲染后状态刷新挂上。
-        switch control {
-        case let frame as PageFrame:
-            frame.onPageChanged = { [weak self] _, _ in self?.updateStatus() }
-            frame.onCleared = { [weak self] _ in self?.updateStatus() }
-        case let tv as PageTabView:
-            tv.onPageChanged = { [weak self] _, _, _ in self?.updateStatus() }
-            tv.onCleared = { [weak self] _, _ in self?.updateStatus() }
-        default:
-            break
+        control.pageChanged.addHandler { [weak self] _, page in
+            if page == nil {
+                self?.control.navigate(
+                    to: makePage(name: "Home", headerKind: .string, effect: .fromBottom),
+                    mode: .inplace, transitionInfoOverride: SuppressNavigationTransitionInfo())
+            }
+            self?.updateStatus()
         }
 
         // strip "+" 的 page 来源（仅 tabView 模式有意义）。
-        pageTabView?.setAddTabProvider { [weak self] in
-            guard let self else {
-                return (makePage(name: "Home", headerKind: .string, effect: .fromBottom), "Home")
-            }
-            return self.makeProviderPage()
-        }
-
-        Task { @MainActor in
-            let homePage = makePage(name: "Home", headerKind: .string, effect: .fromBottom)
-            switch mode {
-            case .frame:
-                // 首帧抑制进入动画，与原 PageFrameTestWindow 一致。
-                control.pushPage(
-                    to: homePage,
-                    transitionInfoOverride: SuppressNavigationTransitionInfo(),
-                    maxHistoryPages: 64
-                )
-            case .tabView:
-                // PageTabView 首个 tab 走 addTab（内部首个 tab 用 Suppress 进场）。
-                pageTabView?.addTab(
-                    page: homePage,
-                    header: "Home",
-                    transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: .fromBottom)
-                )
-            }
-            updateStatus()
-        }
+        // pageTabView?.setAddTabProvider { [weak self] in
+        //     guard let self else {
+        //         return (makePage(name: "Home", headerKind: .string, effect: .fromBottom), "Home")
+        //     }
+        //     return self.makeProviderPage()
+        // }
     }
 
     // MARK: - Root + Toolbar (XAML-loaded)
@@ -231,34 +201,31 @@ final class PageControlTestWindow: Window {
         default: effect = .fromLeft
         }
         let page = makePage(name: name, headerKind: headerKind, effect: effect)
-        control.pushPage(
-            to: page,
-            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect),
-            maxHistoryPages: 64
+        control.navigate(
+            to: page, mode: .newTab,
+            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect)
         )
         updateStatus()
     }
 
     private func newTabTapped() {
         // 仅 tabView 模式有意义：走 strip "+" 与 +NewTab 同一入口（provider 提供页）。
-        pageTabView?.addNewTabFromProvider()
+        _ = (control as? PageTabView)?.addNewTabFromProvider()
         updateStatus()
     }
 
     private func updateStatus() {
         let current = control.currentPage?.title ?? "(empty)"
-        // currentModel 在 PageFrame 恒非空；PageTabView 取当前选中 tab 的 model。
-        // 两侧统一走协议读取 back/forward 计数。
-        let backCount = control.currentModel?.backwardPages.count ?? 0
-        let fwdCount = control.currentModel?.forwardPages.count ?? 0
-        statusText?.text = "cur: \(current) | back: \(backCount) | fwd: \(fwdCount)"
+        statusText?.text =
+            "cur: \(current) | back: \(control.canGoBack) | fwd: \(control.canGoForward)"
         backButton?.isEnabled = control.canGoBack
         forwardButton?.isEnabled = control.canGoForward
 
-        guard mode == .tabView, let tv = pageTabView else { return }
+        guard mode == .tabView, let tv = control as? PageTabView else { return }
         // tabs 数 + strip 是否隐藏的状态，方便肉眼判断 strip 自动隐藏。
         let stripHidden = tv.tabCount <= 1
-        tabCountText?.text = stripHidden
+        tabCountText?.text =
+            stripHidden
             ? "tabs: \(tv.tabCount) (strip hidden)"
             : "tabs: \(tv.tabCount)"
     }

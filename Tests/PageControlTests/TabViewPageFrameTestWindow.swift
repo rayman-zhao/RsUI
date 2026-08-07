@@ -105,7 +105,7 @@ final class TabViewPageFrameTestWindow: Window {
         tabHeader: String,
         transitionInfoOverride: NavigationTransitionInfo? = nil
     ) -> TabViewItem? {
-        let model = MainWindowTab(page: page, transitionInfoOverride: transitionInfoOverride)
+        let model = PageModel(page: page)
         let frame = PageFrame(model: model)
 
         let item = TabViewItem()
@@ -128,11 +128,7 @@ final class TabViewPageFrameTestWindow: Window {
         isSyncingSelection = false
 
         // 首次首页抑制进入动画；后续 tab 顺其自然播放 transitionInfo。
-        let firstRender = isFirstNavigation
         isFirstNavigation = false
-        let renderOverride: NavigationTransitionInfo? =
-            firstRender ? SuppressNavigationTransitionInfo() : nil
-        frame.renderCurrentPageIfNeeded(transitionInfoOverride: renderOverride)
 
         updateClosableStates()
         return item
@@ -213,9 +209,10 @@ final class TabViewPageFrameTestWindow: Window {
         let updateStatus = { [weak frame] in
             guard let frame else { return }
             let current = frame.currentPage?.title ?? "(empty)"
-            statusText?.text = "cur: \(current)"
-                + " | back: \(frame.model.backwardPages.count)"
-                + " | fwd: \(frame.model.forwardPages.count)"
+            statusText?.text =
+                "cur: \(current)"
+                + " | back: \(frame.canGoBack)"
+                + " | fwd: \(frame.canGoForward)"
             backButton?.isEnabled = frame.canGoBack
             forwardButton?.isEnabled = frame.canGoForward
         }
@@ -223,13 +220,11 @@ final class TabViewPageFrameTestWindow: Window {
         backButton?.click.addHandler { [weak frame] _, _ in
             guard let frame, frame.canGoBack else { return }
             frame.goBack()
-            frame.renderCurrentPageIfNeeded()
             updateStatus()
         }
         forwardButton?.click.addHandler { [weak frame] _, _ in
             guard let frame, frame.canGoForward else { return }
             frame.goForward()
-            frame.renderCurrentPageIfNeeded()
             updateStatus()
         }
 
@@ -262,7 +257,8 @@ final class TabViewPageFrameTestWindow: Window {
         // 初始状态。
         backButton?.isEnabled = false
         forwardButton?.isEnabled = false
-        statusText?.text = "cur: \(frame.currentPage?.title ?? "(empty)")"
+        statusText?.text =
+            "cur: \(frame.currentPage?.title ?? "(empty)")"
             + " | back: 0 | fwd: 0"
 
         return root
@@ -332,10 +328,8 @@ final class TabViewPageFrameTestWindow: Window {
         let page = makePage(name: pageName, headerKind: headerKind, effect: effect)
         frame.navigate(
             to: page,
-            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect),
-            maxHistoryPages: 64
+            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect)
         )
-        frame.renderCurrentPageIfNeeded()
     }
 
     // MARK: - Strip "+ tab" button
