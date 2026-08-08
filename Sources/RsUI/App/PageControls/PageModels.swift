@@ -1,23 +1,18 @@
 import Foundation
-import Observation
-import WinUI
 
 class PageModel {
     var backwardPages: [Page] = []
     var forwardPages: [Page] = []
     var currentPage: Page? = nil
-    var needsRender: Bool = false
 
     init() {
     }
 
     init(page: Page) {
         currentPage = page
-        needsRender = true
     }
 
     func navigate(to page: Page) {
-        needsRender = true
         if currentPage === page {
             currentPage = page
         } else {
@@ -35,7 +30,6 @@ class PageModel {
     func goBack() {
         guard !backwardPages.isEmpty else { return }
 
-        needsRender = true
         if let page = currentPage {
             forwardPages.append(page)
         }
@@ -45,7 +39,6 @@ class PageModel {
     func goForward() {
         guard !forwardPages.isEmpty else { return }
 
-        needsRender = true
         if let page = currentPage {
             backwardPages.append(page)
         }
