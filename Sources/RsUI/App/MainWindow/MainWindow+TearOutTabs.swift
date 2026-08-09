@@ -86,7 +86,7 @@ class MainWindow {
     // (it over-fires, incl. speculative tears it never commits) don't leak empty
     // windows.
     static var spareReceiver: MainWindow? = nil
-    
+
     // Empty receiver window for a tear-out. Comes up with no tab and skips
     // position restore; the torn tab is injected by tabTearOutRequested.
     init(tearOutReceiver: Bool) {
@@ -189,7 +189,7 @@ class MainWindow {
         pageTabView.adoptTab(model: model, header: header, at: index)
     }
 
-    
+
     // Closes this window once its last tab has been torn/merged away, so an
     // emptied floating receiver doesn't linger.
     func closeIfEmpty() {
@@ -281,6 +281,49 @@ class MainWindow {
             i += 1
         }
         return nil
+    }
+}
+
+class PageTabView {
+    // MARK: - Host-facing entry points (MainWindow cross-window tear-out & fullscreen)
+
+    /// 暴露内部 strip `TabView` 供宿主挂 cross-window tear-out 事件。Tear-out 本质跨
+    /// 窗口（创建接收窗、在窗口间迁移 model），windowless 控件无法自己拥有，故把这
+    /// 个事件源暴露给宿主窗口。受 `PageTabView.tabTearOutEnabled` gate:`false` 时
+    /// 宿主的 `configureTearOutEvents` 直接 early-return，永不读取本 accessor。
+    var tearOutTabView: TabView { tabView }
+
+    /// 收养一个已含历史的 model（tear-out / 跨窗口迁移用）：直接用该 model 建
+    /// `TabContext` 插入 strip，不走 `PageModel(page:)` 新建 —— 保留 back/forward
+    /// 历史与已渲染过的 `Page` 实例。`model.needsRender=true` 让 `applyTab` 渲染当前
+    /// 页；宿主需在调用前自行把 `model.allPages` 的 `Page` `onWindowContextChanged`
+    /// 重绑到本窗口（控件本身不知道窗口边界）。
+    @discardableResult
+    func adoptTab(model: PageModel, header tabHeader: String?, at index: Int? = nil)
+        -> TabContext
+    {
+        let item = TabViewItem()
+        item.name = UUID().uuidString
+        item.minWidth = 100
+        item.isClosable = !tabContextsByName.isEmpty
+        if let tabHeader {
+            item.header = tabHeader
+        }
+
+        let ctx = TabContext(model: model, item: item)
+        tabContextsByName[item.name] = ctx
+        updateTabTitle(ctx)
+
+        insertItem(item, at: index)
+
+        // Tear-out 落地必选中 —— torn tab 跟随光标进入接收窗口后应立刻成为当前页。
+        selectItem(item)
+        // model.needsRender = true
+        applyTab(ctx)
+
+        updateStripVisibility()
+        updateAllClosableStates()
+        return ctx
     }
 }
 */
