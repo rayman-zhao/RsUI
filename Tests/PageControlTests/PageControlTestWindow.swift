@@ -36,7 +36,6 @@ final class PageControlTestWindow: Window {
     private var forwardButton: Button!
     private var statusText: TextBlock!
     private var tabCountText: TextBlock!
-    private var newTabButton: Button!
 
     init(mode: Mode) {
         self.mode = mode
@@ -47,7 +46,7 @@ final class PageControlTestWindow: Window {
         case .frame:
             self.control = PageFrame()
         case .tabView:
-            self.control = PageTabView(maxHistoryPages: 64)
+            self.control = PageTabView()
         }
 
         super.init()
@@ -71,14 +70,6 @@ final class PageControlTestWindow: Window {
             }
             self?.updateStatus()
         }
-
-        // strip "+" 的 page 来源（仅 tabView 模式有意义）。
-        // pageTabView?.setAddTabProvider { [weak self] in
-        //     guard let self else {
-        //         return (makePage(name: "Home", headerKind: .string, effect: .fromBottom), "Home")
-        //     }
-        //     return self.makeProviderPage()
-        // }
     }
 
     // MARK: - Root + Toolbar (XAML-loaded)
@@ -94,7 +85,6 @@ final class PageControlTestWindow: Window {
         forwardButton = (try? root.findName("ForwardButton")) as? Button
         statusText = (try? root.findName("StatusText")) as? TextBlock
         tabCountText = (try? root.findName("TabCountText")) as? TextBlock
-        newTabButton = (try? root.findName("NewTabButton")) as? Button
 
         // 事件处理必须在代码里绑（XAML 不能写 XAML-defined 事件处理器）。
         backButton.click.addHandler { [weak self] _, _ in self?.goBackTapped() }
@@ -111,15 +101,12 @@ final class PageControlTestWindow: Window {
             }
         }
 
-        newTabButton?.click.addHandler { [weak self] _, _ in self?.newTabTapped() }
-
         // Row1 挂 control（rootView 是 Grid 子类的 FrameworkElement，可直接 Grid.setRow）。
         root.children.append(control.rootView)
         try? Grid.setRow(control.rootView, 1)
 
         // frame 模式下 tab 专属控件收起：无 strip 也无 +NewTab 语义。
         if mode != .tabView {
-            newTabButton?.visibility = .collapsed
             tabCountText?.visibility = .collapsed
         }
 
@@ -161,10 +148,6 @@ final class PageControlTestWindow: Window {
                     <Button Name="AddNilHdrButton" MinHeight="28" Padding="10,4,10,4"
                             VerticalAlignment="Center">
                         <TextBlock Text="+NilHdr"/>
-                    </Button>
-                    <Button Name="NewTabButton" MinHeight="28" Padding="10,4,10,4"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="+NewTab"/>
                     </Button>
                     <TextBlock Name="StatusText" Margin="12,0,12,0" VerticalAlignment="Center"/>
                     <TextBlock Name="TabCountText" Margin="4,0,0,0" VerticalAlignment="Center"
@@ -208,12 +191,6 @@ final class PageControlTestWindow: Window {
         updateStatus()
     }
 
-    private func newTabTapped() {
-        // 仅 tabView 模式有意义：走 strip "+" 与 +NewTab 同一入口（provider 提供页）。
-        _ = (control as? PageTabView)?.addNewTabFromProvider()
-        updateStatus()
-    }
-
     private func updateStatus() {
         let current = control.currentPage?.title ?? "(empty)"
         statusText?.text =
@@ -228,15 +205,5 @@ final class PageControlTestWindow: Window {
             stripHidden
             ? "tabs: \(tv.tabCount) (strip hidden)"
             : "tabs: \(tv.tabCount)"
-    }
-
-    // MARK: - Provider page (PageTabView +NewTab 专用)
-
-    /// strip "+" 按钮 / 工具条 +NewTab 走的 page 来源（仅 tabView 模式）。
-    private func makeProviderPage() -> (RsUI.Page, String) {
-        counter += 1
-        let n = counter
-        let page = makePage(name: "Home \(n)", headerKind: .string, effect: .fromBottom)
-        return (page, "Tab #\(n)")
     }
 }
