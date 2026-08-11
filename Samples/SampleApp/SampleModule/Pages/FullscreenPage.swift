@@ -10,7 +10,7 @@ final class FullscreenPage: RsUI.Page {
         self.context = context
     }
 
-    func onWindowContextChanged(to context: WindowContext) {
+    func windowContextDidChange(to context: WindowContext) {
         self.context = context
         (self.statusCard.headerIcon as! FontIcon).glyph =
             context.isInFullscreen ? "\u{E922}" : "\u{E93A}"

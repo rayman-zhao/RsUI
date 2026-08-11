@@ -27,8 +27,8 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
 
             if let url, self.context.open(url) {
                 return
-            } else if let home = self.ui.navigationView.firstItemURL {
-                self.context.open(home)
+            } else {
+                self.context.open(self.ui.navigationView.firstItemURL)
             }
         }
     }
@@ -110,9 +110,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
             } else {
                 self.ui.backButton.isEnabled = false
                 self.ui.forwardButton.isEnabled = false
-                if let home = self.ui.navigationView.firstItemURL {
-                    self.context.open(home)
-                }
+                self.context.open(self.ui.navigationView.firstItemURL)
             }
         }
     }

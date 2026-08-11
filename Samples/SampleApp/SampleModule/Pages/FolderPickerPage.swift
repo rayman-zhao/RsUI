@@ -12,7 +12,7 @@ final class FolderPickerPage: RsUI.Page {
         self.path = path
     }
 
-    func onWindowContextChanged(to context: WindowContext) {
+    func windowContextDidChange(to context: WindowContext) {
         self.context = context
     }
 

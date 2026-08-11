@@ -6,8 +6,8 @@ public class SettingsExpander: StackPanel {
 
     // MARK: - Public properties
 
-    public var expanded: (() -> Void)?
-    public var collapsed: (() -> Void)?
+    public var onExpanded: (() -> Void)?
+    public var onCollapsed: (() -> Void)?
 
     public var itemsHeader: WinUI.UIElement? {
         didSet { rebuildItems() }
@@ -68,8 +68,13 @@ public class SettingsExpander: StackPanel {
     }
 
     /// Positional: iconPath, header, description, contentText, items
-    public convenience init(_ headerIconPath: String, _ header: String, _ description: String? = nil, _ contentText: String? = nil, _ items: [SettingsCard] = []) {
-        self.init(headerIconPath: headerIconPath, header: header, description: description, contentText: contentText, items: items)
+    public convenience init(
+        _ headerIconPath: String, _ header: String, _ description: String? = nil,
+        _ contentText: String? = nil, _ items: [SettingsCard] = []
+    ) {
+        self.init(
+            headerIconPath: headerIconPath, header: header, description: description,
+            contentText: contentText, items: items)
     }
 
     public init(
@@ -133,7 +138,8 @@ public class SettingsExpander: StackPanel {
         cardStack.children.append(expandedHost)
 
         let outerCard = WinUI.Border()
-        outerCard.cornerRadius = WinUI.CornerRadius(topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
+        outerCard.cornerRadius = WinUI.CornerRadius(
+            topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
         outerCard.background = cardBackgroundBrush(theme: theme)
         outerCard.borderBrush = cardBorderBrush(theme: theme)
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
@@ -224,9 +230,9 @@ public class SettingsExpander: StackPanel {
             }
             self.isAnimating = false
             if expanding {
-                self.expanded?()
+                self.onExpanded?()
             } else {
-                self.collapsed?()
+                self.onCollapsed?()
             }
         }
 

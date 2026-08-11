@@ -103,9 +103,9 @@ class PageFrame: PageTransitionHost, PageControl {
     }
 
     func updateWindowContext(_ context: WindowContext) {
-        model.currentPage?.onWindowContextChanged(to: context)
+        model.currentPage?.windowContextDidChange(to: context)
         for page in model.backwardPages + model.forwardPages {
-            page.onWindowContextChanged(to: context)
+            page.windowContextDidChange(to: context)
         }
     }
 }

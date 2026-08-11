@@ -2,7 +2,6 @@ import UWP
 import WinUI
 import WindowsFoundation
 
-
 // MARK: - Brushes (internal)
 
 enum SettingsBrushMode {
@@ -119,7 +118,6 @@ func cardForegroundHoverBrush(theme: AppTheme = App.context.theme) -> WinUI.Soli
 func cardForegroundPressedBrush(theme: AppTheme = App.context.theme) -> WinUI.SolidColorBrush {
     WinUI.SolidColorBrush(settingsBrushPalette(for: theme).settingsCardForegroundPressed)
 }
-
 
 func cardBorderBrush(theme: AppTheme = App.context.theme) -> WinUI.SolidColorBrush {
     WinUI.SolidColorBrush(settingsBrushPalette(for: theme).settingsCardBorderBrush)

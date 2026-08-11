@@ -183,7 +183,7 @@ class MainWindow {
         // this window so window-scoped calls hit the new owner, not the creator.
         let context = WindowContext(owner: self)
         for page in model.allPages {
-            page.onWindowContextChanged(to: context)
+            page.windowContextDidChange(to: context)
         }
         let header = model.currentPage?.title
         pageTabView.adoptTab(model: model, header: header, at: index)
@@ -296,7 +296,7 @@ class PageTabView {
     /// 收养一个已含历史的 model（tear-out / 跨窗口迁移用）：直接用该 model 建
     /// `TabContext` 插入 strip，不走 `PageModel(page:)` 新建 —— 保留 back/forward
     /// 历史与已渲染过的 `Page` 实例。`model.needsRender=true` 让 `applyTab` 渲染当前
-    /// 页；宿主需在调用前自行把 `model.allPages` 的 `Page` `onWindowContextChanged`
+    /// 页；宿主需在调用前自行把 `model.allPages` 的 `Page` `windowContextDidChange`
     /// 重绑到本窗口（控件本身不知道窗口边界）。
     @discardableResult
     func adoptTab(model: PageModel, header tabHeader: String?, at index: Int? = nil)

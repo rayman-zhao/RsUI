@@ -1,7 +1,7 @@
-import WindowsFoundation
 import UWP
 import WinAppSDK
 import WinUI
+import WindowsFoundation
 
 /// ContentAlignment controls where the content is placed within SettingsCard.
 public enum SettingsCardContentAlignment {
@@ -24,7 +24,7 @@ public class SettingsCard: ButtonBase {
     public var headerIcon: IconElement?
     public var actionIcon: FontIcon? = {
         let icon = WinUI.FontIcon()
-        icon.glyph = "\u{E974}" // ChevronRight
+        icon.glyph = "\u{E974}"  // ChevronRight
         return icon
     }()
     public var actionIconToolTip: String?
@@ -68,14 +68,14 @@ public class SettingsCard: ButtonBase {
         cardBorder.verticalAlignment = .center
         cardBorder.backgroundSizing = .innerBorderEdge
         cardBorder.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
-        cardBorder.cornerRadius = WinUI.CornerRadius(topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
+        cardBorder.cornerRadius = WinUI.CornerRadius(
+            topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
         cardBorder.background = cardBackgroundBrush()
         cardBorder.borderBrush = cardBorderBrush()
         self.foreground = cardForegroundBrush()
 
         self.content = cardBorder
     }
-
 
     /// Header + description (text) + right-side content control, with a glyph icon.
     public convenience init(
@@ -158,8 +158,13 @@ public class SettingsCard: ButtonBase {
     }
 
     /// Positional: glyph, header, description, content
-    public convenience init(_ headerIconGlyph: String, _ header: String, _ description: String? = nil, _ content: FrameworkElement? = nil, _ actionIcon: FontIcon? = nil) {
-        self.init(headerIconGlyph: headerIconGlyph, header: header, description: description, content: content, actionIcon: actionIcon)
+    public convenience init(
+        _ headerIconGlyph: String, _ header: String, _ description: String? = nil,
+        _ content: FrameworkElement? = nil, _ actionIcon: FontIcon? = nil
+    ) {
+        self.init(
+            headerIconGlyph: headerIconGlyph, header: header, description: description,
+            content: content, actionIcon: actionIcon)
     }
 
     /// Positional: header, description (FrameworkElement)
@@ -174,7 +179,8 @@ public class SettingsCard: ButtonBase {
         cardBorder.background = nil
         cardBorder.borderBrush = nil
         cardBorder.borderThickness = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
-        cardBorder.cornerRadius = WinUI.CornerRadius(topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0)
+        cardBorder.cornerRadius = WinUI.CornerRadius(
+            topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0)
     }
 
     /// Applies the item padding used when hosted inside a SettingsExpander.
@@ -230,12 +236,18 @@ public class SettingsCard: ButtonBase {
     }
 
     private func disableInteraction() {
-        pointerEnteredToken?.dispose(); pointerEnteredToken = nil
-        pointerExitedToken?.dispose(); pointerExitedToken = nil
-        pointerPressedToken?.dispose(); pointerPressedToken = nil
-        pointerReleasedToken?.dispose(); pointerReleasedToken = nil
-        pointerCaptureLostToken?.dispose(); pointerCaptureLostToken = nil
-        pointerCanceledToken?.dispose(); pointerCanceledToken = nil
+        pointerEnteredToken?.dispose()
+        pointerEnteredToken = nil
+        pointerExitedToken?.dispose()
+        pointerExitedToken = nil
+        pointerPressedToken?.dispose()
+        pointerPressedToken = nil
+        pointerReleasedToken?.dispose()
+        pointerReleasedToken = nil
+        pointerCaptureLostToken?.dispose()
+        pointerCaptureLostToken = nil
+        pointerCanceledToken?.dispose()
+        pointerCanceledToken = nil
 
         goToNormalState()
     }
@@ -333,7 +345,8 @@ public class SettingsCard: ButtonBase {
             let headerPanel: StackPanel = WinUI.StackPanel()
             headerPanel.orientation = .vertical
             headerPanel.verticalAlignment = .center
-            headerPanel.margin = (contentAlignment == .right)
+            headerPanel.margin =
+                (contentAlignment == .right)
                 ? WinUI.Thickness(left: 0, top: 0, right: 24, bottom: 0)
                 : WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
             try? WinUI.Grid.setRow(headerPanel, 0)
@@ -414,7 +427,8 @@ public class SettingsCard: ButtonBase {
                 try? WinUI.ToolTipService.setToolTip(actionIconHolder, toolTip)
             }
 
-            actionIconHolder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
+            actionIconHolder.visibility =
+                (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
             actionIconHolder.child = aIcon
             self.actionIconHolder = actionIconHolder
             container.children.append(actionIconHolder)
@@ -430,15 +444,18 @@ public class SettingsCard: ButtonBase {
 
     private func makeDescriptionView(_ text: String?) -> FrameworkElement? {
         guard let text, !text.isEmpty else { return nil }
-        let tb: TextBlock = (try? XamlReader.load("""
-            <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" >
-            \(text)
-            </TextBlock>
-            """)) as? TextBlock ?? {
-            let t = TextBlock()
-            t.text = text
-            return t
-        }()
+        let tb: TextBlock =
+            (try? XamlReader.load(
+                """
+                <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" >
+                \(text)
+                </TextBlock>
+                """)) as? TextBlock
+            ?? {
+                let t = TextBlock()
+                t.text = text
+                return t
+            }()
         return tb
     }
 }

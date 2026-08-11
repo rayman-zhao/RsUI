@@ -11,15 +11,15 @@ public protocol Page: AnyObject {
     /// Callback when the page is moved to another window (tab tear-out or
     /// merge), or the window enter/exit fullscreen state.
     ///
-    /// A page that caches WindowContext should update it here，and change button
+    /// A page that caches WindowContext should update it here, and change button
     /// text or icon for fullscreen state.
-    func onWindowContextChanged(to context: WindowContext)
+    func windowContextDidChange(to context: WindowContext)
 }
 
 extension Page {
     public var header: Any? { nil }
 
-    public func onWindowContextChanged(to context: WindowContext) {}
+    public func windowContextDidChange(to context: WindowContext) {}
 
     public func startObserving<Element>(
         _ emit: @escaping @Sendable () -> Element,

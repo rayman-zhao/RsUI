@@ -1,11 +1,14 @@
 import Foundation
 import Observation
-import WindowsFoundation
 import WinAppSDK
 import WinUI
+import WindowsFoundation
 
-public extension NavigationViewItem {
-    func startObserving<Element>(_ emit: @escaping @Sendable () -> Element, onChanged: @escaping @MainActor (NavigationViewItem, Element) -> Void) {
+extension NavigationViewItem {
+    public func startObserving<Element>(
+        _ emit: @escaping @Sendable () -> Element,
+        onChanged: @escaping @MainActor (NavigationViewItem, Element) -> Void
+    ) {
         let obs = Observations(emit)
 
         Task { [weak self] in
@@ -19,7 +22,7 @@ public extension NavigationViewItem {
         }
     }
 
-    static func build(icon: FontIcon, label: String, url: String) -> NavigationViewItem {
+    public static func build(icon: FontIcon, label: String, url: String) -> NavigationViewItem {
         let item = NavigationViewItem()
         item.icon = icon
         item.content = label
@@ -27,18 +30,21 @@ public extension NavigationViewItem {
         return item
     }
 
-    static func build(iconGlyph: String, label: String, url: String) -> NavigationViewItem {
+    public static func build(iconGlyph: String, label: String, url: String) -> NavigationViewItem {
         let icon = FontIcon()
         icon.glyph = iconGlyph
 
         return build(icon: icon, label: label, url: url)
     }
 
-    static func build(icon: FontIcon, label: String, url: String, actionGlyph: String, actionTooltip: String, actionHandler: @escaping ((Optional<Any>, Optional<RoutedEventArgs>) throws -> ())) -> NavigationViewItem {
+    public static func build(
+        icon: FontIcon, label: String, url: String, actionGlyph: String, actionTooltip: String,
+        actionHandler: @escaping ((Any?, RoutedEventArgs?) throws -> Void)
+    ) -> NavigationViewItem {
         let grid = Grid()
         grid.horizontalAlignment = .stretch
         grid.verticalAlignment = .center
-        
+
         // 定义列：标签(填充) | 动作按钮(自动)
         let textCol = ColumnDefinition()
         textCol.width = GridLength(value: 1, gridUnitType: .star)
@@ -64,7 +70,8 @@ public extension NavigationViewItem {
         actionButton.horizontalAlignment = .center
         actionButton.width = 32
         actionButton.height = 32
-        actionButton.cornerRadius = CornerRadius(topLeft: 6, topRight: 6, bottomRight: 6, bottomLeft: 6)
+        actionButton.cornerRadius = CornerRadius(
+            topLeft: 6, topRight: 6, bottomRight: 6, bottomLeft: 6)
 
         let actionIcon = FontIcon()
         actionIcon.glyph = actionGlyph
@@ -85,10 +92,15 @@ public extension NavigationViewItem {
         return item
     }
 
-    static func build(iconGlyph: String, label: String, url: String, actionGlyph: String, actionTooltip: String, actionHandler: @escaping ((Optional<Any>, Optional<RoutedEventArgs>) throws -> ())) -> NavigationViewItem {
+    public static func build(
+        iconGlyph: String, label: String, url: String, actionGlyph: String, actionTooltip: String,
+        actionHandler: @escaping ((Any?, RoutedEventArgs?) throws -> Void)
+    ) -> NavigationViewItem {
         let icon = FontIcon()
         icon.glyph = iconGlyph
 
-        return build(icon: icon, label: label, url: url, actionGlyph: actionGlyph, actionTooltip: actionTooltip, actionHandler: actionHandler)
+        return build(
+            icon: icon, label: label, url: url, actionGlyph: actionGlyph,
+            actionTooltip: actionTooltip, actionHandler: actionHandler)
     }
 }
