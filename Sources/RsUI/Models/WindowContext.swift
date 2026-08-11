@@ -132,7 +132,7 @@ public struct WindowContext {
         }
 
         for module in App.context.modules {
-            if let page = module.onNavigationRequested(for: url, in: self) {
+            if let page = module.navigationDidRequest(for: url, in: self) {
                 return page
             }
         }

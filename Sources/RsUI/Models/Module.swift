@@ -10,7 +10,7 @@ public protocol Module: ExpressibleByEmptyLiteral {
     func navigationViewFooterMenuItems(in context: WindowContext) -> [NavigationViewItemBase]
     func settingsGroup() -> (title: String, cards: [UIElement])?
 
-    func onNavigationRequested(for url: URL, in context: WindowContext) -> Page?
+    func navigationDidRequest(for url: URL, in context: WindowContext) -> Page?
 }
 
 extension Module {
@@ -31,7 +31,7 @@ extension Module {
         return nil
     }
 
-    public func onNavigationRequested(for url: URL, in context: WindowContext) -> Page? {
+    public func navigationDidRequest(for url: URL, in context: WindowContext) -> Page? {
         return nil
     }
 }

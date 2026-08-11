@@ -30,7 +30,6 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
         self = .undefined
     }
 
-    @discardableResult
     mutating func toggle() {
         self = isDark ? .light : .dark
     }

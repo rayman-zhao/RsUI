@@ -128,7 +128,7 @@ final class SampleModule: Module {
         return (tr("Settings Controls Demo"), [basicCard, clickableCard, expander])
     }
 
-    func onNavigationRequested(for url: URL, in context: WindowContext) -> RsUI.Page? {
+    func navigationDidRequest(for url: URL, in context: WindowContext) -> RsUI.Page? {
         guard url.host == self.id else { return nil }
         switch url.path {
         case "", "/":
