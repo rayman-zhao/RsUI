@@ -3,7 +3,7 @@ import UWP
 import WinAppSDK
 
 extension RuntimeInfo {
-    static var sdkVersion: String {
+    public static var sdkVersion: String {
         switch RuntimeInfo.version {
         case PackageVersion(major: 8000, minor: 616, build: 304, revision: 0):
             return "1.8.0"
