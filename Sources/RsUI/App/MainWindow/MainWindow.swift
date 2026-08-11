@@ -9,28 +9,20 @@ import WinUI
 ///
 /// 提供context接口用于隔离窗口具体类型。
 class MainWindow: NavigationViewWindow, WindowContextHost {
+    private var initURL: URL?
     private lazy var context = WindowContext(host: self)
     private lazy var pageControl: PageControl = PageTabView()
 
     // MARK: - Init
 
     init(url: URL? = nil, forceMinimalMode: Bool = false) {
+        initURL = url
         super.init(forceMinimalMode)
         useMicaBackdrop()
         useRestoration()
 
         setupUI()
         bindEvents()
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            if let url, self.context.open(url) {
-                return
-            } else {
-                self.context.open(self.ui.navigationView.firstItemURL)
-            }
-        }
     }
 
     private func setupUI() {
@@ -110,6 +102,13 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
             } else {
                 self.ui.backButton.isEnabled = false
                 self.ui.forwardButton.isEnabled = false
+
+                if let url = self.initURL {
+                    self.initURL = nil
+                    if self.context.open(url) {
+                        return
+                    }
+                }
                 self.context.open(self.ui.navigationView.firstItemURL)
             }
         }
