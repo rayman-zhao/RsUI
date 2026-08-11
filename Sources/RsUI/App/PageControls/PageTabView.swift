@@ -170,7 +170,16 @@ class PageTabView: Grid, PageControl {
     }
 
     func updateWindowContext(_ context: WindowContext) {
-        currentPage?.onWindowContextChanged(to: context)
+        for item in tabView.tabItems {
+            if let tabViewItem = item as? TabViewItem, let tag = tabViewItem.tag,
+                let model = tag as? PageModel
+            {
+                model.currentPage?.windowContextDidChange(to: context)
+                for page in model.backwardPages + model.forwardPages {
+                    page.windowContextDidChange(to: context)
+                }
+            }
+        }
     }
 
     private func addTabItems(with pages: [Page?]) -> TabViewItem {
