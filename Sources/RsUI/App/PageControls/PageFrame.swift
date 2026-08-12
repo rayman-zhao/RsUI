@@ -99,7 +99,13 @@ class PageFrame: PageTransitionHost, PageControl {
     }
 
     func updateAppearance() {
-        transition(to: currentPage?.view)
+        /// NOTE: A page inplace transition will have problem if some UI Elements been referenced in the Page object.
+        /// So that, must remove the page view from visual tree first, then release COM references in event loop,
+        /// then add to new visual tree node.
+        transition(to: nil)
+        Task { @MainActor in
+            transition(to: currentPage?.view)
+        }
     }
 
     func updateWindowContext(_ context: WindowContext) {
