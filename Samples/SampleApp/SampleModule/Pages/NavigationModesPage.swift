@@ -86,7 +86,7 @@ final class NavigationModesPage: RsUI.Page {
         )
         card.isClickEnabled = true
         card.click.addHandler { _, _ in
-            App.context.openNewWindow(with: URL(string: "rs://ui/settings")!)
+            App.context.openNewWindow(with: [URL(string: "rs://ui/settings")!])
         }
         return card
     }

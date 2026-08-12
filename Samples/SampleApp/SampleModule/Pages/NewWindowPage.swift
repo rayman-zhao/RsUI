@@ -35,7 +35,7 @@ final class NewWindowPage: RsUI.Page {
         plainCard.isClickEnabled = true
         plainCard.click.addHandler { [weak self] _, _ in
             guard let self else { return }
-            App.context.openNewWindow(with: self.url)
+            App.context.openNewWindow(with: [self.url])
         }
 
         let viewerCard = SettingsCard(
@@ -46,7 +46,7 @@ final class NewWindowPage: RsUI.Page {
         viewerCard.isClickEnabled = true
         viewerCard.click.addHandler { [weak self] _, _ in
             guard let self else { return }
-            App.context.openNewWindow(with: self.url, forceMinimalMode: true)
+            App.context.openNewWindow(with: [self.url], forceMinimalMode: true)
         }
 
         return featurePageContent([plainCard, viewerCard])

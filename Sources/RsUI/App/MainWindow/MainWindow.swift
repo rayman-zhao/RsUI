@@ -14,7 +14,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
 
     // MARK: - Init
 
-    init(url: URL? = nil, forceMinimalMode: Bool = false) {
+    init(urls: [URL] = [], forceMinimalMode: Bool = false) {
         super.init(forceMinimalMode)
         useMicaBackdrop()
         useRestoration()
@@ -22,9 +22,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
         setupUI()
         bindEvents()
 
-        if let url {
-            _ = self.context.open(url)
-        }
+        _ = self.context.open(urls)
     }
 
     private func setupUI() {

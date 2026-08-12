@@ -85,6 +85,7 @@ public struct WindowContext {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
+        guard !urls.isEmpty else { return 0 }
         guard urls.count > 1 else {
             return open(urls[0], mode: mode, transitionInfoOverride: transitionInfoOverride)
                 ? 1 : 0

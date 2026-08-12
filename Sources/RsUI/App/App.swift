@@ -34,10 +34,10 @@ open class App: SwiftApplication {
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
             logo: App.context.iconAppxUri)
 
-        if launchHasFlag("--new-window", args) {
-            try? MainWindow().activate()
+        if let url = App.context.route.lastPageURL {
+            try? MainWindow(urls: [url]).activate()
         } else {
-            try? MainWindow(url: App.context.route.lastPageURL).activate()
+            try? MainWindow().activate()
         }
     }
 

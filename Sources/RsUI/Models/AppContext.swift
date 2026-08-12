@@ -107,15 +107,15 @@ public final class AppContext {
     /// Opens a brand-new `MainWindow` and navigates it to the given URL.
     ///
     /// - Parameters:
-    ///   - url: The route URL to resolve in the new window.
+    ///   - urls: The route URL to resolve in the new window.
     ///   - forceMinimalMode: When `true`, the new window starts with
     ///     the NavigationView pane minimized and its closing handler skips
     ///     persisting the layout unless user expended it. Use for viewer-style
     ///     windows (e.g. slide presenters) where chrome would distract from content.
     public func openNewWindow(
-        with url: URL,
+        with urls: [URL],
         forceMinimalMode: Bool = false
     ) {
-        try! MainWindow(url: url, forceMinimalMode: forceMinimalMode).activate()
+        try! MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
     }
 }
