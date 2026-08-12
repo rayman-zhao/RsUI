@@ -101,7 +101,7 @@ class PageTransitionHost: Grid {
 
         storyboard.completed.addHandler { [weak self] _, _ in
             guard let self else { return }
-            try? self.dispatcherQueue?.tryEnqueue { [weak self] in
+            _ = try? self.dispatcherQueue?.tryEnqueue { [weak self] in
                 guard let self else { return }
                 if let oldWrapper {
                     oldWrapper.child = nil
@@ -134,7 +134,7 @@ class PageTransitionHost: Grid {
 
         storyboard.completed.addHandler { [weak self] _, _ in
             guard let self else { return }
-            try? self.dispatcherQueue?.tryEnqueue { [weak self] in
+            _ = try? self.dispatcherQueue?.tryEnqueue { [weak self] in
                 guard let self else { return }
                 wrapper.child = nil
                 self.removeChild(wrapper)
