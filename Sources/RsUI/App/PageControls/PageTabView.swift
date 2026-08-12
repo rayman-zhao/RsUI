@@ -77,11 +77,14 @@ class PageTabView: Grid, PageControl {
         }
         closeOthersButton.click.addHandler { [weak self] _, _ in
             guard let self else { return }
+            guard let item = self.tabView.selectedItem else { return }
+            guard let index = self.tabView.tabItems.index(of: item) else { return }
 
-            let item = self.tabView.selectedItem
-            self.tabView.tabItems.clear()
-            self.tabView.tabItems.append(item)
-            self.tabView.selectedItem = item
+            for i in stride(from: self.tabView.tabItems.count - 1, through: 0, by: -1) {
+                if i != index {
+                    self.tabView.tabItems.removeAt(UInt32(i))
+                }
+            }
             self.tabView.visibility = .collapsed
         }
         pageFrame.pageChanged.addHandler { [weak self] _, page in
