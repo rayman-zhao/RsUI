@@ -1,0 +1,29 @@
+disabled_rules:
+  - opening_brace  # swift-format conflict
+  - trailing_comma
+  - cyclomatic_complexity
+#  - todo
+#  - force_try
+
+line_length: 160
+
+function_body_length:
+  warning: 500
+  error: 1000
+
+type_body_length:
+  warning: 1000
+  error: 2000
+
+file_length:
+  warning: 1000
+  error: 2000
+
+identifier_name:
+  min_length:
+    warning: 1
+    error: 1
+
+included:
+  - Sources
+#  - Tests

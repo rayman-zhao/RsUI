@@ -26,7 +26,7 @@ extension JumpList {
                     guard let item = try JumpListItem.createWithArguments(arguments, displayName)
                     else { return }
                     item.logo = logo
-                    items.append(item)                    
+                    items.append(item)
                 }
 
                 try await jumpList.saveAsync().get()

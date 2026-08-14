@@ -8,7 +8,7 @@ class AppearanceWindow: Window {
     let appearanceChanged = EventHandler<AppearanceWindow>()
 
     // 持有 Observation Task 句柄，窗口关闭时 cancel，避免死窗口的 task 继续访问失效的 self.appWindow / self.viewModel
-    private var observationTask: Task<Void, Never>? = nil
+    private var observationTask: Task<Void, Never>?
     private var isApplyingAppearance = false
 
     override init() {

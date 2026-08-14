@@ -76,7 +76,7 @@ extension Window {
         guard let hwnd = self.appWindow, let presenter = hwnd.presenter as? OverlappedPresenter
         else { return }
 
-        let maximized = windowPosition.isMaximized  //moveAndResize will cause pref changed in event, so need to reserve here
+        let maximized = windowPosition.isMaximized  // moveAndResize will cause pref changed in event, so need to reserve here
         try? hwnd.moveAndResize(windowPosition.windowRect)
         if maximized {
             try? presenter.maximize()

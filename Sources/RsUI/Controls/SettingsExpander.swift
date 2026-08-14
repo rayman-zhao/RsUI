@@ -236,7 +236,11 @@ public class SettingsExpander: StackPanel {
             }
         }
 
-        expanding ? chevron.expand() : chevron.collapse()
+        if expanding {
+            chevron.expand()
+        } else {
+            chevron.collapse()
+        }
         try? storyboard.begin()
     }
 

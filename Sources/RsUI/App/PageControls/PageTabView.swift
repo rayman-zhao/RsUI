@@ -115,7 +115,10 @@ class PageTabView: Grid, PageControl {
     ) {
         if self.tabView.tabItems.count == 0 {
             let item = addTabItems(with: [page])
-            pageFrame.rebind(to: item.tag as! PageModel)  // The very first item will not fire selection changed event, have to do it manually.
+            // The very first item will not fire selection changed event, have to do it manually.
+            if let model = item.tag as? PageModel {
+                pageFrame.rebind(to: model)
+            }
         } else if case .inplace = mode {
             pageFrame.navigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
         } else {
@@ -228,7 +231,7 @@ private var xamlUI: String {
         bugs are fixed, flip this flag in one place. -->
     <TabView
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives" 
+        xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
         Name="tabView"
         IsAddTabButtonVisible="True"
         TabWidthMode="SizeToContent"

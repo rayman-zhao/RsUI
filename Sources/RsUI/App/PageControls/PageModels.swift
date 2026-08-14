@@ -3,7 +3,7 @@ import Foundation
 class PageModel {
     var backwardPages: [Page] = []
     var forwardPages: [Page] = []
-    var currentPage: Page? = nil
+    var currentPage: Page?
 
     init() {
     }

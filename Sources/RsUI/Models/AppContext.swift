@@ -116,6 +116,6 @@ public final class AppContext {
         with urls: [URL],
         forceMinimalMode: Bool = false
     ) {
-        try! MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
+        try? MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
     }
 }

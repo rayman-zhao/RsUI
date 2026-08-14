@@ -27,18 +27,18 @@ class SettingsPage: Page {
         mainStackPanel.spacing = 30
         mainStackPanel.padding = WinUI.Thickness(left: 32, top: 28, right: 32, bottom: 28)
 
-        /// MARK: - 外观
+        // MARK: - 外观
         mainStackPanel.children.append(
             SettingsGroup(tr("personalizationSection"), [themeCard, languageCard]))
 
-        /// MARK: - 各个模块
+        // MARK: - 各个模块
         for module in App.context.modules {
             if let group = module.settingsGroup() {
                 mainStackPanel.children.append(SettingsGroup(group.title, group.cards))
             }
         }
 
-        /// MARK: - 关于
+        // MARK: - 关于
         let year = Calendar.current.component(.year, from: Date())
         let copyright = tr("copyright").replacingOccurrences(of: "%lld", with: "\(year)")
             .replacingOccurrences(of: "%@", with: App.context.groupName)
@@ -51,7 +51,7 @@ class SettingsPage: Page {
         )
         mainStackPanel.children.append(SettingsGroup(tr("AboutTitle"), [aboutCard]))
 
-        /// MARK: - 总装视图
+        // MARK: - 总装视图
         let scrollViewer = ScrollViewer()
         scrollViewer.verticalScrollBarVisibility = .auto
         scrollViewer.content = mainStackPanel
@@ -69,8 +69,9 @@ class SettingsPage: Page {
         combo.itemsSource = single_threaded_vector_inspectable([tr("lightMode"), tr("darkMode")])
         combo.selectedIndex = App.context.theme.isDark ? Int32(1) : Int32(0)
         combo.selectionChanged.addHandler { sender, _ in
-            let theme =
-                (sender as! WinUI.ComboBox).selectedIndex == 1 ? AppTheme.dark : AppTheme.light
+            guard let sender = sender as? ComboBox else { return }
+
+            let theme = sender.selectedIndex == 1 ? AppTheme.dark : AppTheme.light
             if theme != App.context.theme {
                 App.context.theme = theme
             }
@@ -91,14 +92,12 @@ class SettingsPage: Page {
         combo.selectedIndex = Int32(
             AppLanguage.availableCases.firstIndex(of: App.context.language) ?? 0)
         combo.selectionChanged.addHandler { sender, _ in
-            let index = (sender as! WinUI.ComboBox).selectedIndex
-            for (i, language) in AppLanguage.availableCases.enumerated() {
-                if i == index {
-                    if language != App.context.language {
-                        App.context.language = language
-                    }
-                    break
-                }
+            guard let sender = sender as? WinUI.ComboBox else { return }
+
+            let index = Int(sender.selectedIndex)
+            let language = AppLanguage.availableCases[index]
+            if language != App.context.language {
+                App.context.language = language
             }
         }
 
