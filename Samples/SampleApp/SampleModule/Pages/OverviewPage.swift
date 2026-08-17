@@ -63,9 +63,9 @@ final class OverviewPage: RsUI.Page {
             ),
             makeJumpCard(
                 glyph: "\u{E8B7}",
-                header: tr("Folder Picker"),
-                description: tr("WindowContext.pickFolder, parented to this window."),
-                path: "/folder-picker"
+                header: tr("Picker"),
+                description: tr("WindowContext.pick, parented to this window."),
+                path: "/picker"
             ),
         ]
         return featurePageContent(cards)

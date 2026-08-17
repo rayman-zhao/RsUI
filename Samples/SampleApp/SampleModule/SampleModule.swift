@@ -60,7 +60,7 @@ final class SampleModule: Module {
             NavigationViewItem.build(
                 iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
             NavigationViewItem.build(
-                iconGlyph: "\u{E8B7}", label: tr("Folder Picker"), url: "rs://\(id)/folder-picker"),
+                iconGlyph: "\u{E8B7}", label: tr("Picker"), url: "rs://\(id)/picker"),
         ]
         return items
     }
@@ -145,7 +145,9 @@ final class SampleModule: Module {
             return NewWindowPage(context: context)
         case "/appearance":
             return AppearancePage(context: context)
-        case "/folder-picker", "/footer-picker":
+        case "/picker":
+            return PickerPage(context: context)
+        case "/footer-picker":
             return FolderPickerPage(context: context, path: url.path)
         default:
             return nil
