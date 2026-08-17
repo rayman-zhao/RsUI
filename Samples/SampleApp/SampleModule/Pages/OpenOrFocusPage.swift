@@ -21,7 +21,10 @@ final class OpenOrFocusPage: RsUI.Page {
         featurePageHeader(
             title: tr("openOrFocus"),
             description: tr(
-                "Opens the URL in a new tab, or focuses the existing tab matching the URL. Open this page a few times via Navigation Modes → .newTab first to see the dedup effect."
+                """
+                Opens the URL in a new tab, or focuses the existing tab matching the URL. \
+                Open this page a few times via Navigation Modes → .newTab first to see the dedup effect.
+                """
             )
         )
     }
