@@ -358,13 +358,8 @@ public final class Viewer: WinUI.Grid {
 
     /// 加载 Viewer 的通用 XAML 外壳。XAML 是 Viewer 的结构契约，加载失败时直接暴露具体原因。
     private static func loadViewerShell() -> WinUI.Grid {
-        guard let path = App.context.resourceBundle.path(forResource: "ViewerShell", ofType: "xaml")
-        else {
-            fatalError("找不到 ViewerShell.xaml")
-        }
         do {
-            let xaml = try String(contentsOfFile: path, encoding: .utf8)
-            guard let root = try WinUI.XamlReader.load(App.context.tr(xaml: xaml)) as? WinUI.Grid
+            guard let root = try WinUI.XamlReader.load(App.context.tr(xaml: xamlUI)) as? WinUI.Grid
             else {
                 fatalError("ViewerShell.xaml 的根元素类型不符合预期")
             }
@@ -837,4 +832,210 @@ public final class Viewer: WinUI.Grid {
         guard isOverlayLoggingEnabled else { return }
         print("[Viewer][Overlay] \(message)")
     }
+}
+
+private var xamlUI: String {
+    """
+    <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        <Grid.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.ThemeDictionaries>
+                    <ResourceDictionary x:Key="Light">
+                        <SolidColorBrush x:Key="ViewerChromeButtonBackgroundPointerOver" Color="#10000000" />
+                        <SolidColorBrush x:Key="ViewerChromeButtonBackgroundPressed" Color="#18000000" />
+                    </ResourceDictionary>
+                    <ResourceDictionary x:Key="Dark">
+                        <SolidColorBrush x:Key="ViewerChromeButtonBackgroundPointerOver" Color="#18FFFFFF" />
+                        <SolidColorBrush x:Key="ViewerChromeButtonBackgroundPressed" Color="#24FFFFFF" />
+                    </ResourceDictionary>
+                </ResourceDictionary.ThemeDictionaries>
+
+                <Style x:Key="ViewerChromeButtonStyle" TargetType="Button">
+                    <Setter Property="Width" Value="34" />
+                    <Setter Property="Height" Value="32" />
+                    <Setter Property="Padding" Value="6" />
+                    <Setter Property="Margin" Value="4,0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="CornerRadius" Value="4" />
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+
+                <Style x:Key="ViewerOverlayChromeButtonStyle" TargetType="Button" BasedOn="{StaticResource ViewerChromeButtonStyle}" />
+
+                <Storyboard x:Name="LeftExpanded">
+                    <DoubleAnimation Storyboard.TargetName="LeftHost" Storyboard.TargetProperty="Opacity"
+                                    To="1" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="LeftHostTransform" Storyboard.TargetProperty="TranslateX"
+                                    To="0" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="LeftCollapsed">
+                    <DoubleAnimation Storyboard.TargetName="LeftHost" Storyboard.TargetProperty="Opacity"
+                                    To="0" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="LeftHostTransform" Storyboard.TargetProperty="TranslateX"
+                                    To="-12" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="RightExpanded">
+                    <DoubleAnimation Storyboard.TargetName="RightHost" Storyboard.TargetProperty="Opacity"
+                                    To="1" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="RightHostTransform" Storyboard.TargetProperty="TranslateX"
+                                    To="0" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="RightCollapsed">
+                    <DoubleAnimation Storyboard.TargetName="RightHost" Storyboard.TargetProperty="Opacity"
+                                    To="0" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="RightHostTransform" Storyboard.TargetProperty="TranslateX"
+                                    To="12" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="OverlayTopShown">
+                    <DoubleAnimation Storyboard.TargetName="OverlayTopContainer" Storyboard.TargetProperty="Opacity"
+                                    To="1" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="OverlayTopTransform" Storyboard.TargetProperty="TranslateY"
+                                    To="0" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="OverlayTopHidden">
+                    <DoubleAnimation Storyboard.TargetName="OverlayTopContainer" Storyboard.TargetProperty="Opacity"
+                                    To="0" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="OverlayTopTransform" Storyboard.TargetProperty="TranslateY"
+                                    To="-10" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="OverlayBottomShown">
+                    <DoubleAnimation Storyboard.TargetName="OverlayBottomContainer" Storyboard.TargetProperty="Opacity"
+                                    To="1" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="OverlayBottomTransform" Storyboard.TargetProperty="TranslateY"
+                                    To="0" Duration="0:0:0.16" />
+                </Storyboard>
+                <Storyboard x:Name="OverlayBottomHidden">
+                    <DoubleAnimation Storyboard.TargetName="OverlayBottomContainer" Storyboard.TargetProperty="Opacity"
+                                    To="0" Duration="0:0:0.16" />
+                    <DoubleAnimation Storyboard.TargetName="OverlayBottomTransform" Storyboard.TargetProperty="TranslateY"
+                                    To="10" Duration="0:0:0.16" />
+                </Storyboard>
+            </ResourceDictionary>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="TopRow" Height="0" />
+            <RowDefinition Height="*" />
+            <RowDefinition x:Name="BottomRow" Height="0" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="LeftColumn" Width="0" />
+            <ColumnDefinition x:Name="LeftSplitterColumn" Width="0" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition x:Name="RightSplitterColumn" Width="0" />
+            <ColumnDefinition x:Name="RightColumn" Width="0" />
+        </Grid.ColumnDefinitions>
+
+        <ContentControl x:Name="CenterContentHost" Grid.Row="1" Grid.Column="2"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <ContentControl x:Name="CenterOverlayHost" Grid.Row="1" Grid.Column="2" IsHitTestVisible="False"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="2"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="ViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
+                <FontIcon x:Name="ViewerLeftPaneIcon" Glyph="&#xE76B;" FontSize="14" />
+            </Button>
+            <ContentControl x:Name="TopHost" Grid.Column="1"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+            <Button x:Name="ViewerFullscreenButton" Grid.Column="2" Style="{StaticResource ViewerChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerFullscreen}">
+                <FontIcon x:Name="ViewerFullscreenIcon" Glyph="&#xE740;" FontSize="14" />
+            </Button>
+            <Button x:Name="ViewerChromeModeButton" Grid.Column="3" Style="{StaticResource ViewerChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
+                <FontIcon x:Name="ViewerChromeModeIcon" Glyph="&#xE7F8;" FontSize="14" />
+            </Button>
+            <Button x:Name="ViewerRightPaneButton" Grid.Column="4" Style="{StaticResource ViewerChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
+                <FontIcon x:Name="ViewerRightPaneIcon" Glyph="&#xE76C;" FontSize="14" />
+            </Button>
+        </Grid>
+        <ContentControl x:Name="BottomHost" Grid.Row="2" Grid.Column="2"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <Border x:Name="OverlayTopContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
+                VerticalAlignment="Top" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                Visibility="Collapsed" Canvas.ZIndex="100">
+            <Border.RenderTransform>
+                <CompositeTransform x:Name="OverlayTopTransform" />
+            </Border.RenderTransform>
+            <Grid x:Name="OverlayTopChromeRoot" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="OverlayViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerOverlayChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
+                    <FontIcon x:Name="OverlayViewerLeftPaneIcon" Glyph="&#xE76B;" FontSize="14" />
+                </Button>
+                <ContentControl x:Name="OverlayTopHost" Grid.Column="1" HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch" />
+                <Button x:Name="OverlayViewerFullscreenButton" Grid.Column="2" Style="{StaticResource ViewerOverlayChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerFullscreen}">
+                    <FontIcon x:Name="OverlayViewerFullscreenIcon" Glyph="&#xE740;" FontSize="14" />
+                </Button>
+                <Button x:Name="OverlayViewerChromeModeButton" Grid.Column="3" Style="{StaticResource ViewerOverlayChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
+                    <FontIcon x:Name="OverlayViewerChromeModeIcon" Glyph="&#xE7F8;" FontSize="14" />
+                </Button>
+                <Button x:Name="OverlayViewerRightPaneButton" Grid.Column="4" Style="{StaticResource ViewerOverlayChromeButtonStyle}" Visibility="Collapsed" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
+                    <FontIcon x:Name="OverlayViewerRightPaneIcon" Glyph="&#xE76C;" FontSize="14" />
+                </Button>
+            </Grid>
+        </Border>
+        <Border x:Name="OverlayBottomContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
+                VerticalAlignment="Bottom" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                Visibility="Collapsed" Canvas.ZIndex="100">
+            <Border.RenderTransform>
+                <CompositeTransform x:Name="OverlayBottomTransform" />
+            </Border.RenderTransform>
+            <ContentControl x:Name="OverlayBottomHost" HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch" />
+        </Border>
+        <ContentControl x:Name="LeftHost" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+            <ContentControl.RenderTransform>
+                <CompositeTransform x:Name="LeftHostTransform" />
+            </ContentControl.RenderTransform>
+        </ContentControl>
+        <ContentControl x:Name="RightHost" Grid.Row="0" Grid.RowSpan="3" Grid.Column="4"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
+            <ContentControl.RenderTransform>
+                <CompositeTransform x:Name="RightHostTransform" />
+            </ContentControl.RenderTransform>
+        </ContentControl>
+
+        <Border x:Name="LeftSplitter" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"
+                Width="6" Margin="0,0,-3,0" HorizontalAlignment="Right" Background="Transparent"
+                Visibility="Collapsed" Canvas.ZIndex="102" />
+        <Border x:Name="RightSplitter" Grid.Row="0" Grid.RowSpan="3" Grid.Column="4"
+                Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent"
+                Visibility="Collapsed" Canvas.ZIndex="102" />
+        <Border x:Name="TopHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
+                Width="176" Height="16" HorizontalAlignment="Center" VerticalAlignment="Top"
+                Background="Transparent" Visibility="Collapsed" Canvas.ZIndex="101">
+            <Border Width="72" Height="8" VerticalAlignment="Top"
+                    Background="#66000000" CornerRadius="0,0,4,4">
+                <Border Width="46" Height="2" VerticalAlignment="Center"
+                        Background="#E6FFFFFF" CornerRadius="1" />
+            </Border>
+        </Border>
+        <Border x:Name="BottomHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
+                Width="176" Height="16" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Background="Transparent" Visibility="Collapsed" Canvas.ZIndex="101">
+            <Border Width="72" Height="8" VerticalAlignment="Bottom"
+                    Background="#66000000" CornerRadius="4,4,0,0">
+                <Border Width="46" Height="2" VerticalAlignment="Center"
+                        Background="#E6FFFFFF" CornerRadius="1" />
+            </Border>
+        </Border>
+    </Grid>
+    """
 }
