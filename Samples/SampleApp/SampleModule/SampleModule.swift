@@ -61,6 +61,8 @@ final class SampleModule: Module {
                 iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E8B7}", label: tr("Picker"), url: "rs://\(id)/picker"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E91B}", label: tr("Viewer"), url: "rs://\(id)/viewer"),
         ]
         return items
     }
@@ -147,6 +149,8 @@ final class SampleModule: Module {
             return AppearancePage(context: context)
         case "/picker":
             return PickerPage(context: context)
+        case "/viewer":
+            return ViewerPage(context: context)
         case "/footer-picker":
             return FolderPickerPage(context: context, path: url.path)
         default:
