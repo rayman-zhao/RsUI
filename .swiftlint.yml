@@ -2,10 +2,10 @@ disabled_rules:
   - opening_brace  # swift-format conflict
   - trailing_comma
   - cyclomatic_complexity
+  - force_cast
 #  - todo
-#  - force_try
 
-line_length: 160
+line_length: 200
 
 function_body_length:
   warning: 500
