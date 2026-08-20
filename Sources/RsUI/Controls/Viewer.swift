@@ -4,22 +4,23 @@ import WinAppSDK
 import WinUI
 
 /// Viewer 中可由外部提供内容的四个边缘区域。
-public enum ViewerEdge: CaseIterable, Hashable {
-    case top, bottom, left, right
+public enum ViewerEdge: CaseIterable {
+    case top
+    case bottom
+    case left
+    case right
 }
 
 /// Viewer 区域是否参与布局并显示内容。
-public enum ViewerPaneState: Equatable {
-    case expanded, collapsed
+public enum ViewerPaneState {
+    case expanded
+    case collapsed
 }
 
 /// 中间区域上下栏的布局模式。
-public enum ViewerChromeMode: Equatable {
-    /// 上下栏占用中间区域的布局空间。
-    case docked
-
-    /// 上下栏覆盖主内容，并由 Viewer 自动处理鼠标靠近显示、移开隐藏。
-    case overlay
+public enum ViewerChromeMode {
+    case docked  // 上下栏占用中间区域的布局空间。
+    case overlay  // 上下栏覆盖主内容，并由 Viewer 自动处理鼠标靠近显示、移开隐藏。
 }
 
 /// 单个 Viewer 区域的初始配置。
@@ -41,13 +42,7 @@ public struct ViewerPaneConfiguration {
     }
 }
 
-/// Viewer 内部持久化的通用布局偏好。
-///
-/// 调用方只需要设置 `preferenceKey`。Viewer 会保存和恢复左右栏宽度、左右栏展开状态
-/// 以及上下栏固定/悬浮模式；业务组件自己的偏好仍放在业务 Preferences 中。
-private struct ViewerPreferences: PreferenceValue {
-    var entries: [String: ViewerPreferenceEntry] = [:]
-}
+// MARK: - 内部状态模型
 
 /// 单个 Viewer 实例对应的持久化状态。宽度可选值 `nil` 代表由内容自动决定尺寸。
 private struct ViewerPreferenceEntry: Codable {
@@ -56,6 +51,39 @@ private struct ViewerPreferenceEntry: Codable {
     let leftPaneCollapsed: Bool
     let rightPaneCollapsed: Bool
     let chromeModeRaw: String
+}
+
+/// Viewer 内部持久化的通用布局偏好。
+///
+/// 调用方只需要设置 `preferenceKey`。Viewer 会保存和恢复左右栏宽度、左右栏展开状态
+/// 以及上下栏固定/悬浮模式；业务组件自己的偏好仍放在业务 Preferences 中。
+private struct ViewerPreferences: PreferenceValue {
+    var entries: [String: ViewerPreferenceEntry] = [:]
+}
+
+private struct PaneRuntimeState {
+    var state: ViewerPaneState = .collapsed
+    var length: Double?
+    var minimumLength: Double = 0
+    var maximumLength: Double = .greatestFiniteMagnitude
+
+    func constrained(_ proposedLength: Double) -> Double {
+        min(maximumLength, max(minimumLength, proposedLength))
+    }
+}
+
+private enum OverlayPointerRegion {
+    case topChrome
+    case bottomChrome
+    case topHotzone
+    case bottomHotzone
+}
+
+private struct OverlayRuntimeState {
+    var mode: ViewerChromeMode = .docked
+    var isVisible = true
+    var pointerRegions: Set<OverlayPointerRegion> = []
+    var hideTask: Task<Void, Never>?
 }
 
 /// 通用 Viewer 布局容器。
@@ -70,30 +98,6 @@ private struct ViewerPreferenceEntry: Codable {
 /// - 同一个 UIElement 同一时间只能属于一个父容器，设置内容前应确保它未挂载到其他位置。
 /// - 左右区域支持拖拽调整尺寸；顶部和底部当前只支持固定尺寸或内容自适应。
 public final class Viewer: WinUI.Grid {
-    // MARK: - 内部状态模型
-
-    private struct PaneRuntimeState {
-        var state: ViewerPaneState = .collapsed
-        var length: Double?
-        var minimumLength: Double = 0
-        var maximumLength: Double = .greatestFiniteMagnitude
-
-        func constrained(_ proposedLength: Double) -> Double {
-            min(maximumLength, max(minimumLength, proposedLength))
-        }
-    }
-
-    private enum OverlayPointerRegion: String, Hashable {
-        case topChrome, bottomChrome, topHotzone, bottomHotzone
-    }
-
-    private struct OverlayRuntimeState {
-        var mode: ViewerChromeMode = .docked
-        var isVisible = true
-        var pointerRegions: Set<OverlayPointerRegion> = []
-        var hideTask: Task<Void, Never>?
-    }
-
     private let ui:
         (
             shellRoot: Grid,
@@ -145,20 +149,16 @@ public final class Viewer: WinUI.Grid {
             overlayBottomHiddenStoryboard: Storyboard,
         )
 
+    private var isApplyingStoredPreferences = false
+    /// Viewer 通用布局偏好的存储 key。不同业务组件应使用不同 key。
+    private let preferenceKey: String
+
     private var panes = Dictionary(
         uniqueKeysWithValues: ViewerEdge.allCases.map { ($0, PaneRuntimeState()) })
     private var overlay = OverlayRuntimeState()
     private var resizingEdge: ViewerEdge?
 
-    private var viewerPreferences = App.context.preferences.load(for: ViewerPreferences.self)
-    private var isApplyingStoredPreferences = false
-    /// Viewer 通用布局偏好的存储 key。不同业务组件应使用不同 key。
-    private let preferenceKey: String
-
     // MARK: - 公开配置与回调
-
-    /// 是否输出悬浮区域的诊断日志。
-    public var isOverlayLoggingEnabled = true
 
     /// 是否显示 Viewer 内置左侧区域开关。
     public var showsLeftPaneButton = true {
@@ -558,6 +558,7 @@ public final class Viewer: WinUI.Grid {
 
     /// 根据 `preferenceKey` 恢复 Viewer 通用布局偏好。
     private func applyStoredPreferences() {
+        let viewerPreferences = App.context.preferences.load(for: ViewerPreferences.self)
         guard let entry = viewerPreferences.entries[preferenceKey] else { return }
         isApplyingStoredPreferences = true
         defer { isApplyingStoredPreferences = false }
@@ -581,6 +582,7 @@ public final class Viewer: WinUI.Grid {
             rightPaneCollapsed: paneState(.right) == .collapsed,
             chromeModeRaw: chromeMode == .overlay ? "overlay" : "docked"
         )
+        var viewerPreferences = App.context.preferences.load(for: ViewerPreferences.self)
         viewerPreferences.entries[preferenceKey] = entry
         App.context.preferences.save(viewerPreferences)
     }
