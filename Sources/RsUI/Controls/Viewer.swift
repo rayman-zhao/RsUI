@@ -45,21 +45,17 @@ public struct ViewerPaneConfiguration {
 ///
 /// 调用方只需要设置 `preferenceKey`。Viewer 会保存和恢复左右栏宽度、左右栏展开状态
 /// 以及上下栏固定/悬浮模式；业务组件自己的偏好仍放在业务 Preferences 中。
-public struct ViewerPreferences: PreferenceValue {
-    public var entries: [String: ViewerPreferenceEntry] = [:]
-
-    public init() {}
+private struct ViewerPreferences: PreferenceValue {
+    var entries: [String: ViewerPreferenceEntry] = [:]
 }
 
-/// 单个 Viewer 实例对应的持久化状态。
-public struct ViewerPreferenceEntry: Codable {
-    public var leftPaneWidth: Double?
-    public var rightPaneWidth: Double?
-    public var leftPaneCollapsed: Bool?
-    public var rightPaneCollapsed: Bool?
-    public var chromeModeRaw: String?
-
-    public init() {}
+/// 单个 Viewer 实例对应的持久化状态。宽度可选值 `nil` 代表由内容自动决定尺寸。
+private struct ViewerPreferenceEntry: Codable {
+    let leftPaneWidth: Double?
+    let rightPaneWidth: Double?
+    let leftPaneCollapsed: Bool
+    let rightPaneCollapsed: Bool
+    let chromeModeRaw: String
 }
 
 /// 通用 Viewer 布局容器。
@@ -98,60 +94,71 @@ public final class Viewer: WinUI.Grid {
         var hideTask: Task<Void, Never>?
     }
 
-    private let shellRoot: WinUI.Grid
-    private let centerContentHost: WinUI.ContentControl
-    private let centerOverlayHost: WinUI.ContentControl
-    private let topHost: WinUI.ContentControl
-    private let bottomHost: WinUI.ContentControl
-    private let overlayTopHost: WinUI.ContentControl
-    private let overlayBottomHost: WinUI.ContentControl
-    private let overlayTopContainer: WinUI.Border
-    private let overlayBottomContainer: WinUI.Border
-    private let leftHost: WinUI.ContentControl
-    private let rightHost: WinUI.ContentControl
-    private let topRow: WinUI.RowDefinition
-    private let bottomRow: WinUI.RowDefinition
-    private let leftColumn: WinUI.ColumnDefinition
-    private let rightColumn: WinUI.ColumnDefinition
-    private let leftSplitterColumn: WinUI.ColumnDefinition
-    private let rightSplitterColumn: WinUI.ColumnDefinition
-    private let leftSplitter: WinUI.Border
-    private let rightSplitter: WinUI.Border
-    private let topHotzone: WinUI.Border
-    private let bottomHotzone: WinUI.Border
-    private let viewerLeftPaneButton: WinUI.Button
-    private let viewerLeftPaneIcon: WinUI.FontIcon
-    private let viewerRightPaneButton: WinUI.Button
-    private let viewerRightPaneIcon: WinUI.FontIcon
-    private let viewerFullscreenButton: WinUI.Button
-    private let viewerFullscreenIcon: WinUI.FontIcon
-    private let viewerChromeModeButton: WinUI.Button
-    private let viewerChromeModeIcon: WinUI.FontIcon
-    private let overlayViewerLeftPaneButton: WinUI.Button
-    private let overlayViewerLeftPaneIcon: WinUI.FontIcon
-    private let overlayViewerRightPaneButton: WinUI.Button
-    private let overlayViewerRightPaneIcon: WinUI.FontIcon
-    private let overlayViewerFullscreenButton: WinUI.Button
-    private let overlayViewerFullscreenIcon: WinUI.FontIcon
-    private let overlayViewerChromeModeButton: WinUI.Button
-    private let overlayViewerChromeModeIcon: WinUI.FontIcon
+    private let ui:
+        (
+            shellRoot: Grid,
+
+            centerContentHost: ContentControl,
+            centerOverlayHost: ContentControl,
+            topHost: ContentControl,
+            bottomHost: ContentControl,
+            overlayTopHost: ContentControl,
+            overlayBottomHost: ContentControl,
+            overlayTopContainer: Border,
+            overlayBottomContainer: Border,
+            leftHost: ContentControl,
+            rightHost: ContentControl,
+            topRow: RowDefinition,
+            bottomRow: RowDefinition,
+            leftColumn: ColumnDefinition,
+            rightColumn: ColumnDefinition,
+            leftSplitterColumn: ColumnDefinition,
+            rightSplitterColumn: ColumnDefinition,
+            leftSplitter: Border,
+            rightSplitter: Border,
+            topHotzone: Border,
+            bottomHotzone: Border,
+            viewerLeftPaneButton: Button,
+            viewerLeftPaneIcon: FontIcon,
+            viewerRightPaneButton: Button,
+            viewerRightPaneIcon: FontIcon,
+            viewerFullscreenButton: Button,
+            viewerFullscreenIcon: FontIcon,
+            viewerChromeModeButton: Button,
+            viewerChromeModeIcon: FontIcon,
+            overlayViewerLeftPaneButton: Button,
+            overlayViewerLeftPaneIcon: FontIcon,
+            overlayViewerRightPaneButton: Button,
+            overlayViewerRightPaneIcon: FontIcon,
+            overlayViewerFullscreenButton: Button,
+            overlayViewerFullscreenIcon: FontIcon,
+            overlayViewerChromeModeButton: Button,
+            overlayViewerChromeModeIcon: FontIcon,
+
+            leftExpandedStoryboard: Storyboard,
+            leftCollapsedStoryboard: Storyboard,
+            rightExpandedStoryboard: Storyboard,
+            rightCollapsedStoryboard: Storyboard,
+            overlayTopShownStoryboard: Storyboard,
+            overlayTopHiddenStoryboard: Storyboard,
+            overlayBottomShownStoryboard: Storyboard,
+            overlayBottomHiddenStoryboard: Storyboard,
+        )
 
     private var panes = Dictionary(
         uniqueKeysWithValues: ViewerEdge.allCases.map { ($0, PaneRuntimeState()) })
     private var overlay = OverlayRuntimeState()
     private var resizingEdge: ViewerEdge?
+
     private var viewerPreferences = App.context.preferences.load(for: ViewerPreferences.self)
     private var isApplyingStoredPreferences = false
+    /// Viewer 通用布局偏好的存储 key。不同业务组件应使用不同 key。
+    private let preferenceKey: String
 
     // MARK: - 公开配置与回调
 
     /// 是否输出悬浮区域的诊断日志。
     public var isOverlayLoggingEnabled = true
-
-    /// Viewer 通用布局偏好的存储 key。不同业务组件应使用不同 key。
-    public var preferenceKey: String? {
-        didSet { applyStoredPreferences() }
-    }
 
     /// 是否显示 Viewer 内置左侧区域开关。
     public var showsLeftPaneButton = true {
@@ -198,14 +205,14 @@ public final class Viewer: WinUI.Grid {
 
     /// 中心主内容，例如 WebView、图像或其他任意 UIElement。
     public var centerContent: WinUI.UIElement? {
-        get { centerContentHost.content as? WinUI.UIElement }
-        set { centerContentHost.content = newValue }
+        get { ui.centerContentHost.content as? WinUI.UIElement }
+        set { ui.centerContentHost.content = newValue }
     }
 
     /// 覆盖在中心主内容之上的非交互内容，例如加载状态或空状态。
     public var centerOverlayContent: WinUI.UIElement? {
-        get { centerOverlayHost.content as? WinUI.UIElement }
-        set { centerOverlayHost.content = newValue }
+        get { ui.centerOverlayHost.content as? WinUI.UIElement }
+        set { ui.centerOverlayHost.content = newValue }
     }
 
     /// 顶部、底部、左侧和右侧区域内容。
@@ -218,73 +225,87 @@ public final class Viewer: WinUI.Grid {
         set { setPaneContent(newValue, for: .bottom) }
     }
     public var leftContent: WinUI.UIElement? {
-        get { leftHost.content as? WinUI.UIElement }
+        get { ui.leftHost.content as? WinUI.UIElement }
         set { setPaneContent(newValue, for: .left) }
     }
     public var rightContent: WinUI.UIElement? {
-        get { rightHost.content as? WinUI.UIElement }
+        get { ui.rightHost.content as? WinUI.UIElement }
         set { setPaneContent(newValue, for: .right) }
     }
 
     /// 悬浮模式上下栏的背景，可由具体业务覆盖。
     public var overlayTopBackground: WinUI.Brush? {
-        get { overlayTopContainer.background }
-        set { overlayTopContainer.background = newValue }
+        get { ui.overlayTopContainer.background }
+        set { ui.overlayTopContainer.background = newValue }
     }
     public var overlayBottomBackground: WinUI.Brush? {
-        get { overlayBottomContainer.background }
-        set { overlayBottomContainer.background = newValue }
+        get { ui.overlayBottomContainer.background }
+        set { ui.overlayBottomContainer.background = newValue }
     }
 
     // MARK: - 初始化
 
-    public override init() {
-        self.shellRoot = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as! Grid
-        self.centerContentHost = (try? shellRoot.findName("CenterContentHost")) as! ContentControl
-        self.centerOverlayHost = (try? shellRoot.findName("CenterOverlayHost")) as! ContentControl
-        self.topHost = (try? shellRoot.findName("TopHost")) as! ContentControl
-        self.bottomHost = (try? shellRoot.findName("BottomHost")) as! ContentControl
-        self.overlayTopHost = (try? shellRoot.findName("OverlayTopHost")) as! ContentControl
-        self.overlayBottomHost = (try? shellRoot.findName("OverlayBottomHost")) as! ContentControl
-        self.overlayTopContainer = (try? shellRoot.findName("OverlayTopContainer")) as! Border
-        self.overlayBottomContainer = (try? shellRoot.findName("OverlayBottomContainer")) as! Border
-        self.leftHost = (try? shellRoot.findName("LeftHost")) as! ContentControl
-        self.rightHost = (try? shellRoot.findName("RightHost")) as! ContentControl
-        self.topRow = (try? shellRoot.findName("TopRow")) as! RowDefinition
-        self.bottomRow = (try? shellRoot.findName("BottomRow")) as! RowDefinition
-        self.leftColumn = (try? shellRoot.findName("LeftColumn")) as! ColumnDefinition
-        self.rightColumn = (try? shellRoot.findName("RightColumn")) as! ColumnDefinition
-        self.leftSplitterColumn = (try? shellRoot.findName("LeftSplitterColumn")) as! ColumnDefinition
-        self.rightSplitterColumn = (try? shellRoot.findName("RightSplitterColumn")) as! ColumnDefinition
-        self.leftSplitter = (try? shellRoot.findName("LeftSplitter")) as! Border
-        self.rightSplitter = (try? shellRoot.findName("RightSplitter")) as! Border
-        self.topHotzone = (try? shellRoot.findName("TopHotzone")) as! Border
-        self.bottomHotzone = (try? shellRoot.findName("BottomHotzone")) as! Border
-        self.viewerLeftPaneButton = (try? shellRoot.findName("ViewerLeftPaneButton")) as! Button
-        self.viewerLeftPaneIcon = (try? shellRoot.findName("ViewerLeftPaneIcon")) as! FontIcon
-        self.viewerRightPaneButton = (try? shellRoot.findName("ViewerRightPaneButton")) as! Button
-        self.viewerRightPaneIcon = (try? shellRoot.findName("ViewerRightPaneIcon")) as! FontIcon
-        self.viewerFullscreenButton = (try? shellRoot.findName("ViewerFullscreenButton")) as! Button
-        self.viewerFullscreenIcon = (try? shellRoot.findName("ViewerFullscreenIcon")) as! FontIcon
-        self.viewerChromeModeButton = (try? shellRoot.findName("ViewerChromeModeButton")) as! Button
-        self.viewerChromeModeIcon = (try? shellRoot.findName("ViewerChromeModeIcon")) as! FontIcon
-        self.overlayViewerLeftPaneButton = (try? shellRoot.findName("OverlayViewerLeftPaneButton")) as! Button
-        self.overlayViewerLeftPaneIcon = (try? shellRoot.findName("OverlayViewerLeftPaneIcon")) as! FontIcon
-        self.overlayViewerRightPaneButton = (try? shellRoot.findName("OverlayViewerRightPaneButton")) as! Button
-        self.overlayViewerRightPaneIcon = (try? shellRoot.findName("OverlayViewerRightPaneIcon")) as! FontIcon
-        self.overlayViewerFullscreenButton = (try? shellRoot.findName("OverlayViewerFullscreenButton")) as! Button
-        self.overlayViewerFullscreenIcon = (try? shellRoot.findName("OverlayViewerFullscreenIcon")) as! FontIcon
-        self.overlayViewerChromeModeButton = (try? shellRoot.findName("OverlayViewerChromeModeButton")) as! Button
-        self.overlayViewerChromeModeIcon = (try? shellRoot.findName("OverlayViewerChromeModeIcon")) as! FontIcon
+    public init(preferenceKey: String = "default") {
+        let loaded = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as! Grid
+        self.ui = (
+            shellRoot: loaded,
+            centerContentHost: (try? loaded.findName("CenterContentHost")) as! ContentControl,
+            centerOverlayHost: (try? loaded.findName("CenterOverlayHost")) as! ContentControl,
+            topHost: (try? loaded.findName("TopHost")) as! ContentControl,
+            bottomHost: (try? loaded.findName("BottomHost")) as! ContentControl,
+            overlayTopHost: (try? loaded.findName("OverlayTopHost")) as! ContentControl,
+            overlayBottomHost: (try? loaded.findName("OverlayBottomHost")) as! ContentControl,
+            overlayTopContainer: (try? loaded.findName("OverlayTopContainer")) as! Border,
+            overlayBottomContainer: (try? loaded.findName("OverlayBottomContainer")) as! Border,
+            leftHost: (try? loaded.findName("LeftHost")) as! ContentControl,
+            rightHost: (try? loaded.findName("RightHost")) as! ContentControl,
+            topRow: (try? loaded.findName("TopRow")) as! RowDefinition,
+            bottomRow: (try? loaded.findName("BottomRow")) as! RowDefinition,
+            leftColumn: (try? loaded.findName("LeftColumn")) as! ColumnDefinition,
+            rightColumn: (try? loaded.findName("RightColumn")) as! ColumnDefinition,
+            leftSplitterColumn: (try? loaded.findName("LeftSplitterColumn")) as! ColumnDefinition,
+            rightSplitterColumn: (try? loaded.findName("RightSplitterColumn")) as! ColumnDefinition,
+            leftSplitter: (try? loaded.findName("LeftSplitter")) as! Border,
+            rightSplitter: (try? loaded.findName("RightSplitter")) as! Border,
+            topHotzone: (try? loaded.findName("TopHotzone")) as! Border,
+            bottomHotzone: (try? loaded.findName("BottomHotzone")) as! Border,
+            viewerLeftPaneButton: (try? loaded.findName("ViewerLeftPaneButton")) as! Button,
+            viewerLeftPaneIcon: (try? loaded.findName("ViewerLeftPaneIcon")) as! FontIcon,
+            viewerRightPaneButton: (try? loaded.findName("ViewerRightPaneButton")) as! Button,
+            viewerRightPaneIcon: (try? loaded.findName("ViewerRightPaneIcon")) as! FontIcon,
+            viewerFullscreenButton: (try? loaded.findName("ViewerFullscreenButton")) as! Button,
+            viewerFullscreenIcon: (try? loaded.findName("ViewerFullscreenIcon")) as! FontIcon,
+            viewerChromeModeButton: (try? loaded.findName("ViewerChromeModeButton")) as! Button,
+            viewerChromeModeIcon: (try? loaded.findName("ViewerChromeModeIcon")) as! FontIcon,
+            overlayViewerLeftPaneButton: (try? loaded.findName("OverlayViewerLeftPaneButton")) as! Button,
+            overlayViewerLeftPaneIcon: (try? loaded.findName("OverlayViewerLeftPaneIcon")) as! FontIcon,
+            overlayViewerRightPaneButton: (try? loaded.findName("OverlayViewerRightPaneButton")) as! Button,
+            overlayViewerRightPaneIcon: (try? loaded.findName("OverlayViewerRightPaneIcon")) as! FontIcon,
+            overlayViewerFullscreenButton: (try? loaded.findName("OverlayViewerFullscreenButton")) as! Button,
+            overlayViewerFullscreenIcon: (try? loaded.findName("OverlayViewerFullscreenIcon")) as! FontIcon,
+            overlayViewerChromeModeButton: (try? loaded.findName("OverlayViewerChromeModeButton")) as! Button,
+            overlayViewerChromeModeIcon: (try? loaded.findName("OverlayViewerChromeModeIcon")) as! FontIcon,
+
+            leftExpandedStoryboard: loaded.resources.lookup("LeftExpanded") as! WinUI.Storyboard,
+            leftCollapsedStoryboard: loaded.resources.lookup("LeftCollapsed") as! WinUI.Storyboard,
+            rightExpandedStoryboard: loaded.resources.lookup("RightExpanded") as! WinUI.Storyboard,
+            rightCollapsedStoryboard: loaded.resources.lookup("RightCollapsed") as! WinUI.Storyboard,
+            overlayTopShownStoryboard: loaded.resources.lookup("OverlayTopShown") as! WinUI.Storyboard,
+            overlayTopHiddenStoryboard: loaded.resources.lookup("OverlayTopHidden") as! WinUI.Storyboard,
+            overlayBottomShownStoryboard: loaded.resources.lookup("OverlayBottomShown") as! WinUI.Storyboard,
+            overlayBottomHiddenStoryboard: loaded.resources.lookup("OverlayBottomHidden") as! WinUI.Storyboard,
+        )
+        self.preferenceKey = preferenceKey
         super.init()
 
-        children.append(shellRoot)
-        leftSplitter.protectedCursor = try? InputSystemCursor.create(.sizeWestEast)
-        rightSplitter.protectedCursor = try? InputSystemCursor.create(.sizeWestEast)
+        children.append(ui.shellRoot)
+        ui.leftSplitter.protectedCursor = try? InputSystemCursor.create(.sizeWestEast)
+        ui.rightSplitter.protectedCursor = try? InputSystemCursor.create(.sizeWestEast)
         setupSplitterEvents()
         setupOverlayEvents()
         setupChromeControlEvents()
         updateChromeControls()
+        applyStoredPreferences()
     }
 
     // MARK: - 公开区域接口
@@ -361,10 +382,10 @@ public final class Viewer: WinUI.Grid {
 
         let top = activeChromeHost(.top).content as? WinUI.UIElement
         let bottom = activeChromeHost(.bottom).content as? WinUI.UIElement
-        topHost.content = nil
-        bottomHost.content = nil
-        overlayTopHost.content = nil
-        overlayBottomHost.content = nil
+        ui.topHost.content = nil
+        ui.bottomHost.content = nil
+        ui.overlayTopHost.content = nil
+        ui.overlayBottomHost.content = nil
 
         overlay.mode = mode
         overlay.isVisible = true
@@ -403,8 +424,8 @@ public final class Viewer: WinUI.Grid {
     private func host(_ edge: ViewerEdge) -> WinUI.ContentControl {
         switch edge {
         case .top, .bottom: activeChromeHost(edge)
-        case .left: leftHost
-        case .right: rightHost
+        case .left: ui.leftHost
+        case .right: ui.rightHost
         }
     }
 
@@ -416,10 +437,10 @@ public final class Viewer: WinUI.Grid {
     /// 根据固定或悬浮模式，返回顶部或底部当前活动的内容宿主。
     private func activeChromeHost(_ edge: ViewerEdge) -> WinUI.ContentControl {
         switch (edge, overlay.mode) {
-        case (.top, .docked): topHost
-        case (.top, .overlay): overlayTopHost
-        case (.bottom, .docked): bottomHost
-        case (.bottom, .overlay): overlayBottomHost
+        case (.top, .docked): ui.topHost
+        case (.top, .overlay): ui.overlayTopHost
+        case (.bottom, .docked): ui.bottomHost
+        case (.bottom, .overlay): ui.overlayBottomHost
         default: fatalError("Only top and bottom edges have chrome hosts")
         }
     }
@@ -443,15 +464,15 @@ public final class Viewer: WinUI.Grid {
             gridUnitType: expanded && runtime.length == nil ? .auto : .pixel
         )
         if edge == .top {
-            topRow.height =
+            ui.topRow.height =
                 overlay.mode == .docked
                 ? dockedLength : WinUI.GridLength(value: 0, gridUnitType: .pixel)
-            topHost.visibility = overlay.mode == .docked && expanded ? .visible : .collapsed
+            ui.topHost.visibility = overlay.mode == .docked && expanded ? .visible : .collapsed
         } else {
-            bottomRow.height =
+            ui.bottomRow.height =
                 overlay.mode == .docked
                 ? dockedLength : WinUI.GridLength(value: 0, gridUnitType: .pixel)
-            bottomHost.visibility = overlay.mode == .docked && expanded ? .visible : .collapsed
+            ui.bottomHost.visibility = overlay.mode == .docked && expanded ? .visible : .collapsed
         }
         updateOverlayVisibility()
     }
@@ -466,15 +487,15 @@ public final class Viewer: WinUI.Grid {
         )
         let splitLength = WinUI.GridLength(value: 0, gridUnitType: .pixel)
         if edge == .left {
-            leftColumn.width = paneLength
-            leftSplitterColumn.width = splitLength
-            leftHost.visibility = expanded ? .visible : .collapsed
-            leftSplitter.visibility = expanded ? .visible : .collapsed
+            ui.leftColumn.width = paneLength
+            ui.leftSplitterColumn.width = splitLength
+            ui.leftHost.visibility = expanded ? .visible : .collapsed
+            ui.leftSplitter.visibility = expanded ? .visible : .collapsed
         } else {
-            rightColumn.width = paneLength
-            rightSplitterColumn.width = splitLength
-            rightHost.visibility = expanded ? .visible : .collapsed
-            rightSplitter.visibility = expanded ? .visible : .collapsed
+            ui.rightColumn.width = paneLength
+            ui.rightSplitterColumn.width = splitLength
+            ui.rightHost.visibility = expanded ? .visible : .collapsed
+            ui.rightSplitter.visibility = expanded ? .visible : .collapsed
         }
     }
 
@@ -482,19 +503,19 @@ public final class Viewer: WinUI.Grid {
 
     /// 注册 Viewer 通用按钮事件。按钮只处理布局状态，不承载业务动作。
     private func setupChromeControlEvents() {
-        for button in [viewerLeftPaneButton, overlayViewerLeftPaneButton] {
+        for button in [ui.viewerLeftPaneButton, ui.overlayViewerLeftPaneButton] {
             button.click.addHandler { [weak self] _, _ in self?.togglePane(.left) }
         }
-        for button in [viewerRightPaneButton, overlayViewerRightPaneButton] {
+        for button in [ui.viewerRightPaneButton, ui.overlayViewerRightPaneButton] {
             button.click.addHandler { [weak self] _, _ in self?.togglePane(.right) }
         }
-        for button in [viewerChromeModeButton, overlayViewerChromeModeButton] {
+        for button in [ui.viewerChromeModeButton, ui.overlayViewerChromeModeButton] {
             button.click.addHandler { [weak self] _, _ in
                 guard let self else { return }
                 self.setChromeMode(self.chromeMode == .docked ? .overlay : .docked)
             }
         }
-        for button in [viewerFullscreenButton, overlayViewerFullscreenButton] {
+        for button in [ui.viewerFullscreenButton, ui.overlayViewerFullscreenButton] {
             button.click.addHandler { [weak self] _, _ in self?.onFullscreenRequested?() }
         }
     }
@@ -507,65 +528,59 @@ public final class Viewer: WinUI.Grid {
         let fullscreenVisible =
             showsFullscreenButton && onFullscreenRequested != nil && hasPaneContent(.top)
 
-        for button in [viewerLeftPaneButton, overlayViewerLeftPaneButton] {
+        for button in [ui.viewerLeftPaneButton, ui.overlayViewerLeftPaneButton] {
             button.visibility = leftVisible ? .visible : .collapsed
         }
-        for button in [viewerRightPaneButton, overlayViewerRightPaneButton] {
+        for button in [ui.viewerRightPaneButton, ui.overlayViewerRightPaneButton] {
             button.visibility = rightVisible ? .visible : .collapsed
         }
-        for button in [viewerChromeModeButton, overlayViewerChromeModeButton] {
+        for button in [ui.viewerChromeModeButton, ui.overlayViewerChromeModeButton] {
             button.visibility = chromeVisible ? .visible : .collapsed
         }
-        for button in [viewerFullscreenButton, overlayViewerFullscreenButton] {
+        for button in [ui.viewerFullscreenButton, ui.overlayViewerFullscreenButton] {
             button.visibility = fullscreenVisible ? .visible : .collapsed
         }
 
         let leftGlyph = paneState(.left) == .expanded ? "\u{E76B}" : "\u{E76C}"
         let rightGlyph = paneState(.right) == .expanded ? "\u{E76C}" : "\u{E76B}"
         let chromeGlyph = chromeMode == .docked ? "\u{E7F8}" : "\u{E7F7}"
-        viewerLeftPaneIcon.glyph = leftGlyph
-        overlayViewerLeftPaneIcon.glyph = leftGlyph
-        viewerRightPaneIcon.glyph = rightGlyph
-        overlayViewerRightPaneIcon.glyph = rightGlyph
-        viewerFullscreenIcon.glyph = "\u{E740}"
-        overlayViewerFullscreenIcon.glyph = "\u{E740}"
-        viewerChromeModeIcon.glyph = chromeGlyph
-        overlayViewerChromeModeIcon.glyph = chromeGlyph
+        ui.viewerLeftPaneIcon.glyph = leftGlyph
+        ui.overlayViewerLeftPaneIcon.glyph = leftGlyph
+        ui.viewerRightPaneIcon.glyph = rightGlyph
+        ui.overlayViewerRightPaneIcon.glyph = rightGlyph
+        ui.viewerFullscreenIcon.glyph = "\u{E740}"
+        ui.overlayViewerFullscreenIcon.glyph = "\u{E740}"
+        ui.viewerChromeModeIcon.glyph = chromeGlyph
+        ui.overlayViewerChromeModeIcon.glyph = chromeGlyph
     }
 
     // MARK: - 通用偏好持久化
 
     /// 根据 `preferenceKey` 恢复 Viewer 通用布局偏好。
     private func applyStoredPreferences() {
-        guard let preferenceKey, let entry = viewerPreferences.entries[preferenceKey] else {
-            return
-        }
+        guard let entry = viewerPreferences.entries[preferenceKey] else { return }
         isApplyingStoredPreferences = true
         defer { isApplyingStoredPreferences = false }
 
         if let leftWidth = entry.leftPaneWidth { setPaneLength(leftWidth, for: .left) }
         if let rightWidth = entry.rightPaneWidth { setPaneLength(rightWidth, for: .right) }
-        if let leftCollapsed = entry.leftPaneCollapsed {
-            setPaneState(leftCollapsed ? .collapsed : .expanded, for: .left)
-        }
-        if let rightCollapsed = entry.rightPaneCollapsed {
-            setPaneState(rightCollapsed ? .collapsed : .expanded, for: .right)
-        }
-        if let raw = entry.chromeModeRaw {
-            setChromeMode(raw == "overlay" ? .overlay : .docked)
-        }
+        setPaneState(entry.leftPaneCollapsed ? .collapsed : .expanded, for: .left)
+        setPaneState(entry.rightPaneCollapsed ? .collapsed : .expanded, for: .right)
+        setChromeMode(entry.chromeModeRaw == "overlay" ? .overlay : .docked)
         updateChromeControls()
     }
 
     /// 保存 Viewer 通用布局偏好；没有设置 key 时 Viewer 保持无状态。
     private func saveStoredPreferences() {
-        guard !isApplyingStoredPreferences, let preferenceKey else { return }
-        var entry = viewerPreferences.entries[preferenceKey] ?? ViewerPreferenceEntry()
-        entry.leftPaneWidth = paneLength(.left)
-        entry.rightPaneWidth = paneLength(.right)
-        entry.leftPaneCollapsed = paneState(.left) == .collapsed
-        entry.rightPaneCollapsed = paneState(.right) == .collapsed
-        entry.chromeModeRaw = chromeMode == .overlay ? "overlay" : "docked"
+        guard !isApplyingStoredPreferences else { return }
+
+        let entry = ViewerPreferenceEntry(
+            leftPaneWidth: paneLength(.left),
+            rightPaneWidth: paneLength(.right),
+            leftPaneCollapsed: paneState(.left) == .collapsed,
+            rightPaneCollapsed: paneState(.right) == .collapsed,
+            chromeModeRaw: chromeMode == .overlay ? "overlay" : "docked"
+        )
         viewerPreferences.entries[preferenceKey] = entry
         App.context.preferences.save(viewerPreferences)
     }
@@ -574,8 +589,8 @@ public final class Viewer: WinUI.Grid {
 
     /// 注册左右分隔条的拖拽事件。
     private func setupSplitterEvents() {
-        bindSplitter(leftSplitter, edge: .left)
-        bindSplitter(rightSplitter, edge: .right)
+        bindSplitter(ui.leftSplitter, edge: .left)
+        bindSplitter(ui.rightSplitter, edge: .right)
     }
 
     /// 为单个左右分隔条绑定按下、移动、释放和捕获丢失事件。
@@ -617,10 +632,10 @@ public final class Viewer: WinUI.Grid {
 
     /// 注册上下栏和上下热区的鼠标进入、移动及离开事件。
     private func setupOverlayEvents() {
-        bindOverlayRegion(topHotzone, region: .topHotzone, tracksMovement: true)
-        bindOverlayRegion(bottomHotzone, region: .bottomHotzone, tracksMovement: true)
-        bindOverlayRegion(overlayTopContainer, region: .topChrome)
-        bindOverlayRegion(overlayBottomContainer, region: .bottomChrome)
+        bindOverlayRegion(ui.topHotzone, region: .topHotzone, tracksMovement: true)
+        bindOverlayRegion(ui.bottomHotzone, region: .bottomHotzone, tracksMovement: true)
+        bindOverlayRegion(ui.overlayTopContainer, region: .topChrome)
+        bindOverlayRegion(ui.overlayBottomContainer, region: .bottomChrome)
     }
 
     /// 为单个悬浮区域绑定鼠标事件，并按需持续跟踪鼠标移动。
@@ -686,41 +701,27 @@ public final class Viewer: WinUI.Grid {
         let showTop = isOverlay && overlay.isVisible && topAvailable
         let showBottom = isOverlay && overlay.isVisible && bottomAvailable
 
-        overlayTopContainer.visibility = isOverlay && topAvailable ? .visible : .collapsed
-        overlayBottomContainer.visibility = isOverlay && bottomAvailable ? .visible : .collapsed
-        overlayTopContainer.isHitTestVisible = showTop
-        overlayBottomContainer.isHitTestVisible = showBottom
-        topHotzone.visibility = isOverlay && !overlay.isVisible && topAvailable ? .visible : .collapsed
-        bottomHotzone.visibility = isOverlay && !overlay.isVisible && bottomAvailable ? .visible : .collapsed
+        ui.overlayTopContainer.visibility = isOverlay && topAvailable ? .visible : .collapsed
+        ui.overlayBottomContainer.visibility = isOverlay && bottomAvailable ? .visible : .collapsed
+        ui.overlayTopContainer.isHitTestVisible = showTop
+        ui.overlayBottomContainer.isHitTestVisible = showBottom
+        ui.topHotzone.visibility = isOverlay && !overlay.isVisible && topAvailable ? .visible : .collapsed
+        ui.bottomHotzone.visibility = isOverlay && !overlay.isVisible && bottomAvailable ? .visible : .collapsed
 
-        runStoryboard(showTop ? "OverlayTopShown" : "OverlayTopHidden")
-        runStoryboard(showBottom ? "OverlayBottomShown" : "OverlayBottomHidden")
+        showTop ? try? ui.overlayTopShownStoryboard.begin() : try? ui.overlayTopHiddenStoryboard.begin()
+        showBottom ? try? ui.overlayBottomShownStoryboard.begin() : try? ui.overlayBottomHiddenStoryboard.begin()
     }
 
     // MARK: - XAML 动画
 
     /// 根据左右栏展开状态选择并播放对应动画。
     private func runPaneAnimation(_ edge: ViewerEdge, state: ViewerPaneState) {
-        let name: String
         switch (edge, state) {
-        case (.left, .expanded): name = "LeftExpanded"
-        case (.left, .collapsed): name = "LeftCollapsed"
-        case (.right, .expanded): name = "RightExpanded"
-        case (.right, .collapsed): name = "RightCollapsed"
+        case (.left, .expanded): try? ui.leftExpandedStoryboard.begin()
+        case (.left, .collapsed): try? ui.leftCollapsedStoryboard.begin()
+        case (.right, .expanded): try? ui.rightExpandedStoryboard.begin()
+        case (.right, .collapsed): try? ui.rightCollapsedStoryboard.begin()
         case (.top, _), (.bottom, _): return
-        }
-        runStoryboard(name)
-    }
-
-    /// 从 ViewerShell.xaml 的资源字典中查找并播放命名 Storyboard。
-    private func runStoryboard(_ name: String) {
-        guard let storyboard = shellRoot.resources.lookup(name) as? WinUI.Storyboard else {
-            fatalError("加载 ViewerShell.xaml 失败：缺少 \(name) 动画资源")
-        }
-        do {
-            try storyboard.begin()
-        } catch {
-            fatalError("播放 ViewerShell.xaml 的 \(name) 动画失败：\(error)")
         }
     }
 }
