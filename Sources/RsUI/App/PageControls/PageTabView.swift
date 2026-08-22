@@ -33,8 +33,8 @@ class PageTabView: Grid, PageControl {
     // MARK: - Init
 
     override init() {
-        tabView = (try? XamlReader.load(xamlUI)) as! TabView
-        closeOthersButton = (try? tabView.findName("closeOthersButton")) as! Button
+        tabView = App.context.requireXaml(string: xamlUI)
+        closeOthersButton = tabView.requireElement("closeOthersButton")
 
         super.init()
         let autoRow = RowDefinition()

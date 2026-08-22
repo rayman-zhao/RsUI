@@ -444,18 +444,13 @@ public class SettingsCard: ButtonBase {
 
     private func makeDescriptionView(_ text: String?) -> FrameworkElement? {
         guard let text, !text.isEmpty else { return nil }
-        let tb: TextBlock =
-            (try? XamlReader.load(
+        let tb: TextBlock = App.context.requireXaml(
+            string:
                 """
                 <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" >
                 \(text)
                 </TextBlock>
-                """)) as? TextBlock
-            ?? {
-                let t = TextBlock()
-                t.text = text
-                return t
-            }()
+                """)
         return tb
     }
 }

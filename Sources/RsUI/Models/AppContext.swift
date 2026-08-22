@@ -101,7 +101,36 @@ public final class AppContext {
                 of: "{x:Tr \(match)}", with: tr(String(match), table: table))
         }
 
+        if let iconPath {
+            result = result.replacingOccurrences(of: "{x:AppIconPath}", with: iconPath)
+        }
+
         return result
+    }
+
+    public func requireXaml<T>(string xaml: String) -> T {
+        do {
+            let trXaml = tr(xaml: xaml)
+            guard let root = try XamlReader.load(trXaml) as? T else {
+                fatalError("The root element of \(xaml) is not \(T.self)")
+            }
+            return root
+        } catch {
+            fatalError("XamlReader \(xaml) failed with error: \(error)")
+        }
+    }
+
+    public func requireXaml<T>(resource name: String) -> T {
+        guard let path = resourceBundle.path(forResource: name, ofType: "xaml") else {
+            fatalError("Can't find \(name).xaml in bundle \(resourceBundle)")
+        }
+
+        do {
+            let xaml = try String(contentsOfFile: path, encoding: .utf8)
+            return requireXaml(string: xaml)
+        } catch {
+            fatalError("Load \(name).xaml failed with error: \(error)")
+        }
     }
 
     /// Opens a brand-new `MainWindow` and navigates it to the given URL.

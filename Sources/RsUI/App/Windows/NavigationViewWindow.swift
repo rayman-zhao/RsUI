@@ -63,21 +63,19 @@ class NavigationViewWindow: AppearanceWindow {
     }
 
     private func setupUI() {
-        let xaml = xamlUI.replacingOccurrences(
-            of: "{x:IconPath}", with: App.context.iconPath ?? "")
-        let loaded = (try? XamlReader.load(xaml)) as! Grid
+        let loaded: Grid = App.context.requireXaml(string: xamlUI)
 
         self.ui = (
             root: loaded,
-            titleBar: (try? loaded.findName("TitleBar")) as! TitleBar,
-            backButton: (try? loaded.findName("BackButton")) as! Button,
-            forwardButton: (try? loaded.findName("ForwardButton")) as! Button,
-            searchBox: (try? loaded.findName("SearchBox")) as! AutoSuggestBox,
-            titleBarRightHeader: (try? loaded.findName("RightHeader")) as! StackPanel,
-            navWrapper: (try? loaded.findName("NavWrapper")) as! Grid,
-            navigationView: (try? loaded.findName("NavigationView")) as! NavigationView,
-            splitterBorder: (try? loaded.findName("SplitterBorder")) as! Border,
-            fullscreenOverlay: (try? loaded.findName("FullscreenOverlay")) as! Border,
+            titleBar: loaded.requireElement("TitleBar"),
+            backButton: loaded.requireElement("BackButton"),
+            forwardButton: loaded.requireElement("ForwardButton"),
+            searchBox: loaded.requireElement("SearchBox"),
+            titleBarRightHeader: loaded.requireElement("RightHeader"),
+            navWrapper: loaded.requireElement("NavWrapper"),
+            navigationView: loaded.requireElement("NavigationView"),
+            splitterBorder: loaded.requireElement("SplitterBorder"),
+            fullscreenOverlay: loaded.requireElement("FullscreenOverlay"),
         )
 
         let paneOpen = windowLayout.navigationViewPaneOpen
@@ -260,8 +258,7 @@ class NavigationViewWindow: AppearanceWindow {
         // 已关窗口时 appWindow 为 nil（IUO）—— 此时只清理本地状态，跳过 setPresenter。
         if let hwnd = self.appWindow {
             try? hwnd.setPresenter(.overlapped)
-            if fullscreen.preWindowMaximized, let presenter = hwnd.presenter as? OverlappedPresenter
-            {
+            if fullscreen.preWindowMaximized, let presenter = hwnd.presenter as? OverlappedPresenter {
                 try? presenter.maximize()
             }
         }
@@ -294,66 +291,64 @@ class NavigationViewWindow: AppearanceWindow {
 
         fullscreen.installedEscapeAccelerator = true
     }
+}
 
-    // MARK: - XAML UI
+/// 窗口壳静态结构。对照 WinUI Gallery "End to end TitleBar sample"：
+/// `Grid(Row0=Auto TitleBar, Row1=* NavigationView)`，标题栏内容 + 右标题头 +
+/// 面板开关按钮都在这里声明。Splitter 仅声明透明占位 Border，几何与事件由 Swift 回填。
+private var xamlUI: String {
+    """
+    <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-    /// 窗口壳静态结构。对照 WinUI Gallery "End to end TitleBar sample"：
-    /// `Grid(Row0=Auto TitleBar, Row1=* NavigationView)`，标题栏内容 + 右标题头 +
-    /// 面板开关按钮都在这里声明。Splitter 仅声明透明占位 Border，几何与事件由 Swift 回填。
-    private var xamlUI: String {
-        """
-        <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- Row 0: custom TitleBar (registered as window drag region) -->
-            <TitleBar Name="TitleBar" Grid.Row="0"
-                      IsBackButtonVisible="False"
-                      IsPaneToggleButtonVisible="True">
-                <TitleBar.IconSource>
-                    <ImageIconSource ImageSource="{x:IconPath}" />
-                </TitleBar.IconSource>
-                <TitleBar.Content>
-                    <StackPanel Orientation="Horizontal" Spacing="20">
-                        <StackPanel Orientation="Horizontal" Spacing="0">
-                            <AppBarButton Name="BackButton" Icon="Back" Width="44" />
-                            <AppBarButton Name="ForwardButton" Icon="Forward" Width="44" />
-                        </StackPanel>
-                        <AutoSuggestBox Name="SearchBox"
-                                        Width="360"
-                                        VerticalAlignment="Center"
-                                        Visibility="Visible"
-                                        QueryIcon="Find"/>
+        <!-- Row 0: custom TitleBar (registered as window drag region) -->
+        <TitleBar Name="TitleBar" Grid.Row="0"
+                  IsBackButtonVisible="False"
+                  IsPaneToggleButtonVisible="True">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="{x:AppIconPath}" />
+            </TitleBar.IconSource>
+            <TitleBar.Content>
+                <StackPanel Orientation="Horizontal" Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="0">
+                        <AppBarButton Name="BackButton" Icon="Back" Width="44" />
+                        <AppBarButton Name="ForwardButton" Icon="Forward" Width="44" />
                     </StackPanel>
-                </TitleBar.Content>
-                <TitleBar.RightHeader>
-                    <StackPanel Name="RightHeader" Orientation="Horizontal"/>
-                </TitleBar.RightHeader>
-            </TitleBar>
+                    <AutoSuggestBox Name="SearchBox"
+                                    Width="360"
+                                    VerticalAlignment="Center"
+                                    Visibility="Visible"
+                                    QueryIcon="Find"/>
+                </StackPanel>
+            </TitleBar.Content>
+            <TitleBar.RightHeader>
+                <StackPanel Name="RightHeader" Orientation="Horizontal"/>
+            </TitleBar.RightHeader>
+        </TitleBar>
 
-            <!-- Row 1: nav pane + splitter overlay in the same Grid cell -->
-            <Grid Name="NavWrapper" Grid.Row="1">
-                <NavigationView Name="NavigationView"
-                                PaneDisplayMode="Auto"
-                                IsSettingsVisible="True"
-                                IsBackButtonVisible="Collapsed"
-                                IsPaneToggleButtonVisible="False"
-                                IsTitleBarAutoPaddingEnabled="False"
-                                CompactModeThresholdWidth="0"/>
-                <Border Name="SplitterBorder" Width="6"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Stretch"
-                        Background="Transparent"/>
-            </Grid>
-
-            <!-- Fullscreen overlay: spans the whole window above TitleBar +
-                 NavWrapper. Declared collapsed; fullscreen reparents a UIElement
-                 into it and flips this to Visible, exit does the reverse. -->
-            <Border Name="FullscreenOverlay" Grid.Row="0" Grid.RowSpan="2"
-                    Visibility="Collapsed"/>
+        <!-- Row 1: nav pane + splitter overlay in the same Grid cell -->
+        <Grid Name="NavWrapper" Grid.Row="1">
+            <NavigationView Name="NavigationView"
+                            PaneDisplayMode="Auto"
+                            IsSettingsVisible="True"
+                            IsBackButtonVisible="Collapsed"
+                            IsPaneToggleButtonVisible="False"
+                            IsTitleBarAutoPaddingEnabled="False"
+                            CompactModeThresholdWidth="0"/>
+            <Border Name="SplitterBorder" Width="6"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"/>
         </Grid>
-        """
-    }
+
+        <!-- Fullscreen overlay: spans the whole window above TitleBar +
+             NavWrapper. Declared collapsed; fullscreen reparents a UIElement
+             into it and flips this to Visible, exit does the reverse. -->
+        <Border Name="FullscreenOverlay" Grid.Row="0" Grid.RowSpan="2"
+                Visibility="Collapsed"/>
+    </Grid>
+    """
 }
