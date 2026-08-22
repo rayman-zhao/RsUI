@@ -108,9 +108,9 @@ public final class AppContext {
         return result
     }
 
-    public func requireXaml<T>(string xaml: String) -> T {
+    public func requireXaml<T>(string xaml: String, trTable: String? = nil) -> T {
         do {
-            let trXaml = tr(xaml: xaml)
+            let trXaml = tr(xaml: xaml, table: trTable)
             guard let root = try XamlReader.load(trXaml) as? T else {
                 fatalError("The root element of \(xaml) is not \(T.self)")
             }
@@ -120,14 +120,14 @@ public final class AppContext {
         }
     }
 
-    public func requireXaml<T>(resource name: String) -> T {
+    public func requireXaml<T>(resource name: String, trTable: String? = nil) -> T {
         guard let path = resourceBundle.path(forResource: name, ofType: "xaml") else {
             fatalError("Can't find \(name).xaml in bundle \(resourceBundle)")
         }
 
         do {
             let xaml = try String(contentsOfFile: path, encoding: .utf8)
-            return requireXaml(string: xaml)
+            return requireXaml(string: xaml, trTable: trTable)
         } catch {
             fatalError("Load \(name).xaml failed with error: \(error)")
         }
