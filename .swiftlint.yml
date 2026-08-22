@@ -3,6 +3,7 @@ disabled_rules:
   - trailing_comma
   - cyclomatic_complexity
   - force_cast
+  - large_tuple
 #  - todo
 
 line_length: 200
