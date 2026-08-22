@@ -33,7 +33,7 @@ class PageTabView: Grid, PageControl {
     // MARK: - Init
 
     override init() {
-        tabView = App.context.requireXaml(string: xamlUI)
+        tabView = App.context.requireXaml(withString: xamlUI)
         closeOthersButton = tabView.requireElement("closeOthersButton")
 
         super.init()

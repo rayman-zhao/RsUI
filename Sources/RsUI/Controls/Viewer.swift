@@ -183,7 +183,7 @@ public final class Viewer: WinUI.Grid {
     // MARK: - 初始化
 
     public init(preferenceKey: String = "default") {
-        let loaded: Grid = App.context.requireXaml(string: xamlUI)
+        let loaded: Grid = App.context.requireXaml(withString: xamlUI)
         self.ui = (
             shellRoot: loaded,
             centerContentHost: loaded.requireElement("CenterContentHost"),

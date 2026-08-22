@@ -3,7 +3,7 @@ import WinUI
 
 extension Page {
     var view: UIElement {
-        let loaded: Grid = App.context.requireXaml(string: xamlUI)
+        let loaded: Grid = App.context.requireXaml(withString: xamlUI)
         let headerBorder: Border = loaded.requireElement("headerBorder")
         let headerContainer: Border = loaded.requireElement("headerContainer")
         let headerText: TextBlock = loaded.requireElement("headerText")

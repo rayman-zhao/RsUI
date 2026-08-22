@@ -63,7 +63,7 @@ class NavigationViewWindow: AppearanceWindow {
     }
 
     private func setupUI() {
-        let loaded: Grid = App.context.requireXaml(string: xamlUI)
+        let loaded: Grid = App.context.requireXaml(withString: xamlUI)
 
         self.ui = (
             root: loaded,

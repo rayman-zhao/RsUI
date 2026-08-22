@@ -445,7 +445,7 @@ public class SettingsCard: ButtonBase {
     private func makeDescriptionView(_ text: String?) -> FrameworkElement? {
         guard let text, !text.isEmpty else { return nil }
         let tb: TextBlock = App.context.requireXaml(
-            string:
+            withString:
                 """
                 <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" >
                 \(text)
