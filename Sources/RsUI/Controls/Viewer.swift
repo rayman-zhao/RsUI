@@ -282,7 +282,6 @@ public final class Viewer: WinUI.Grid {
 
     /// 设置区域展开状态，并触发布局、动画和状态变化回调。
     private func setPaneState(_ state: ViewerPaneState, for edge: ViewerEdge) {
-        guard paneState(edge) != state else { return }
         updatePane(edge) { $0.state = state }
         applyPaneLayout(edge)
         runPaneAnimation(edge, state: state)
