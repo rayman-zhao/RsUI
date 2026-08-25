@@ -4,7 +4,7 @@ import WinAppSDK
 import WinUI
 
 /// Viewer 中可由外部提供内容的四个边缘区域。
-private enum ViewerEdge: CaseIterable {
+public enum ViewerEdge: CaseIterable {
     case top
     case bottom
     case left
@@ -244,13 +244,15 @@ public final class Viewer: WinUI.Grid {
     // MARK: - 公开区域接口
 
     /// 设置左右区域可拖拽调整的最小和最大宽度。
-    private func setPaneLengthRange(minimum: Double, maximum: Double, for edge: ViewerEdge) {
+    public func setPaneLengthRange(minimum: Double, maximum: Double, for edge: ViewerEdge) {
         guard edge == .left || edge == .right else { return }
         updatePane(edge) { pane in
             pane.minimumLength = max(0, minimum)
             pane.maximumLength = max(pane.minimumLength, maximum)
             if let length = pane.length {
                 pane.length = pane.constrained(length)
+            } else {
+                pane.length = (pane.minimumLength + pane.maximumLength) / 2
             }
         }
         applyPaneLayout(edge)
@@ -282,6 +284,7 @@ public final class Viewer: WinUI.Grid {
 
     /// 设置区域展开状态，并触发布局、动画和状态变化回调。
     private func setPaneState(_ state: ViewerPaneState, for edge: ViewerEdge) {
+        guard paneState(edge) != state else { return }
         updatePane(edge) { $0.state = state }
         applyPaneLayout(edge)
         runPaneAnimation(edge, state: state)
