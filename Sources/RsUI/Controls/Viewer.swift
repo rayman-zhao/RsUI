@@ -698,7 +698,7 @@ private var xamlUI: String {
         <ContentControl x:Name="CenterContentHost" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
         <ContentControl x:Name="CenterOverlayHost" Grid.Row="1" Grid.Column="2" IsHitTestVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
 
-        <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="2" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+        <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -729,7 +729,8 @@ private var xamlUI: String {
             <Border.RenderTransform>
                 <CompositeTransform x:Name="OverlayTopTransform" />
             </Border.RenderTransform>
-            <Grid x:Name="OverlayTopChromeRoot" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Grid x:Name="OverlayTopChromeRoot" Background="{ThemeResource LayerFillColorDefaultBrush
+            }">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
