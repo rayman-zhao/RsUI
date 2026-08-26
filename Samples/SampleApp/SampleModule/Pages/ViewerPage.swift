@@ -20,11 +20,15 @@ final class ViewerPage: RsUI.Page {
     var content: WinUI.UIElement {
         let viewer = Viewer()
 
+        let border = Border()
+        border.background = WinUI.SolidColorBrush(UWP.Color(a: 0xff, r: 0xff, g: 0x00, b: 0x00))
         let centerText = TextBlock()
         centerText.text = tr("Viewer center content")
+
         centerText.horizontalAlignment = .center
         centerText.verticalAlignment = .center
-        viewer.centerContent = centerText
+        border.child = centerText
+        viewer.centerContent = border
 
         let loaded = (try? XamlReader.load(xamlUI)) as! Grid
         let fsbtn = (try? loaded.findName("FullscreenButton")) as! Button
@@ -62,7 +66,7 @@ final class ViewerPage: RsUI.Page {
     private var xamlUI: String {
         """
         <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="Blue">
             <Grid.Resources>
                 <ResourceDictionary>
                     <Style x:Key="ViewerChromeAppBarButtonStyle" TargetType="AppBarButton">
