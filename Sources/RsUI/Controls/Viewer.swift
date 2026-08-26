@@ -357,7 +357,7 @@ public final class Viewer: WinUI.Grid {
 
     /// 返回指定区域是否有调用方提供的内容。没有内容的区域即使状态为 expanded 也不会占位。
     private func hasPaneContent(_ edge: ViewerEdge) -> Bool {
-        paneContent(edge) != nil
+        edge == .top || paneContent(edge) != nil
     }
 
     /// 根据固定或悬浮模式，返回顶部或底部当前活动的内容宿主。
@@ -683,7 +683,7 @@ private var xamlUI: String {
             </ResourceDictionary>
         </Grid.Resources>
         <Grid.RowDefinitions>
-            <RowDefinition x:Name="TopRow" Height="0"/>
+            <RowDefinition x:Name="TopRow" Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition x:Name="BottomRow" Height="0"/>
         </Grid.RowDefinitions>
