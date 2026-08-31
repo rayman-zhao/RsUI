@@ -48,11 +48,25 @@ final class ViewerPage: RsUI.Page {
         leftText.verticalAlignment = .center
         viewer.leftContent = leftText
 
-        let rightText = TextBlock()
-        rightText.text = tr("Viewer right pane")
-        rightText.horizontalAlignment = .center
-        rightText.verticalAlignment = .center
-        viewer.rightContent = rightText
+        let rightPane = SettingsPanel()
+        for i in 0..<5 {
+            let icon = FontIcon()
+            icon.glyph = "\u{F0E3}"
+            let card = SettingsCard(header: "Group \(i)")
+            card.isClickEnabled = true
+            card.click.addHandler { _, _ in
+                let l = TextBlock()
+                l.verticalAlignment = .center
+                l.text = "Group \(i)"
+                let t = TextBlock()
+                t.text = "Second Group"
+                rightPane.navigateTo(label: l, card: t)
+
+            }
+            rightPane.append(icon: icon, label: "Group \(i)", card: card)
+        }
+
+        viewer.rightContent = rightPane
 
         let bottomText = TextBlock()
         bottomText.text = tr("Viewer bottom pane")
