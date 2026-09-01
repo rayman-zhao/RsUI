@@ -1,29 +1,29 @@
 import Foundation
 
-class EventHandler<T> {
-    typealias Handler = (T) -> Void
+public class EventHandler<T> {
+    public typealias Handler = (T) -> Void
     private var handlers: [Handler] = []
 
-    func addHandler(_ handler: @escaping Handler) {
+    public func addHandler(_ handler: @escaping Handler) {
         handlers.append(handler)
     }
 
-    func invoke(_ value: T) {
+    public func invoke(_ value: T) {
         for handler in handlers {
             handler(value)
         }
     }
 }
 
-class EventWithArgumentHandler<T, U> {
-    typealias Handler = (T, U) -> Void
+public class EventWithArgumentHandler<T, U> {
+    public typealias Handler = (T, U) -> Void
     private var handlers: [Handler] = []
 
-    func addHandler(_ handler: @escaping Handler) {
+    public func addHandler(_ handler: @escaping Handler) {
         handlers.append(handler)
     }
 
-    func invoke(_ value: T, _ arg: U) {
+    public func invoke(_ value: T, _ arg: U) {
         for handler in handlers {
             handler(value, arg)
         }
