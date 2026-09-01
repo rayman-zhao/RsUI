@@ -57,27 +57,39 @@ open class SettingsPanel: WinUI.Grid {
         }
     }
 
-    public func append(icon: WinUI.IconElement?, label: String, card: UIElement) {
+    public func append(icon: WinUI.IconElement?, label: String, cards: [UIElement]) {
+        let group = SettingsGroup(label, cards)
+        ui.mainPanel.children.append(group)
+
         if let icon {
             let button: AppBarButton = App.context.requireXaml(withString: xamlAppBarButton.replacingOccurrences(of: "{x:ToolTip}", with: label))
             button.icon = icon
             button.click.addHandler { [weak self] _, _ in
                 guard
                     let self,
-                    let transform = try? card.transformToVisual(ui.mainScrollView),
+                    let transform = try? group.transformToVisual(ui.mainScrollView),
                     let point = try? transform.transformPoint(.init(x: 0, y: 0))
                 else { return }
 
-                let offset = min(self.ui.mainScrollView.scrollableHeight, max(0.0, Double(point.y) - 28.0))
-                _ = try? self.ui.mainScrollView.scrollTo(0, Double(offset))
+                let offset = min(ui.mainScrollView.scrollableHeight, max(0.0, ui.mainScrollView.verticalOffset + Double(point.y)))
+                _ = try? ui.mainScrollView.scrollTo(0, offset)
             }
             ui.headerPanel.children.append(button)
         }
-
-        ui.mainPanel.children.append(SettingsGroup(label, [card]))
     }
 
-    public func navigateTo(label: UIElement, card: UIElement) {
+    public func append(glyph: String?, label: String, cards: [UIElement]) {
+        var icon: IconElement?
+        if let glyph {
+            let fontIcon = FontIcon()
+            fontIcon.glyph = glyph
+            icon = fontIcon
+        }
+
+        return append(icon: icon, label: label, cards: cards)
+    }
+
+    public func navigateTo(label: UIElement, cards: [UIElement]) {
         ui.backButton.visibility = .visible
         ui.headerPanel.visibility = .collapsed
         ui.secondHeaderPanel.visibility = .visible
@@ -85,7 +97,7 @@ open class SettingsPanel: WinUI.Grid {
         ui.secondPanel.visibility = .visible
 
         ui.secondHeaderPanel.children.append(label)
-        ui.secondPanel.children.append(card)
+        cards.forEach { ui.secondPanel.children.append($0) }
 
         try? ui.mainHiddenStoryboard.begin()
         try? ui.secondShownStoryboard.begin()

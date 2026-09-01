@@ -49,9 +49,7 @@ final class ViewerPage: RsUI.Page {
         viewer.leftContent = leftText
 
         let rightPane = SettingsPanel()
-        for i in 0..<5 {
-            let icon = FontIcon()
-            icon.glyph = "\u{F0E3}"
+        for i in 0..<8 {
             let card = SettingsCard(header: "Group \(i)")
             card.isClickEnabled = true
             card.click.addHandler { _, _ in
@@ -60,10 +58,10 @@ final class ViewerPage: RsUI.Page {
                 l.text = "Group \(i)"
                 let t = TextBlock()
                 t.text = "Second Group"
-                rightPane.navigateTo(label: l, card: t)
-
+                rightPane.navigateTo(label: l, cards: [t])
             }
-            rightPane.append(icon: icon, label: "Group \(i)", card: card)
+            let card2 = SettingsCard(header: "Group \(i) Not Clickable")
+            rightPane.append(glyph: "\u{F0E3}", label: "Group \(i)", cards: [card, card2])
         }
 
         viewer.rightContent = rightPane
