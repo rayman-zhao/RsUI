@@ -157,6 +157,11 @@ public class SettingsCard: ButtonBase {
         )
     }
 
+    public convenience init(content: FrameworkElement) {
+        self.init()
+        cardBorder.child = content
+    }
+
     /// Positional: glyph, header, description, content
     public convenience init(
         _ headerIconGlyph: String, _ header: String, _ description: String? = nil,
