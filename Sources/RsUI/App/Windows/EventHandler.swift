@@ -4,6 +4,9 @@ public class EventHandler<T> {
     public typealias Handler = (T) -> Void
     private var handlers: [Handler] = []
 
+    public init() {
+    }
+
     public func addHandler(_ handler: @escaping Handler) {
         handlers.append(handler)
     }
@@ -18,6 +21,9 @@ public class EventHandler<T> {
 public class EventWithArgumentHandler<T, U> {
     public typealias Handler = (T, U) -> Void
     private var handlers: [Handler] = []
+
+    public init() {
+    }
 
     public func addHandler(_ handler: @escaping Handler) {
         handlers.append(handler)
