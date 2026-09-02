@@ -152,12 +152,12 @@ private var xamlUI: String {
         <ScrollView x:Name="MainScrollView" Grid.Row="1"
             VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
             <Grid>
-                <StackPanel x:Name="MainPanel" Padding="16,0,16,0" Spacing="16" HorizontalAlignment="Stretch" Opacity="1">
+                <StackPanel x:Name="MainPanel" Padding="16,0,16,16" Spacing="16" HorizontalAlignment="Stretch" Opacity="1">
                     <StackPanel.RenderTransform>
                         <CompositeTransform x:Name="MainPanelTransform" />
                     </StackPanel.RenderTransform>
                 </StackPanel>
-                <StackPanel x:Name="SecondPanel" Visibility="Collapsed" Opacity="0" Padding="16,0,16,0" Spacing="16">
+                <StackPanel x:Name="SecondPanel" Visibility="Collapsed" Opacity="0" Padding="16,0,16,16" Spacing="16">
                     <StackPanel.RenderTransform>
                         <CompositeTransform x:Name="SecondPanelTransform" TranslateX="12" />
                     </StackPanel.RenderTransform>
