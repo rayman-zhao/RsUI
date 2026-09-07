@@ -18,6 +18,23 @@
         }
       }
     },
+    "Collapse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折叠"
+          }
+        }
+      }
+    },
     "Dark" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31,6 +48,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "深色"
+          }
+        }
+      }
+    },
+    "Expand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开"
           }
         }
       }
@@ -473,6 +507,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关"
+          }
+        }
+      }
+    },
+    "Range Slider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Range Slider"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "范围滑块"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or use the keyboard (←/→ adjust, ↑/↓ switch the active thumb, Home/End jump to bounds)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or use the keyboard (←/→ adjust, ↑/↓ switch the active thumb, Home/End jump to bounds)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或使用键盘（←/→ 调整，↑/↓ 切换当前滑块，Home/End 跳到边界）。"
+          }
+        }
+      }
+    },
+    "Basic usage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basic usage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础用法"
+          }
+        }
+      }
+    },
+    "The readout shows the current lower – upper values." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The readout shows the current lower – upper values."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧文本实时显示当前下限 – 上限。"
+          }
+        }
+      }
+    },
+    "Window / Level (CT)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window / Level (CT)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗宽 / 窗位（CT）"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射。"
+          }
+        }
+      }
+    },
+    "Window Width (WW)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window Width (WW)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗宽 (WW)"
+          }
+        }
+      }
+    },
+    "Window Level (WL)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window Level (WL)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗位 (WL)"
           }
         }
       }

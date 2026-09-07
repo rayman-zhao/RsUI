@@ -123,6 +123,7 @@ Sources/RsUI/
     SettingsGroup.swift                 — Group container with title
     SettingsBrushes.swift               — Theme-aware brush factories (also contains a `UWP.Color(a:0x18,...)` call for a card top-stop, not for nav buttons)
     ChevronIcon.swift                   — Chevron glyph helper
+    RangeSlider.swift                   — Dual-thumb range slider (`ContentControl` + XAML track/canvas; `RangeSliderState` pure-value model handles step snapping / `minGap` clamping; `valueChanged` event)
   Support/
     AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension
     JumpList+Extensions.swift           — `JumpList.register(arguments:displayName:logo:)` taskbar jump-list extension
@@ -146,10 +147,11 @@ Samples/
   SampleApp/
     SampleApp.swift                     — `@main class SampleApp: App`; registration via `super.init(group:product:resourceBundle:moduleTypes:)`
     SampleModule/SampleModule.swift     — `@Observable final class SampleModule: Module`; demo of nav items / footer items / settingsGroup / navigationDidRequest
-    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance / FolderPicker + FeaturePageHelpers)
+    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance / FolderPicker / RangeSlider (incl. a window-width/level CT demo) + FeaturePageHelpers)
   Assets/                               — SampleApp.ico / .rc / .res / Localizable.xcstrings / SettingsPage.xcstrings
 Tests/
   RsUITests/PageModelTests.swift        — Swift Testing `@Suite struct PageModelTests`: PageModel navigate/goBack/goForward/history-limit/clears-forward history
+  RsUITests/RangeSliderStateTests.swift — Swift Testing `@Suite struct RangeSliderStateTests`: RangeSliderState clamping/step-snap/minGap/setRange/domain-revalidate/fraction math
   PageControlTests/                     — GUI test host executable target
     App.swift                           — launches PageControlTestWindow(mode: .frame/.tabView) + TabViewPageFrameTestWindow()
     MockPages.swift                     — test Page impls (string/UIElement/nil header) + `makePage(name:headerKind:effect:)` helper
