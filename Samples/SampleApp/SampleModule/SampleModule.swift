@@ -65,6 +65,8 @@ final class SampleModule: Module {
                 iconGlyph: "\u{E91B}", label: tr("Viewer"), url: "rs://\(id)/viewer"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E71D}", label: tr("Grid View"), url: "rs://\(id)/grid-view"),
         ]
         return items
     }
@@ -155,6 +157,8 @@ final class SampleModule: Module {
             return ViewerPage(context: context)
         case "/range-slider":
             return RangeSliderPage(context: context)
+        case "/grid-view":
+            return GridViewPage(context: context)
         case "/footer-picker":
             return FolderPickerPage(context: context, path: url.path)
         default:
