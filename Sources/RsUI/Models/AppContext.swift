@@ -109,14 +109,14 @@ public final class AppContext {
     }
 
     public func requireXaml<T>(withString xaml: String, trTable: String? = nil) -> T {
+        let trXaml = tr(xaml: xaml, table: trTable)
         do {
-            let trXaml = tr(xaml: xaml, table: trTable)
             guard let root = try XamlReader.load(trXaml) as? T else {
-                fatalError("The root element of \(xaml) is not \(T.self)")
+                fatalError("The root element of \(trXaml) is not \(T.self)")
             }
             return root
         } catch {
-            fatalError("XamlReader \(xaml) failed with error: \(error)")
+            fatalError("XamlReader \(trXaml) failed with error: \(error)")
         }
     }
 
