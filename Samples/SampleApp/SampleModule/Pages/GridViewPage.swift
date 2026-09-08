@@ -18,7 +18,7 @@ final class GridViewPage: RsUI.Page {
         featurePageHeader(
             title: tr("Grid View"),
             description: tr(
-                "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set."
+                "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set. Enable check box selection to toggle items with hover check boxes like File Explorer."
             )
         )
     }
@@ -54,11 +54,22 @@ final class GridViewPage: RsUI.Page {
             updateSelectionText(sender)
         }
 
+        // Win11 资源管理器式复选框(阶段 2)。
+        let checkBoxToggle = ToggleSwitch()
+        checkBoxToggle.header = tr("Check box selection")
+        checkBoxToggle.isOn = gridView.isCheckBoxSelectionEnabled
+        checkBoxToggle.onContent = tr("On")
+        checkBoxToggle.offContent = tr("Off")
+        checkBoxToggle.toggled.addHandler { _, _ in
+            gridView.isCheckBoxSelectionEnabled = checkBoxToggle.isOn
+        }
+
         let stack = StackPanel()
         stack.spacing = 8
         stack.children.append(doubleTapText)
         stack.children.append(itemsText)
         stack.children.append(selectionText)
+        stack.children.append(checkBoxToggle)
         stack.children.append(gridView)
 
         let root = Grid()

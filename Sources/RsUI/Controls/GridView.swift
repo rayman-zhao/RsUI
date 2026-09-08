@@ -35,6 +35,13 @@ open class GridView: WinUI.Grid {
     /// 这里以控件自身为 sender 重新分发)。
     public let selectionChanged = EventHandler<GridView>()
 
+    /// Win11 资源管理器式复选框选择:仅鼠标悬停的条目浮现标准 CheckBox;
+    /// 点击复选框切换该项勾选(CheckBox 自身处理点击,不会触发条目的原生
+    /// 点击选择)。默认关闭。
+    public var isCheckBoxSelectionEnabled = false {
+        didSet { refreshCheckBoxes() }
+    }
+
     // MARK: - 内部构成
 
     let itemsView = WinUI.ItemsView()
@@ -43,6 +50,13 @@ open class GridView: WinUI.Grid {
     private let marqueeOverlay = WinUI.Border()
     /// 视觉树里 ItemsView 内部的 ItemsRepeater,双击/框选命中测试用。
     private var repeater: WinUI.ItemsRepeater?
+    /// 已布线过事件的条目容器(防虚拟化回收复用时重复布线)。
+    private var wiredContainers: [WinUI.ItemContainer] = []
+    private var isRepeaterWired = false
+    /// 悬停中的条目容器(复选框浮现用)。
+    private var hoveredContainer: WinUI.ItemContainer?
+    /// 程序化同步复选框状态时的重入守卫(设置 isChecked 也会触发 toggled)。
+    private var isSyncingCheckBoxes = false
 
     // MARK: - 数据与选择状态
 
@@ -122,12 +136,52 @@ open class GridView: WinUI.Grid {
             guard let self, let args else { return }
             self.handleDoubleTapped(args)
         }
+        // 悬停跟踪:pointerEntered 在合成输入下不可靠,统一用 itemsView 级
+        // pointerMoved + 坐标命中测试;离开网格时清除。
+        itemsView.pointerMoved.addHandler { [weak self] _, args in
+            guard let self, self.isCheckBoxSelectionEnabled, let args else { return }
+            self.ensureRepeaterWired()
+            guard let hostPoint = (try? args.getCurrentPoint(nil))?.position else { return }
+            let container = self.itemContainer(atHostPoint: hostPoint)
+            if self.hoveredContainer != container {
+                self.hoveredContainer = container
+                self.refreshCheckBoxes()
+            }
+        }
+        itemsView.pointerExited.addHandler { [weak self] _, _ in
+            guard let self, self.isCheckBoxSelectionEnabled else { return }
+            if self.hoveredContainer != nil {
+                self.hoveredContainer = nil
+                self.refreshCheckBoxes()
+            }
+        }
+
+        // 条目容器就绪后布线(复选框联动)。
+        itemsView.loaded.addHandler { [weak self] _, _ in
+            self?.ensureRepeaterWired()
+        }
+    }
+
+    /// 订阅内部 ItemsRepeater 的 elementPrepared 并给已实现的容器补布线。
+    /// loaded 时 repeater 可能尚未进入视觉树,由 pointerMoved 路径兜底重试。
+    private func ensureRepeaterWired() {
+        guard !isRepeaterWired, let repeater = findRepeater() else { return }
+        isRepeaterWired = true
+        repeater.elementPrepared.addHandler { [weak self] _, args in
+            guard let self, let args, let container = args.element as? WinUI.ItemContainer else { return }
+            self.wireContainer(container)
+        }
+        for container in Self.descendants(ofType: WinUI.ItemContainer.self, from: itemsView) {
+            wireContainer(container)
+        }
+        refreshCheckBoxes()
     }
 
     // MARK: - 选择同步
 
     private func handleSelectionChanged() {
         selectedIndexesSnapshot = currentSelectionIndexes()
+        refreshCheckBoxes()
         selectionChanged.invoke(self)
     }
 
@@ -182,6 +236,47 @@ open class GridView: WinUI.Grid {
         return current >= 0 ? current : nil
     }
 
+    // MARK: - 复选框选择
+
+    /// 给条目容器布线:复选框 checked/unchecked 联动条目选择。悬停跟踪在
+    /// ItemsView 级 pointerMoved 统一处理(见 bindEvents)。CheckBox 自身处理
+    /// 点击(ToggleButton 语义),不会把点击冒泡成条目的原生选择。
+    private func wireContainer(_ container: WinUI.ItemContainer) {
+        if wiredContainers.contains(container) { return }
+        wiredContainers.append(container)
+
+        guard let checkBox = (try? container.findName("ItemCheckBox")) as? WinUI.CheckBox else { return }
+        // CheckBox 无 toggled 事件,checked/unchecked 各自订阅(RoutedEventHandler)。
+        let handleToggle: (Any?, WinUI.RoutedEventArgs?) -> Void = { [weak self] _, _ in
+            guard let self, self.isCheckBoxSelectionEnabled, !self.isSyncingCheckBoxes else { return }
+            guard let repeater = self.findRepeater(),
+                let index = try? repeater.getElementIndex(container)
+            else { return }
+            if checkBox.isChecked == true {
+                try? self.itemsView.select(index)
+            } else {
+                try? self.itemsView.deselect(index)
+            }
+        }
+        checkBox.checked.addHandler(handleToggle)
+        checkBox.unchecked.addHandler(handleToggle)
+    }
+
+    /// 刷新所有已实现条目的复选框:可见 = 功能开启 且 该条目悬停中(资源管理器
+    /// 式,只浮现在鼠标当前条目上);勾选态按选择快照。
+    private func refreshCheckBoxes() {
+        guard let repeater = findRepeater() else { return }
+        isSyncingCheckBoxes = true
+        defer { isSyncingCheckBoxes = false }
+        for container in Self.descendants(ofType: WinUI.ItemContainer.self, from: itemsView) {
+            guard let checkBox = (try? container.findName("ItemCheckBox")) as? WinUI.CheckBox else { continue }
+            checkBox.visibility = isCheckBoxSelectionEnabled && hoveredContainer == container ? .visible : .collapsed
+            if let index = try? repeater.getElementIndex(container) {
+                checkBox.isChecked = selectedIndexesSnapshot.contains(index)
+            }
+        }
+    }
+
     // MARK: - 视觉树辅助
 
     /// 用宿主坐标命中测试找到条目容器。`originalSource` 祖先上溯在 ItemsView 上
@@ -228,6 +323,23 @@ open class GridView: WinUI.Grid {
         }
         return nil
     }
+
+    /// 收集视觉树中指定类型的全部后代(复选框状态刷新用)。
+    private static func descendants<T: WinUI.FrameworkElement>(
+        ofType type: T.Type, from root: WinUI.DependencyObject
+    ) -> [T] {
+        var result: [T] = []
+        let count = (try? WinUI.VisualTreeHelper.getChildrenCount(root)) ?? 0
+        var index: Int32 = 0
+        while index < count {
+            if let child = try? WinUI.VisualTreeHelper.getChild(root, index) {
+                if let match = child as? T { result.append(match) }
+                result.append(contentsOf: descendants(ofType: type, from: child))
+            }
+            index += 1
+        }
+        return result
+    }
 }
 
 // MARK: - ItemTemplate
@@ -236,11 +348,12 @@ private var itemTemplateXaml: String {
     """
     <DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
         <ItemContainer>
-            <Grid Padding="12,8">
-                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="16,10,12,10">
                     <FontIcon Glyph="&#xE7B8;" FontSize="18"/>
                     <TextBlock Text="{Binding}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
+                <CheckBox Name="ItemCheckBox" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,4,0,0" Visibility="Collapsed"/>
             </Grid>
         </ItemContainer>
     </DataTemplate>

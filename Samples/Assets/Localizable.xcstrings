@@ -18,19 +18,36 @@
         }
       }
     },
-    "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set." : {
+    "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set. Enable check box selection to toggle items with hover check boxes like File Explorer." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set."
+            "value" : "A GridView composed over ItemsView. Ctrl/Shift-click to multi-select, then double-click any selected tile: the selection is kept and itemDoubleTapped reports the whole set. Enable check box selection to toggle items with hover check boxes like File Explorer."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "基于 ItemsView 组合的网格视图。用 Ctrl/Shift 点击进行多选后，双击其中任意一项：选择保持不变，并通过 itemDoubleTapped 事件携带完整的选择集合。"
+            "value" : "基于 ItemsView 组合的网格视图。用 Ctrl/Shift 点击进行多选后，双击其中任意一项：选择保持不变，并通过 itemDoubleTapped 事件携带完整的选择集合。开启复选框选择后，可用资源管理器式的悬停复选框逐项勾选。"
+          }
+        }
+      }
+    },
+    "Check box selection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check box selection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复选框选择"
           }
         }
       }
