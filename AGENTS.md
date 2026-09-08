@@ -123,7 +123,7 @@ Sources/RsUI/
     SettingsGroup.swift                 — Group container with title
     SettingsBrushes.swift               — Theme-aware brush factories (also contains a `UWP.Color(a:0x18,...)` call for a card top-stop, not for nav buttons)
     ChevronIcon.swift                   — Chevron glyph helper
-    RangeSlider.swift                   — Dual-thumb range slider (`ContentControl` + XAML track/canvas; `RangeSliderState` pure-value model handles step snapping / `minGap` clamping; `valueChanged` event)
+    RangeSlider.swift                   — Dual-thumb range slider replicating the native Slider look (real `Thumb` controls + official `Slider*` theme resources; control-level visual states driven manually via `goToVisualState` — `goToElementStateCore` always returns false on XamlReader loose XAML); dragging between the thumbs slides both thumbs together width-kept via a transparent Thumb hit-surface (`RangeSliderState.shiftRaw`/`settleToStep`); keyboard is per-thumb only (←/→, PageUp/PageDown, Home/End); `isToolTipEnabled` gates the value tooltip; `valueChanged` event
   Support/
     AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension
     JumpList+Extensions.swift           — `JumpList.register(arguments:displayName:logo:)` taskbar jump-list extension
@@ -200,6 +200,9 @@ Besides, GUI callback and template-method naming follows four distinct rules —
 
 ### COM Callback Exceptions
 - Swift exceptions thrown inside COM callback paths do NOT propagate correctly to the main thread. The process won't terminate but UI operations will fail silently. Prefer `try?` / `do-catch`-to-log at WinRT call boundaries and surface failures through logging (`log.warning`), not through thrown errors.
+
+### VisualStateManager on Loose XAML
+- `FrameworkElement.goToElementStateCore` (the projection route to `VisualStateManager.GoToElementState`) **always returns `false` on XamlReader-loaded loose XAML** — the state machine silently never runs (verified at runtime; the failure is silent, so double-check any "state applied" assumption). To drive `<VisualStateManager.VisualStateGroups>` defined on loose XAML, fetch the groups via `VisualStateManager.getVisualStateGroups(element)` and `begin()`/`stop()` each state's `storyboard` manually — see `RangeSlider.goToVisualState(_: )` in [`Controls/RangeSlider.swift`](./Sources/RsUI/Controls/RangeSlider.swift). Note the same closure rule that bit `commitStateChange`: never read `self.<property>` inside an `inout` mutation closure (Swift exclusivity crashes at runtime, e.g. "Simultaneous accesses").
 
 ### UIElement Single-Parent Rule
 - A `UIElement` can only have one visual parent. Before reparenting, you MUST remove it from its current parent. The canonical helpers live in [`Support/UIElement+Extensions.swift`](./Sources/RsUI/Support/UIElement+Extensions.swift): `detachFromVisualParent() -> (parent: UIElement, index: UInt32?)?` (handles `Border` / `Panel` / `ContentControl` / `ContentPresenter`, logs for unsupported parents) and `attachToParent(_:index:)` (reverse — `Panel` branch uses `insertAt` with a clamped index).

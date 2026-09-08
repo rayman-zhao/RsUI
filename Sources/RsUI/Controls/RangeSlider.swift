@@ -114,6 +114,32 @@ struct RangeSliderState {
 
         return lowerValue != oldLower || upperValue != oldUpper
     }
+
+    /// 整体平移（不吸附）：拖拽过程逐帧 1:1 跟随用，保持窗宽严格不变，
+    /// 整体钳制在域内 —— 平移到 minimum / maximum 边界即停住。
+    mutating func shiftRaw(by delta: Double) -> Bool {
+        let clamped = min(max(delta, minimum - lowerValue), maximum - upperValue)
+        guard clamped != 0 else { return false }
+        lowerValue += clamped
+        upperValue += clamped
+        return true
+    }
+
+    /// 整体平移（键盘步进用）：`delta` 按 step 网格吸附（作用于位移量，不破坏窗宽）。
+    mutating func shift(by delta: Double) -> Bool {
+        var d = delta
+        if stepFrequency > 0 {
+            d = clean((delta / stepFrequency).rounded() * stepFrequency)
+        }
+        return shiftRaw(by: d)
+    }
+
+    /// 拖拽结束时把窗口对齐到 step 网格（吸附下限、保持窗宽、整体平移差值）。
+    mutating func settleToStep() -> Bool {
+        guard stepFrequency > 0 else { return false }
+        let snappedLower = minimum + clean(((lowerValue - minimum) / stepFrequency).rounded() * stepFrequency)
+        return shiftRaw(by: snappedLower - lowerValue)
+    }
 }
 
 // MARK: - Control
@@ -141,6 +167,9 @@ public class RangeSlider: ContentControl {
     /// lower/upper 值变化时触发(拖动、点击轨道、键盘、程序赋值)。
     public let valueChanged = EventWithArgumentHandler<RangeSlider, Change>()
 
+    /// 拖拽/键盘操作时的数值 Tooltip 是否显示。默认开启。
+    public var isToolTipEnabled = true
+
     private enum Handle {
         case lower
         case upper
@@ -157,6 +186,8 @@ public class RangeSlider: ContentControl {
         static let controlHeight: Double = 32
         static let thumbSize: Double = 18
         static let trackHeight: Double = 4
+        /// 选区窄于该宽度时禁用整体拖动命中面。
+        static let fillDragMinWidth: Double = 8
     }
 
     private var state: RangeSliderState
@@ -169,13 +200,24 @@ public class RangeSlider: ContentControl {
     private var toolTipText: TextBlock!
     private var lowerThumb: Thumb!
     private var upperThumb: Thumb!
+    /// 两滑块之间的透明 Thumb 命中面：拖动它 = 同步平移（滑动窗口）。
+    /// 用真 Thumb 承载，使整体平移骑在与单滑块完全相同的原生拖拽管线上。
+    private var fillDrag: Thumb!
 
-    /// 轨道点击发起的拖拽(滑块直接抓取由 Thumb.drag* 事件驱动,两路并存)。
+    /// 轨道点击发起的拖拽（滑块直接抓取由 Thumb.drag* 事件驱动，两路并存）。
     private var trackDraggingHandle: Handle?
     /// Thumb 拖拽的累计像素位置(DragDelta 只给增量)。
     private var thumbDragPosition: Double = 0
+    /// 选区命中面拖拽的累计像素位置。
+    private var fillDragPosition: Double = 0
+    private var fillDragging = false
     private var hoveringControl = false
+    /// 手动状态机：当前状态名与其 Storyboard（goToElementStateCore 失效的替代）。
+    private var activeStateName: String?
+    private var activeStateStoryboard: Storyboard?
     private var toolTipHideTask: Task<Void, Never>?
+    /// tooltip 尺寸缓存键（文本），变化时才重新 measure。
+    private var toolTipMeasuredKey: String?
 
     // MARK: - Init
 
@@ -260,6 +302,7 @@ public class RangeSlider: ContentControl {
         toolTipText = loaded.requireElement("ToolTipText")
         lowerThumb = loaded.requireElement("LowerThumb")
         upperThumb = loaded.requireElement("UpperThumb")
+        fillDrag = loaded.requireElement("FillDrag")
 
         content = loaded
         isTabStop = false
@@ -272,18 +315,21 @@ public class RangeSlider: ContentControl {
 
     private func bindEvents() {
         // 轨道：点击跳转 + 拖拽(按压落在滑块上时交给 Thumb 原生捕获,不跳值)。
-        root.pointerPressed.addHandler { [weak self] _, args in self?.handlePointerPressed(args) }
-        root.pointerMoved.addHandler { [weak self] _, args in self?.handlePointerMoved(args) }
-        root.pointerReleased.addHandler { [weak self] _, args in self?.handlePointerReleased(args) }
-        root.pointerCanceled.addHandler { [weak self] _, _ in self?.endTrackDragging() }
-        root.pointerCaptureLost.addHandler { [weak self] _, _ in self?.endTrackDragging() }
+        // 指针事件必须注册在控件自身：capturePointer 捕获在 self 上，捕获期间的
+        // 事件只在捕获元素上触发并向上冒泡，子元素（root）收不到 —— 否则拖拽
+        // 过程中收不到 pointerMoved，UI 会等到松手才更新。
+        pointerPressed.addHandler { [weak self] _, args in self?.handlePointerPressed(args) }
+        pointerMoved.addHandler { [weak self] _, args in self?.handlePointerMoved(args) }
+        pointerReleased.addHandler { [weak self] _, args in self?.handlePointerReleased(args) }
+        pointerCanceled.addHandler { [weak self] _, _ in self?.endTrackDragging() }
+        pointerCaptureLost.addHandler { [weak self] _, _ in self?.endTrackDragging() }
 
-        root.pointerEntered.addHandler { [weak self] _, _ in
+        pointerEntered.addHandler { [weak self] _, _ in
             guard let self else { return }
             hoveringControl = true
             updateControlState()
         }
-        root.pointerExited.addHandler { [weak self] _, _ in
+        pointerExited.addHandler { [weak self] _, _ in
             guard let self else { return }
             hoveringControl = false
             updateControlState()
@@ -297,6 +343,11 @@ public class RangeSlider: ContentControl {
         lowerThumb.dragCompleted.addHandler { [weak self] _, _ in self?.handleThumbDragCompleted() }
         upperThumb.dragCompleted.addHandler { [weak self] _, _ in self?.handleThumbDragCompleted() }
 
+        // 选区命中面：拖动 = 整体平移（同一条原生拖拽管线）。
+        fillDrag.dragStarted.addHandler { [weak self] _, _ in self?.handleFillDragStarted() }
+        fillDrag.dragDelta.addHandler { [weak self] _, args in self?.handleFillDragDelta(args) }
+        fillDrag.dragCompleted.addHandler { [weak self] _, _ in self?.handleFillDragCompleted() }
+
         // 键盘：聚焦到哪个滑块,方向键就驱动哪个。
         lowerThumb.keyDown.addHandler { [weak self] _, args in self?.handleKeyDown(.lower, args) }
         upperThumb.keyDown.addHandler { [weak self] _, args in self?.handleKeyDown(.upper, args) }
@@ -304,7 +355,12 @@ public class RangeSlider: ContentControl {
         isEnabledChanged.addHandler { [weak self] _, _ in self?.updateControlState() }
 
         // ThemeResource 画刷随主题自动更新;重进当前状态以刷新状态 Storyboard 持有的画刷。
-        root.actualThemeChanged.addHandler { [weak self] _, _ in self?.updateControlState() }
+        // ThemeResource 画刷随主题自动更新;清掉状态缓存以重跑当前状态的 Storyboard。
+        root.actualThemeChanged.addHandler { [weak self] _, _ in
+            guard let self else { return }
+            activeStateName = nil
+            updateControlState()
+        }
 
         root.sizeChanged.addHandler { [weak self] _, _ in self?.updateTrackLayout() }
         root.loaded.addHandler { [weak self] _, _ in self?.updateTrackLayout() }
@@ -312,13 +368,15 @@ public class RangeSlider: ContentControl {
 
     // MARK: - Visual states
 
-    /// 控件级状态(Normal / PointerOver / MinPressed / MaxPressed / Disabled),
-    /// 决定轨道、选区与滑块颜色;名字与 Toolkit RangeSelector 一致,
-    /// 经 goToElementStateCore 驱动松散 XAML 上的状态机。
+    /// 控件级状态(Normal / PointerOver / MinPressed / MaxPressed / WindowPressed /
+    /// Disabled)，决定轨道、选区与滑块颜色;名字与 Toolkit RangeSelector 一致，
+    /// 经 goToVisualState 手动驱动松散 XAML 上的状态机。
     private func updateControlState() {
         let name: String
         if !isEnabled {
             name = "Disabled"
+        } else if fillDragging {
+            name = "WindowPressed"
         } else if let dragging = currentDraggingHandle {
             name = dragging.isLower ? "MinPressed" : "MaxPressed"
         } else if hoveringControl {
@@ -326,7 +384,24 @@ public class RangeSlider: ContentControl {
         } else {
             name = "Normal"
         }
-        _ = try? root.goToElementStateCore(name, true)
+        goToVisualState(name)
+    }
+
+    /// `FrameworkElement.goToElementStateCore` 在 XamlReader 松散 XAML 上恒返回
+    /// false（状态机不工作，实测确认），改为手动驱动：从 root 的
+    /// VisualStateGroups 取目标状态的 Storyboard 直接 begin，并停掉上一个。
+    private func goToVisualState(_ name: String) {
+        guard name != activeStateName else { return }
+        guard let groups = try? VisualStateManager.getVisualStateGroups(root) else { return }
+        for case let group? in groups where group.name == "CommonStates" {
+            for case let state? in group.states where state.name == name {
+                try? activeStateStoryboard?.stop()
+                activeStateStoryboard = state.storyboard
+                try? state.storyboard?.begin()
+                activeStateName = name
+                return
+            }
+        }
     }
 
     private var currentDraggingHandle: Handle? {
@@ -378,11 +453,12 @@ public class RangeSlider: ContentControl {
         updateControlState()
     }
 
-    /// 按压是否落在某个 Thumb(含其 -2 Margin 外环)上：沿 visual tree 上溯判断。
+    /// 按压是否落在某个 Thumb（滑块或选区命中面）上：沿 visual tree 上溯判断。
+    /// 这些表面自带原生拖拽处理，无需跳值。
     private func pressedOnThumb(_ args: PointerRoutedEventArgs) -> Bool {
         var element = args.originalSource as? UIElement
         while let current = element {
-            if current === lowerThumb || current === upperThumb { return true }
+            if current === lowerThumb || current === upperThumb || current === fillDrag { return true }
             element = (try? VisualTreeHelper.getParent(current)) as? UIElement
         }
         return false
@@ -414,7 +490,6 @@ public class RangeSlider: ContentControl {
         let usable = max(0, Double(root.actualWidth) - Metrics.thumbSize)
         let fraction = usable > 0 ? min(max(thumbDragPosition / usable, 0), 1) : 0
         let target = state.value(atFraction: fraction)
-
         commitStateChange { state in
             handle.isLower ? state.setLower(target) : state.setUpper(target)
         }
@@ -430,6 +505,42 @@ public class RangeSlider: ContentControl {
         updateControlState()
     }
 
+    // MARK: - Fill (window) drag interaction
+
+    /// 选区命中面的整体平移：数学与滑块拖拽完全一致（以 lower thumb 位置为锚），
+    /// 区别仅在于 dragDelta 来自 FillDrag 这个透明 Thumb。
+    private func handleFillDragStarted() {
+        fillDragPosition = thumbX(of: state.lowerValue)
+        fillDragging = true
+        showWindowToolTip()
+        updateControlState()
+    }
+
+    private func handleFillDragDelta(_ args: DragDeltaEventArgs?) {
+        guard let args else { return }
+        fillDragPosition += Double(args.horizontalChange)
+
+        let usable = max(0, Double(root.actualWidth) - Metrics.thumbSize)
+        let fraction = usable > 0 ? min(max(fillDragPosition / usable, 0), 1) : 0
+        let targetLower = state.value(atFraction: fraction)
+        // 读取必须在 inout 闭包外完成：闭包内再读 self.state 会触发
+        // Swift 独占性检查（Simultaneous accesses）直接崩溃。
+        let delta = targetLower - state.lowerValue
+
+        commitStateChange { $0.shiftRaw(by: delta) }
+        // 以钳制后的实际位置继续累计，避免拖拽与边界错位。
+        fillDragPosition = thumbX(of: state.lowerValue)
+        showWindowToolTip()
+    }
+
+    private func handleFillDragCompleted() {
+        fillDragging = false
+        commitStateChange { $0.settleToStep() }
+        hideToolTip()
+        updateTrackLayout()
+        updateControlState()
+    }
+
     // MARK: - Keyboard interaction
 
     private func handleKeyDown(_ handle: Handle, _ args: KeyRoutedEventArgs?) {
@@ -438,25 +549,21 @@ public class RangeSlider: ContentControl {
         let step = state.stepFrequency > 0 ? state.stepFrequency : max(state.span / 100, 0)
 
         switch args.key {
-        case VirtualKey.left:
-            moveHandle(handle, by: -step)
-        case VirtualKey.right:
-            moveHandle(handle, by: step)
-        case VirtualKey.pageUp:
-            moveHandle(handle, by: step * 10)
-        case VirtualKey.pageDown:
-            moveHandle(handle, by: -step * 10)
+        case VirtualKey.left, VirtualKey.right:
+            let sign: Double = args.key == VirtualKey.left ? -1 : 1
+            moveHandle(handle, by: sign * step)
+        case VirtualKey.pageUp, VirtualKey.pageDown:
+            let sign: Double = args.key == VirtualKey.pageUp ? 1 : -1
+            moveHandle(handle, by: sign * step * 10)
         case VirtualKey.home:
+            let target = handle.isLower ? state.minimum : state.lowerValue + state.minGap
             commitStateChange { state in
-                handle.isLower
-                    ? state.setLower(self.state.minimum)
-                    : state.setUpper(self.state.lowerValue + self.state.minGap)
+                handle.isLower ? state.setLower(target) : state.setUpper(target)
             }
         case VirtualKey.end:
+            let target = handle.isLower ? state.upperValue - state.minGap : state.maximum
             commitStateChange { state in
-                handle.isLower
-                    ? state.setLower(self.state.upperValue - self.state.minGap)
-                    : state.setUpper(self.state.maximum)
+                handle.isLower ? state.setLower(target) : state.setUpper(target)
             }
         default:
             return
@@ -521,28 +628,51 @@ public class RangeSlider: ContentControl {
         try? Canvas.setLeft(upperThumb, upperX)
         try? Canvas.setLeft(activeRectangle, lowerX + Metrics.thumbSize / 2)
         activeRectangle.width = max(0, upperX - lowerX)
+
+        // 选区命中面覆盖 [lower 中心, upper 中心]，z-order 在滑块之下；
+        // 选区过窄（两滑块接近重合）时禁用命中，回落到就近滑块逻辑。
+        try? Canvas.setLeft(fillDrag, lowerX + Metrics.thumbSize / 2)
+        fillDrag.width = max(0, upperX - lowerX)
+        fillDrag.isHitTestVisible = (upperX - lowerX) >= Metrics.fillDragMinWidth
     }
 
     // MARK: - ToolTip
 
     /// 拖拽/键盘步进时在滑块上方显示当前值(Toolkit RangeSelector 同款交互)。
     private func showToolTip(for handle: Handle) {
+        guard isToolTipEnabled else { return }
         let value = handle.isLower ? state.lowerValue : state.upperValue
         toolTipText.text = formatValue(value)
         toolTip.visibility = .visible
-        positionToolTip(for: handle)
+        positionToolTip(centerX: thumbCenterX(of: handle))
     }
 
-    private func positionToolTip(for handle: Handle) {
-        _ = try? toolTip.updateLayout()
-        let width = Double(toolTip.actualWidth)
+    /// 窗口整体平移时显示两端值与窗宽，例如 "-160 – 240 (W 400)"。
+    private func showWindowToolTip() {
+        guard isToolTipEnabled else { return }
+        toolTipText.text =
+            "\(formatValue(state.lowerValue)) – \(formatValue(state.upperValue)) (W \(formatValue(state.upperValue - state.lowerValue)))"
+        toolTip.visibility = .visible
+        positionToolTip(centerX: (thumbCenterX(of: .lower) + thumbCenterX(of: .upper)) / 2)
+    }
+
+    private func positionToolTip(centerX: Double) {
+        // 文本变化时才做一次 scoped measure 并缓存尺寸。
+        // 不能在每次 move 里 updateLayout()——那是全树同步布局，会把 UI 线程
+        // 塞爆导致拖拽卡顿（先冻住、积压消化后一跳一大截）。
+        let key = toolTipText.text
+        if key != toolTipMeasuredKey {
+            try? toolTip.measure(
+                WindowsFoundation.Size(width: .infinity, height: .infinity))
+            toolTipMeasuredKey = key
+        }
+        let width = Double(toolTip.desiredSize.width)
         guard width > 0 else { return }
-        let centerX = thumbCenterX(of: handle)
         let canvasWidth = Double(root.actualWidth)
         let left = min(max(centerX - width / 2, 0), max(0, canvasWidth - width))
         try? Canvas.setLeft(toolTip, left)
         // 滑块顶缘(7)上方留 12px 间距;canvas 不裁剪,可为负值。
-        try? Canvas.setTop(toolTip, 7 - Double(toolTip.actualHeight) - 12)
+        try? Canvas.setTop(toolTip, 7 - Double(toolTip.desiredSize.height) - 12)
     }
 
     private func hideToolTip() {
@@ -725,6 +855,20 @@ private var xamlUI: String {
                         </ObjectAnimationUsingKeyFrames>
                     </Storyboard>
                 </VisualState>
+                <!-- 整体平移（拖动选区命中面）进行中 -->
+                <VisualState x:Name="WindowPressed">
+                    <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ActiveRectangle" Storyboard.TargetProperty="Fill">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTrackValueFillPressed}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LowerThumb" Storyboard.TargetProperty="Background">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderThumbBackgroundPressed}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="UpperThumb" Storyboard.TargetProperty="Background">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderThumbBackgroundPressed}" />
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
                 <VisualState x:Name="Disabled">
                     <Storyboard>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TrackBackground" Storyboard.TargetProperty="Background">
@@ -748,6 +892,15 @@ private var xamlUI: String {
         <Canvas Name="ContainerCanvas" Background="Transparent">
             <Rectangle x:Name="ActiveRectangle" Height="4" Canvas.Top="14"
                        Fill="{ThemeResource SliderTrackValueFill}" />
+            <!-- 透明 Thumb 命中面：拖动选区 = 整体平移（原生拖拽管线，宽度/位置由代码更新） -->
+            <Thumb Name="FillDrag" Height="32" IsTabStop="False"
+                   AutomationProperties.Name="Range">
+                <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="Transparent" />
+                    </ControlTemplate>
+                </Thumb.Template>
+            </Thumb>
             <Grid Name="ToolTip"
                   Background="{ThemeResource ToolTipBackground}"
                   BorderBrush="{ThemeResource ToolTipBorderBrush}"

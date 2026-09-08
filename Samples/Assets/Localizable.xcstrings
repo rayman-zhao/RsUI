@@ -646,6 +646,193 @@
           }
         }
       }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag the highlighted range to slide the whole window (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the window." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag the highlighted range to slide the whole window (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the window."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动高亮选区整体平移窗口（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Shift+←/→ 平移窗口。"
+          }
+        }
+      }
+    },
+    "Show tooltip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show tooltip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示数值提示"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag the highlighted range to pan the level while keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag the highlighted range to pan the level while keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动高亮选区可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Shift while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the range." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Shift while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the range."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或按住 Shift 拖动任意滑块使两者同步平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Shift+←/→ 平移选区。"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Shift while dragging a thumb to pan the level keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Shift while dragging a thumb to pan the level keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；按住 Shift 拖动滑块可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Ctrl (or Shift) while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Ctrl (or Shift) while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或按住 Ctrl（或 Shift）拖动任意滑块使两者同步平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Ctrl/Shift+←/→ 平移选区。"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Ctrl (or Shift) while dragging a thumb to pan the level keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Ctrl (or Shift) while dragging a thumb to pan the level keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；按住 Ctrl（或 Shift）拖动滑块可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, drag between the thumbs to slide both together (width kept), or hold Ctrl/Shift while dragging. Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, drag between the thumbs to slide both together (width kept), or hold Ctrl/Shift while dragging. Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，拖动两滑块之间的选区可整体平移（保持窗宽），或按住 Ctrl/Shift 拖动滑块。Tab 聚焦滑块后可用键盘：←/→ 调整，Ctrl/Shift+←/→ 平移选区。"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs (or hold Ctrl/Shift) to pan the level keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs (or hold Ctrl/Shift) to pan the level keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动两滑块之间（或按住 Ctrl/Shift 拖动）可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动两滑块之间的选区整体平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，PageUp/PageDown 大步进，Home/End 到边界。"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动两滑块之间可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

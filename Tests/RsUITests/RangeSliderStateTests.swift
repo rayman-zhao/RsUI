@@ -93,6 +93,73 @@ import Testing
         #expect(shrunk.range == 30...50)
     }
 
+    @Test func shiftPreservesWidthAndClampsToDomain() {
+        var state = RangeSliderState(lowerValue: 25, upperValue: 75)
+        var changed = state.shift(by: 10)
+        #expect(changed)
+        #expect(state.range == 35...85)
+        // clamps at the minimum edge
+        changed = state.shift(by: -100)
+        #expect(changed)
+        #expect(state.range == 0...50)
+        // clamps at the maximum edge
+        changed = state.shift(by: 60)
+        #expect(changed)
+        #expect(state.range == 50...100)
+        // already pinned, cannot move further
+        changed = state.shift(by: 10)
+        #expect(!changed)
+        changed = state.shift(by: -0.4)
+        #expect(changed)
+        #expect(state.range == 49.6...99.6)
+    }
+
+    @Test func shiftSnapsDeltaNotEndpoints() {
+        var state = RangeSliderState(stepFrequency: 5, lowerValue: 12, upperValue: 37)
+        // snapping applies to the delta, width stays 25 (not a multiple of 5)
+        var changed = state.shift(by: 7)
+        #expect(changed)
+        #expect(state.lowerValue == 15 && state.upperValue == 40)
+        // sub-step delta snaps to 0 → no-op
+        changed = state.shift(by: 2)
+        #expect(!changed)
+        // negative delta also snaps, width preserved
+        changed = state.shift(by: -7)
+        #expect(changed)
+        #expect(state.lowerValue == 10 && state.upperValue == 35)
+    }
+
+    @Test func zeroWidthRangeStillShifts() {
+        var state = RangeSliderState(lowerValue: 50, upperValue: 50)
+        var changed = state.shift(by: -30)
+        #expect(changed)
+        #expect(state.range == 20...20)
+        changed = state.shift(by: 200)
+        #expect(changed)
+        #expect(state.range == 100...100)
+    }
+
+    @Test func shiftRawTracksContinuouslyAndSettlesToStep() {
+        var state = RangeSliderState(stepFrequency: 5, lowerValue: 12, upperValue: 37)
+        // init snaps to 10...35
+        #expect(state.range == 10...35)
+        // raw shift does not snap, width kept
+        var changed = state.shiftRaw(by: 2.5)
+        #expect(changed)
+        #expect(state.lowerValue == 12.5 && state.upperValue == 37.5)
+        // settle aligns the lower bound to the step grid, width kept
+        changed = state.settleToStep()
+        #expect(changed)
+        #expect(state.range == 15...40)
+        // settling an already-aligned window is a no-op
+        changed = state.settleToStep()
+        #expect(!changed)
+        // continuous mode has nothing to settle
+        var continuous = RangeSliderState(lowerValue: 25, upperValue: 75)
+        changed = continuous.settleToStep()
+        #expect(!changed)
+    }
+
     @Test func fractionAndValueRoundTrip() {
         let state = RangeSliderState(minimum: -100, maximum: 100, lowerValue: 0, upperValue: 50)
         #expect(state.fraction(of: -100) == 0)

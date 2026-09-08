@@ -18,7 +18,7 @@ final class RangeSliderPage: RsUI.Page {
         featurePageHeader(
             title: tr("Range Slider"),
             description: tr(
-                "A dual-thumb slider for picking a range. Drag a thumb, click the track, or use the keyboard (←/→ adjust, ↑/↓ switch the active thumb, Home/End jump to bounds)."
+                "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds."
             )
         )
     }
@@ -54,22 +54,18 @@ final class RangeSliderPage: RsUI.Page {
         panel.children.append(slider)
         panel.children.append(readout)
 
-        // TEMP: native slider reference for A/B visual comparison
-        let native = WinUI.Slider()
-        native.minimum = 0
-        native.maximum = 100
-        native.value = 80
-        native.stepFrequency = 1
-        native.width = 220
-        let nativePanel = StackPanel()
-        nativePanel.orientation = .vertical
-        nativePanel.spacing = 4
-        nativePanel.children.append(native)
+        let toolTipToggle = ToggleSwitch()
+        toolTipToggle.header = tr("Show tooltip")
+        toolTipToggle.isOn = slider.isToolTipEnabled
+        toolTipToggle.toggled.addHandler { _, _ in
+            slider.isToolTipEnabled = toolTipToggle.isOn
+        }
+
         let wrap = StackPanel()
         wrap.orientation = .vertical
         wrap.spacing = 8
         wrap.children.append(panel)
-        wrap.children.append(nativePanel)
+        wrap.children.append(toolTipToggle)
         return wrap
     }
 
@@ -80,7 +76,7 @@ final class RangeSliderPage: RsUI.Page {
 
         let subtitle = TextBlock()
         subtitle.text = tr(
-            "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping."
+            "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
         )
         subtitle.fontSize = 12
         subtitle.textWrapping = .wrap
