@@ -29,12 +29,12 @@ class SettingsPage: Page {
 
         // MARK: - 外观
         mainStackPanel.children.append(
-            SettingsGroup(tr("personalizationSection"), [themeCard, languageCard]))
+            SettingsGroup(title: tr("personalizationSection"), cards: [themeCard, languageCard], isExpandable: false))
 
         // MARK: - 各个模块
         for module in App.context.modules {
             if let group = module.settingsGroup() {
-                mainStackPanel.children.append(SettingsGroup(group.title, group.cards))
+                mainStackPanel.children.append(SettingsGroup(title: group.title, cards: group.cards))
             }
         }
 
@@ -49,7 +49,7 @@ class SettingsPage: Page {
             Bundle.main.executableURL?.version ?? "",
             [dependenciesCard]
         )
-        mainStackPanel.children.append(SettingsGroup(tr("AboutTitle"), [aboutCard]))
+        mainStackPanel.children.append(SettingsGroup(title: tr("AboutTitle"), cards: [aboutCard], isExpandable: false))
 
         // MARK: - 总装视图
         let scrollViewer = ScrollViewer()

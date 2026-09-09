@@ -61,7 +61,7 @@ final class ViewerPage: RsUI.Page {
                 rightPane.navigateTo(label: l, cards: [t])
             }
             let card2 = SettingsCard(header: "Group \(i) Not Clickable")
-            rightPane.append(glyph: "\u{F0E3}", label: "Group \(i)", cards: [card, card2])
+            rightPane.append(glyph: "\u{F0E3}", title: "Group \(i)", cards: [card, card2])
         }
 
         viewer.rightContent = rightPane

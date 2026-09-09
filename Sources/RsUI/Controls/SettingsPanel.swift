@@ -57,13 +57,11 @@ open class SettingsPanel: WinUI.Grid {
         }
     }
 
-    public func append(icon: WinUI.IconElement?, label: String, cards: [UIElement]) {
-        let group = SettingsGroup(label, cards)
+    public func append(glyph: String?, group: SettingsGroup) {
         ui.mainPanel.children.append(group)
 
-        if let icon {
-            let button: AppBarButton = App.context.requireXaml(withString: xamlAppBarButton.replacingOccurrences(of: "{x:ToolTip}", with: label))
-            button.icon = icon
+        if let glyph {
+            let button = AppBarButton.makeIconOnly(glyph: glyph, tooltip: group.title)
             button.click.addHandler { [weak self] _, _ in
                 guard
                     let self,
@@ -78,15 +76,9 @@ open class SettingsPanel: WinUI.Grid {
         }
     }
 
-    public func append(glyph: String?, label: String, cards: [UIElement]) {
-        var icon: IconElement?
-        if let glyph {
-            let fontIcon = FontIcon()
-            fontIcon.glyph = glyph
-            icon = fontIcon
-        }
-
-        return append(icon: icon, label: label, cards: cards)
+    public func append(glyph: String?, title: String, cards: [UIElement]) {
+        let group = SettingsGroup(title: title, cards: cards)
+        return append(glyph: glyph, group: group)
     }
 
     public func navigateTo(label: UIElement, cards: [UIElement]) {
