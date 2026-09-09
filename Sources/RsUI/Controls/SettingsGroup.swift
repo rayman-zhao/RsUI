@@ -14,6 +14,8 @@ public class SettingsGroup: StackPanel {
         }
     }
 
+    public let expand = EventWithArgumentHandler<SettingsGroup, Bool>()
+
     // MARK: - Private state
 
     private let ui:
@@ -66,6 +68,7 @@ public class SettingsGroup: StackPanel {
         ui.toggleButton.click.addHandler { [weak self] _, _ in
             guard let self else { return }
             self.isExpanded = !self.isExpanded
+            self.expand.invoke(self, self.isExpanded)
         }
         // The storyboards are reused across runs, so completed handlers are wired once here.
         ui.expandStoryboard.completed.addHandler { [weak self] _, _ in
