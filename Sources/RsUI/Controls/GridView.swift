@@ -42,12 +42,17 @@ open class GridView: WinUI.Grid {
         didSet { refreshCheckBoxes() }
     }
 
+    /// 框选(rubber-band)选择:在空白处按下左键并拖拽画矩形,自动选中与矩形
+    /// 相交的条目;Ctrl 按住时在现有选择上累加,默认替换。拖到视口边缘的
+    /// 自动滚动暂不支持。默认开启。
+    public var isMarqueeSelectionEnabled = true
+
     // MARK: - 内部构成
 
     let itemsView = WinUI.ItemsView()
     private let uniformGridLayout = WinUI.UniformGridLayout()
-    /// 框选矩形 overlay(阶段 3 启用;先挂载占位)。
-    private let marqueeOverlay = WinUI.Border()
+    /// 框选矩形 overlay(主题色细边框 + 半透明填充)。
+    private lazy var marqueeOverlay: WinUI.Grid = App.context.requireXaml(withString: marqueeOverlayXaml)
     /// 视觉树里 ItemsView 内部的 ItemsRepeater,双击/框选命中测试用。
     private var repeater: WinUI.ItemsRepeater?
     /// 已布线过事件的条目容器(防虚拟化回收复用时重复布线)。
@@ -55,8 +60,10 @@ open class GridView: WinUI.Grid {
     private var isRepeaterWired = false
     /// 悬停中的条目容器(复选框浮现用)。
     private var hoveredContainer: WinUI.ItemContainer?
-    /// 程序化同步复选框状态时的重入守卫(设置 isChecked 也会触发 toggled)。
+    /// 程序化同步复选框状态时的重入守卫(设置 isChecked 也会触发 checked)。
     private var isSyncingCheckBoxes = false
+    /// 进行中的框选会话。
+    private var marquee: MarqueeSession?
 
     // MARK: - 数据与选择状态
 
@@ -78,10 +85,6 @@ open class GridView: WinUI.Grid {
         itemsView.selectionMode = .extended
         itemsView.itemTemplate = App.context.requireXaml(withString: itemTemplateXaml)
         children.append(itemsView)
-
-        marqueeOverlay.visibility = .collapsed
-        marqueeOverlay.isHitTestVisible = false
-        try? WinUI.Canvas.setZIndex(marqueeOverlay, 100)
         children.append(marqueeOverlay)
 
         bindEvents()
@@ -136,13 +139,21 @@ open class GridView: WinUI.Grid {
             guard let self, let args else { return }
             self.handleDoubleTapped(args)
         }
-        // 悬停跟踪:pointerEntered 在合成输入下不可靠,统一用 itemsView 级
+        // 悬停/框选跟踪:pointerEntered 在合成输入下不可靠,统一用 itemsView 级
         // pointerMoved + 坐标命中测试;离开网格时清除。
         itemsView.pointerMoved.addHandler { [weak self] _, args in
-            guard let self, self.isCheckBoxSelectionEnabled, let args else { return }
+            guard let self, let args else { return }
+            guard let pointerPoint = try? args.getCurrentPoint(nil) else { return }
+
+            if self.marquee != nil {
+                let localPoint = (try? args.getCurrentPoint(self))?.position ?? pointerPoint.position
+                self.updateMarquee(hostPoint: pointerPoint.position, localPoint: localPoint)
+                return
+            }
+
+            guard self.isCheckBoxSelectionEnabled else { return }
             self.ensureRepeaterWired()
-            guard let hostPoint = (try? args.getCurrentPoint(nil))?.position else { return }
-            let container = self.itemContainer(atHostPoint: hostPoint)
+            let container = self.itemContainer(atHostPoint: pointerPoint.position)
             if self.hoveredContainer != container {
                 self.hoveredContainer = container
                 self.refreshCheckBoxes()
@@ -154,6 +165,33 @@ open class GridView: WinUI.Grid {
                 self.hoveredContainer = nil
                 self.refreshCheckBoxes()
             }
+        }
+
+        // 框选:空白处按下左键开始,条目上的按下交给原生点击选择。
+        itemsView.pointerPressed.addHandler { [weak self] _, args in
+            guard let self, let args, self.isMarqueeSelectionEnabled else { return }
+            self.ensureRepeaterWired()
+            guard let pointerPoint = try? args.getCurrentPoint(nil),
+                pointerPoint.properties.isLeftButtonPressed,
+                self.itemContainer(atHostPoint: pointerPoint.position) == nil,
+                let localPoint = (try? args.getCurrentPoint(self))?.position
+            else { return }
+            _ = try? self.itemsView.capturePointer(args.pointer)
+            let ctrl = args.keyModifiers == .control
+            self.marquee = MarqueeSession(
+                startLocal: localPoint,
+                startHost: pointerPoint.position,
+                baseSelection: ctrl ? self.selectedIndexesSnapshot : [])
+        }
+        itemsView.pointerReleased.addHandler { [weak self] _, args in
+            guard let self, self.marquee != nil else { return }
+            if let args, let pointer = args.pointer {
+                try? self.itemsView.releasePointerCapture(pointer)
+            }
+            self.endMarquee()
+        }
+        itemsView.pointerCaptureLost.addHandler { [weak self] _, _ in
+            self?.endMarquee()
         }
 
         // 条目容器就绪后布线(复选框联动)。
@@ -270,11 +308,96 @@ open class GridView: WinUI.Grid {
         defer { isSyncingCheckBoxes = false }
         for container in Self.descendants(ofType: WinUI.ItemContainer.self, from: itemsView) {
             guard let checkBox = (try? container.findName("ItemCheckBox")) as? WinUI.CheckBox else { continue }
-            checkBox.visibility = isCheckBoxSelectionEnabled && hoveredContainer == container ? .visible : .collapsed
+            checkBox.visibility =
+                GridViewSelectionModel.isCheckBoxVisible(
+                    isEnabled: isCheckBoxSelectionEnabled,
+                    isHovered: hoveredContainer == container)
+                ? .visible
+                : .collapsed
             if let index = try? repeater.getElementIndex(container) {
                 checkBox.isChecked = selectedIndexesSnapshot.contains(index)
             }
         }
+    }
+
+    // MARK: - 框选选择
+
+    /// 一次框选会话的状态。
+    private struct MarqueeSession {
+        /// 框选起点(GridView 本地坐标,overlay 定位用)。
+        let startLocal: WindowsFoundation.Point
+        /// 框选起点(宿主坐标,命中测试用)。
+        let startHost: WindowsFoundation.Point
+        /// Ctrl 累加模式下的基线选择;替换模式为空集。
+        let baseSelection: Set<Int32>
+        /// 上次已应用到选择模型的 target,逐帧 diff 增量更新。
+        var lastTarget: Set<Int32> = []
+    }
+
+    private func updateMarquee(hostPoint: WindowsFoundation.Point, localPoint: WindowsFoundation.Point) {
+        guard let session = marquee, let repeater = findRepeater() else { return }
+
+        let hostRect = GridViewSelectionModel.marqueeRect(
+            start: (session.startHost.x, session.startHost.y),
+            current: (hostPoint.x, hostPoint.y))
+        // 拖拽超过阈值才真正开始框选,避免与空白单击混淆。
+        guard GridViewSelectionModel.marqueeEngaged(hostRect) else { return }
+
+        let localRect = GridViewSelectionModel.marqueeRect(
+            start: (session.startLocal.x, session.startLocal.y),
+            current: (localPoint.x, localPoint.y))
+        marqueeOverlay.visibility = .visible
+        marqueeOverlay.margin = Thickness(
+            left: Double(localRect.x), top: Double(localRect.y), right: 0, bottom: 0)
+        marqueeOverlay.width = Double(localRect.width)
+        marqueeOverlay.height = Double(localRect.height)
+
+        let hits = marqueeHitIndexes(
+            rect: WindowsFoundation.Rect(
+                x: hostRect.x, y: hostRect.y,
+                width: hostRect.width, height: hostRect.height),
+            repeater: repeater)
+        let target = session.baseSelection.union(hits)
+        let delta = GridViewSelectionModel.marqueeDelta(applied: session.lastTarget, target: target)
+        for index in delta.select {
+            try? itemsView.select(index)
+        }
+        for index in delta.deselect {
+            try? itemsView.deselect(index)
+        }
+        marquee?.lastTarget = target
+    }
+
+    /// 矩形相交命中:取视觉树中与矩形相交的元素,向上找到条目容器并换算成索引。
+    private func marqueeHitIndexes(
+        rect: WindowsFoundation.Rect, repeater: WinUI.ItemsRepeater
+    ) -> Set<Int32> {
+        var indexes: Set<Int32> = []
+        guard
+            let hits = try? WinUI.VisualTreeHelper.findElementsInHostCoordinates(rect, itemsView),
+            var iterator = hits.first()
+        else { return indexes }
+        while iterator.hasCurrent {
+            if let element = iterator.current {
+                var current = element as? WinUI.FrameworkElement
+                while let node = current {
+                    if let container = node as? WinUI.ItemContainer {
+                        if let index = try? repeater.getElementIndex(container), index >= 0 {
+                            indexes.insert(index)
+                        }
+                        break
+                    }
+                    current = node.parent as? WinUI.FrameworkElement
+                }
+            }
+            if !iterator.moveNext() { break }
+        }
+        return indexes
+    }
+
+    private func endMarquee() {
+        marquee = nil
+        marqueeOverlay.visibility = .collapsed
     }
 
     // MARK: - 视觉树辅助
@@ -342,7 +465,18 @@ open class GridView: WinUI.Grid {
     }
 }
 
-// MARK: - ItemTemplate
+// MARK: - XAML 模板
+
+private var marqueeOverlayXaml: String {
+    """
+    <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          Visibility="Collapsed" IsHitTestVisible="False" Canvas.ZIndex="100"
+          HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.2" CornerRadius="2"/>
+        <Border BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="2"/>
+    </Grid>
+    """
+}
 
 private var itemTemplateXaml: String {
     """
