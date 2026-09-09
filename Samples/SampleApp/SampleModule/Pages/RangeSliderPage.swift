@@ -46,7 +46,7 @@ final class RangeSliderPage: RsUI.Page {
         slider.valueChanged.addHandler { _, change in
             readout.text = String(format: "%.0f – %.0f", change.new.lowerBound, change.new.upperBound)
         }
-        readout.text = "20 – 80"
+        readout.text = "20 - 80"
 
         let panel = StackPanel()
         panel.orientation = .horizontal

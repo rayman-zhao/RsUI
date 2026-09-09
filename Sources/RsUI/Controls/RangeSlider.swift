@@ -206,10 +206,14 @@ public class RangeSlider: ContentControl {
 
     /// 轨道点击发起的拖拽（滑块直接抓取由 Thumb.drag* 事件驱动，两路并存）。
     private var trackDraggingHandle: Handle?
-    /// Thumb 拖拽的累计像素位置(DragDelta 只给增量)。
-    private var thumbDragPosition: Double = 0
-    /// 选区命中面拖拽的累计像素位置。
-    private var fillDragPosition: Double = 0
+    /// 滑块拖拽期间指针位置与滑块值的抓取偏移（值域单位）。
+    /// Thumb 的 DragDelta 在滑块拖拽起点的旧坐标系里度量增量，滑块自身被
+    /// Canvas.setLeft 移动后会污染增量（正反馈），故拖拽值一律由
+    /// pointerMoved 的绝对位置驱动，此偏移保持"抓哪跟哪"不跳值。
+    private var thumbGrabOffset: Double?
+    private var thumbDragHandle: Handle?
+    /// 选区整体平移的抓取偏移（值域单位），首个 pointerMoved 时初始化。
+    private var fillGrabOffset: Double?
     private var fillDragging = false
     private var hoveringControl = false
     /// 手动状态机：当前状态名与其 Storyboard（goToElementStateCore 失效的替代）。
@@ -335,17 +339,17 @@ public class RangeSlider: ContentControl {
             updateControlState()
         }
 
-        // 滑块：Thumb 原生拖拽(悬停/按压缩放动画由 Thumb 状态机自动播放)。
+        // 滑块：Thumb 原生拖拽只借用其按压/释放生命周期（捕获、悬停/按压
+        // 缩放动画由 Thumb 状态机自动播放）；值更新由 self 的 pointerMoved
+        // 以绝对位置驱动 —— Thumb.DragDelta 的增量在拖拽起点的旧坐标系里
+        // 度量，滑块自身被移动后会形成正反馈，不可用（见 applyThumbDrag）。
         lowerThumb.dragStarted.addHandler { [weak self] _, _ in self?.handleThumbDragStarted(.lower) }
         upperThumb.dragStarted.addHandler { [weak self] _, _ in self?.handleThumbDragStarted(.upper) }
-        lowerThumb.dragDelta.addHandler { [weak self] _, args in self?.handleThumbDragDelta(.lower, args) }
-        upperThumb.dragDelta.addHandler { [weak self] _, args in self?.handleThumbDragDelta(.upper, args) }
         lowerThumb.dragCompleted.addHandler { [weak self] _, _ in self?.handleThumbDragCompleted() }
         upperThumb.dragCompleted.addHandler { [weak self] _, _ in self?.handleThumbDragCompleted() }
 
-        // 选区命中面：拖动 = 整体平移（同一条原生拖拽管线）。
+        // 选区命中面：拖动 = 整体平移（同样只借生命周期，值走 pointerMoved）。
         fillDrag.dragStarted.addHandler { [weak self] _, _ in self?.handleFillDragStarted() }
-        fillDrag.dragDelta.addHandler { [weak self] _, args in self?.handleFillDragDelta(args) }
         fillDrag.dragCompleted.addHandler { [weak self] _, _ in self?.handleFillDragCompleted() }
 
         // 键盘：聚焦到哪个滑块,方向键就驱动哪个。
@@ -408,8 +412,6 @@ public class RangeSlider: ContentControl {
         trackDraggingHandle ?? thumbDragHandle
     }
 
-    private var thumbDragHandle: Handle?
-
     // MARK: - Track pointer interaction
 
     private func handlePointerPressed(_ args: PointerRoutedEventArgs?) {
@@ -431,12 +433,25 @@ public class RangeSlider: ContentControl {
     }
 
     private func handlePointerMoved(_ args: PointerRoutedEventArgs?) {
-        guard let handle = trackDraggingHandle, let args,
-            let point = try? args.getCurrentPoint(root)
-        else { return }
-        applyValue(atX: Double(point.position.x))
-        showToolTip(for: handle)
-        args.handled = true
+        guard let args, let point = try? args.getCurrentPoint(root) else { return }
+        let x = Double(point.position.x)
+
+        // 三种拖拽共用绝对位置驱动：指针坐标不会说谎，也不依赖任何累计状态。
+        // Thumb 原生捕获期间事件在 Thumb 上触发并冒泡到 self（Thumb 不置
+        // Handled），因此滑块/选区拖拽同样走这条路。
+        if let handle = trackDraggingHandle {
+            applyValue(atX: x)
+            showToolTip(for: handle)
+            args.handled = true
+        } else if let handle = thumbDragHandle {
+            applyThumbDrag(handle, pointerX: x)
+            showToolTip(for: handle)
+            args.handled = true
+        } else if fillDragging {
+            applyFillDrag(pointerX: x)
+            showWindowToolTip()
+            args.handled = true
+        }
     }
 
     private func handlePointerReleased(_ args: PointerRoutedEventArgs?) {
@@ -474,32 +489,46 @@ public class RangeSlider: ContentControl {
 
     // MARK: - Thumb drag interaction
 
+    /// 滑块拖拽开始：仅记录抓取状态，值更新全部由 pointerMoved 绝对位置驱动。
+    /// 抓取偏移在首个 pointerMoved 到达时初始化（dragStarted 不带指针参数），
+    /// 保持"抓在滑块哪里就跟到哪里"的原生手感、起步不跳值。
     private func handleThumbDragStarted(_ handle: Handle) {
         raiseThumb(of: handle)
-        thumbDragPosition = thumbX(of: handle.isLower ? state.lowerValue : state.upperValue)
+        thumbGrabOffset = nil
         thumbDragHandle = handle
         _ = try? thumbControl(of: handle).focus(.pointer)
         showToolTip(for: handle)
         updateControlState()
     }
 
-    private func handleThumbDragDelta(_ handle: Handle, _ args: DragDeltaEventArgs?) {
-        guard let args else { return }
-        thumbDragPosition += Double(args.horizontalChange)
-
+    private func applyThumbDrag(_ handle: Handle, pointerX: Double) {
         let usable = max(0, Double(root.actualWidth) - Metrics.thumbSize)
-        let fraction = usable > 0 ? min(max(thumbDragPosition / usable, 0), 1) : 0
-        let target = state.value(atFraction: fraction)
-        commitStateChange { state in
-            handle.isLower ? state.setLower(target) : state.setUpper(target)
+        let rawFraction = usable > 0 ? (pointerX - Metrics.thumbSize / 2) / usable : 0
+        // 指针越出轨道两端时不再保持抓取偏移，值直接钉到边界 —— 否则
+        // "clamp 后的目标 + 偏移"会差偏移那么一段到不了边界值（快速甩出
+        // 轨道时滑块停在边缘附近，原生 Slider 无此问题）。
+        if rawFraction < 0 || rawFraction > 1 {
+            let bound = rawFraction < 0 ? state.minimum : state.maximum
+            commitStateChange { state in
+                handle.isLower ? state.setLower(bound) : state.setUpper(bound)
+            }
+            return
         }
-        // 以吸附/钳制后的实际位置继续累计,避免拖拽与吸附错位。
-        thumbDragPosition = thumbX(of: handle.isLower ? state.lowerValue : state.upperValue)
-        showToolTip(for: handle)
+
+        let target = state.value(atFraction: rawFraction)
+        if thumbGrabOffset == nil {
+            let grabbed = handle.isLower ? state.lowerValue : state.upperValue
+            thumbGrabOffset = grabbed - target
+        }
+        let adjusted = target + (thumbGrabOffset ?? 0)
+        commitStateChange { state in
+            handle.isLower ? state.setLower(adjusted) : state.setUpper(adjusted)
+        }
     }
 
     private func handleThumbDragCompleted() {
         thumbDragHandle = nil
+        thumbGrabOffset = nil
         hideToolTip()
         updateTrackLayout()
         updateControlState()
@@ -507,34 +536,30 @@ public class RangeSlider: ContentControl {
 
     // MARK: - Fill (window) drag interaction
 
-    /// 选区命中面的整体平移：数学与滑块拖拽完全一致（以 lower thumb 位置为锚），
-    /// 区别仅在于 dragDelta 来自 FillDrag 这个透明 Thumb。
+    /// 选区命中面的整体平移：以首个 pointerMoved 的指针值为锚，保持窗宽
+    /// 严格不变，整体钳制在域内 —— 平移到 minimum / maximum 边界即停住。
     private func handleFillDragStarted() {
-        fillDragPosition = thumbX(of: state.lowerValue)
+        fillGrabOffset = nil
         fillDragging = true
         showWindowToolTip()
         updateControlState()
     }
 
-    private func handleFillDragDelta(_ args: DragDeltaEventArgs?) {
-        guard let args else { return }
-        fillDragPosition += Double(args.horizontalChange)
-
-        let usable = max(0, Double(root.actualWidth) - Metrics.thumbSize)
-        let fraction = usable > 0 ? min(max(fillDragPosition / usable, 0), 1) : 0
-        let targetLower = state.value(atFraction: fraction)
+    private func applyFillDrag(pointerX: Double) {
+        let pointerValue = state.value(atFraction: pixelFraction(atX: pointerX))
         // 读取必须在 inout 闭包外完成：闭包内再读 self.state 会触发
         // Swift 独占性检查（Simultaneous accesses）直接崩溃。
+        if fillGrabOffset == nil {
+            fillGrabOffset = state.lowerValue - pointerValue
+        }
+        let targetLower = pointerValue + (fillGrabOffset ?? 0)
         let delta = targetLower - state.lowerValue
-
         commitStateChange { $0.shiftRaw(by: delta) }
-        // 以钳制后的实际位置继续累计，避免拖拽与边界错位。
-        fillDragPosition = thumbX(of: state.lowerValue)
-        showWindowToolTip()
     }
 
     private func handleFillDragCompleted() {
         fillDragging = false
+        fillGrabOffset = nil
         commitStateChange { $0.settleToStep() }
         hideToolTip()
         updateTrackLayout()
