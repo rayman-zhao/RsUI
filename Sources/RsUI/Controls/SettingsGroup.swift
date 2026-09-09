@@ -22,12 +22,14 @@ public class SettingsGroup: StackPanel {
         (
             titleLabel: TextBlock,
             toggleButton: AppBarButton,
+            headerGrid: Grid,
             chevronTransform: CompositeTransform,
             cardsHost: StackPanel,
             cardsHostTransform: CompositeTransform,
             expandStoryboard: Storyboard,
             collapseStoryboard: Storyboard
         )
+    private let isExpandable: Bool
     private var isAnimating = false
 
     // MARK: - Init
@@ -35,11 +37,13 @@ public class SettingsGroup: StackPanel {
     public init(title: String, cards: [WinUI.UIElement], isExpandable: Bool = true, isExpanded: Bool = true) {
         self.title = title
         self.isExpanded = isExpanded
+        self.isExpandable = isExpandable
 
         let loaded: Grid = App.context.requireXaml(withString: xamlUI)
         ui = (
             titleLabel: loaded.requireElement("TitleLabel"),
             toggleButton: loaded.requireElement("ToggleButton"),
+            headerGrid: loaded.requireElement("HeaderGrid"),
             chevronTransform: loaded.requireElement("ChevronTransform"),
             cardsHost: loaded.requireElement("CardsHost"),
             cardsHostTransform: loaded.requireElement("CardsHostTransform"),
@@ -66,9 +70,13 @@ public class SettingsGroup: StackPanel {
         }
 
         ui.toggleButton.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            self.isExpanded = !self.isExpanded
-            self.expand.invoke(self, self.isExpanded)
+            self?.toggleExpanded()
+        }
+        // The whole header row toggles; AppBarButton swallows pointer input for its own
+        // click, so taps on the chevron never reach this handler — no double toggling.
+        ui.headerGrid.tapped.addHandler { [weak self] _, _ in
+            guard let self, self.isExpandable else { return }
+            self.toggleExpanded()
         }
         // The storyboards are reused across runs, so completed handlers are wired once here.
         ui.expandStoryboard.completed.addHandler { [weak self] _, _ in
@@ -79,6 +87,11 @@ public class SettingsGroup: StackPanel {
             self.ui.cardsHost.visibility = .collapsed
             self.isAnimating = false
         }
+    }
+
+    private func toggleExpanded() {
+        isExpanded = !isExpanded
+        expand.invoke(self, isExpanded)
     }
 
     private func runExpandCollapseAnimation(expanding: Bool) {
@@ -126,7 +139,7 @@ private var xamlUI: String {
                 </Storyboard>
             </ResourceDictionary>
         </Grid.Resources>
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+        <Grid Name="HeaderGrid" Grid.Row="0" ColumnDefinitions="*,Auto">
             <TextBlock Name="TitleLabel" Grid.Column="0"
                 Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"/>
             <AppBarButton Name="ToggleButton" Grid.Column="1"
