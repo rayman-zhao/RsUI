@@ -4,6 +4,7 @@ public class SettingsGroup: StackPanel {
 
     // MARK: - Public properties
 
+    public let title: String
     /// Whether the group's cards are shown. Defaults to `true`; assigning a new
     /// value expands or collapses the group with the same animation as the toggle button.
     public var isExpanded: Bool {
@@ -29,7 +30,8 @@ public class SettingsGroup: StackPanel {
 
     // MARK: - Init
 
-    public init(_ title: String, _ cards: [WinUI.UIElement], isExpanded: Bool = true) {
+    public init(title: String, cards: [WinUI.UIElement], isExpandable: Bool = true, isExpanded: Bool = true) {
+        self.title = title
         self.isExpanded = isExpanded
 
         let loaded: Grid = App.context.requireXaml(withString: xamlUI)
@@ -43,6 +45,7 @@ public class SettingsGroup: StackPanel {
             collapseStoryboard: loaded.requireResource("CollapseStoryboard")
         )
         ui.titleLabel.text = title
+        ui.toggleButton.visibility = isExpandable ? .visible : .collapsed
         for card in cards {
             ui.cardsHost.children.append(card)
         }
