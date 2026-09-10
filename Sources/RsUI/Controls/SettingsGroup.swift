@@ -72,8 +72,9 @@ public class SettingsGroup: StackPanel {
         ui.toggleButton.click.addHandler { [weak self] _, _ in
             self?.toggleExpanded()
         }
-        // The whole header row toggles; AppBarButton swallows pointer input for its own
-        // click, so taps on the chevron never reach this handler — no double toggling.
+        // A single click on the chevron triggers both the button's `click` and the header's
+        // `tapped` (AppBarButton does not swallow pointer events); `toggleExpanded()` ignores
+        // the second call so one physical click toggles exactly once.
         ui.headerGrid.tapped.addHandler { [weak self] _, _ in
             guard let self, self.isExpandable else { return }
             self.toggleExpanded()
@@ -89,7 +90,12 @@ public class SettingsGroup: StackPanel {
         }
     }
 
+    /// Ignored while an expand/collapse animation is running: this both collapses the
+    /// click + tapped pair of one physical interaction into a single toggle, and coherently
+    /// debounces rapid re-clicks (instead of flipping the state without an animation).
     private func toggleExpanded() {
+        guard !isAnimating else { return }
+
         isExpanded = !isExpanded
         expand.invoke(self, isExpanded)
     }
