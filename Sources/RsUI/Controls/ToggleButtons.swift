@@ -62,8 +62,9 @@ open class ToggleButtons: ContentControl {
     // MARK: - Selection
 
     /// 当前选中项的 tag；nil 表示尚无选中。setter 与用户点击走同一 commit 路径，
-    /// 真正变化时触发 `selectionChanged`；无匹配 tag 或整组被禁用时告警并保持现状。
-    /// 用户点击由 `isEnabled` 的可视树级联天然拦截，这里只拦程序化设置。
+    /// 真正变化时触发 `selectionChanged`；无匹配 tag 时告警并保持现状。
+    /// 禁用状态只拦截用户点击（`isEnabled` 可视树级联），程序化设置照常生效，
+    /// 与 WinUI 其它控件的语义一致。
     public var selectedTag: String? {
         get { _selectedTag }
         set {
@@ -111,10 +112,6 @@ open class ToggleButtons: ContentControl {
     private func select(tag: String) {
         guard let button = buttons.first(where: { tagString(of: $0) == tag }) else {
             log.warning("ToggleButtons: no item matches tag '\(tag)'.")
-            return
-        }
-        guard isEnabled else {
-            log.warning("ToggleButtons: control is disabled, cannot select '\(tag)'.")
             return
         }
         commitSelection(to: tag, preferred: button)
