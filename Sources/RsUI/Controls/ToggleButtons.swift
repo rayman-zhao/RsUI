@@ -7,9 +7,10 @@ import WindowsFoundation
 /// `AppBarToggleButton`，同一时刻至多一项选中；点击已选中项不会反选。
 /// 项目以 `tag`（HString）字符串标识，`selectionChanged` 携带新选中项的 tag。
 ///
-/// `VariableSizedWrapGrid` 在投影里是 final，无法继承，故按 `PageTabView` 的组合模式
-/// 以 `Grid` 子类内嵌一个铺满的 wrapGrid。
-open class ToggleButtons: WinUI.Grid {
+/// `VariableSizedWrapGrid` 在投影里是 final，无法继承，故继承 `ContentControl`、
+/// content 内嵌一个铺满的 wrapGrid（同 `RangeSlider` 的模式）。由此 `isEnabled`
+/// 直接继承自 `Control`：禁用沿可视树自动级联到全部子按钮，无需手动遍历。
+open class ToggleButtons: ContentControl {
     public let selectionChanged = EventWithArgumentHandler<ToggleButtons, String>()
 
     private let wrapGrid = VariableSizedWrapGrid()
@@ -21,7 +22,9 @@ open class ToggleButtons: WinUI.Grid {
         // Orientation 必须显式置 horizontal：默认 Vertical 时子项按列填充（单列竖排）。
         wrapGrid.orientation = .horizontal
         wrapGrid.horizontalAlignment = .stretch
-        children.append(wrapGrid)
+        // 组容器本身不是交互元素，不占用 Tab 停靠点（Control 默认 isTabStop = true）。
+        isTabStop = false
+        content = wrapGrid
     }
 
     // MARK: - Items
@@ -59,7 +62,8 @@ open class ToggleButtons: WinUI.Grid {
     // MARK: - Selection
 
     /// 当前选中项的 tag；nil 表示尚无选中。setter 与用户点击走同一 commit 路径，
-    /// 真正变化时触发 `selectionChanged`；无匹配 tag 时告警并保持现状。
+    /// 真正变化时触发 `selectionChanged`；无匹配 tag 或整组被禁用时告警并保持现状。
+    /// 用户点击由 `isEnabled` 的可视树级联天然拦截，这里只拦程序化设置。
     public var selectedTag: String? {
         get { _selectedTag }
         set {
@@ -107,6 +111,10 @@ open class ToggleButtons: WinUI.Grid {
     private func select(tag: String) {
         guard let button = buttons.first(where: { tagString(of: $0) == tag }) else {
             log.warning("ToggleButtons: no item matches tag '\(tag)'.")
+            return
+        }
+        guard isEnabled else {
+            log.warning("ToggleButtons: control is disabled, cannot select '\(tag)'.")
             return
         }
         commitSelection(to: tag, preferred: button)

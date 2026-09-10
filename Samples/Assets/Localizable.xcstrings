@@ -1223,6 +1223,22 @@
           }
         }
       }
+    },
+    "Enable group" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable group"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用按钮组"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

@@ -48,11 +48,19 @@ final class ToggleButtonsPage: RsUI.Page {
         let selectMonthButton = Button()
         selectMonthButton.content = tr("Select Month")
 
+        let enableToggle = ToggleSwitch()
+        enableToggle.header = tr("Enable group")
+        enableToggle.isOn = group.isEnabled
+        enableToggle.toggled.addHandler { _, _ in
+            group.isEnabled = enableToggle.isOn
+        }
+
         let row = StackPanel()
         row.orientation = .horizontal
         row.spacing = 12
         row.children.append(readout)
         row.children.append(selectMonthButton)
+        row.children.append(enableToggle)
 
         let panel = StackPanel()
         panel.orientation = .vertical
