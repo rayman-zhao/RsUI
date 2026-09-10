@@ -2,7 +2,7 @@ import WinUI
 
 extension AppBarButton {
     public static func makeIconOnly(glyph: String, tooltip: String) -> AppBarButton {
-        let ui = xamlUI.replacingOccurrences(of: "{x:Glyph}", with: glyph).replacingOccurrences(of: "{x:ToolTip}", with: tooltip)
+        let ui = xamlUI.replacingOccurrences(of: "{x:Glyph}", with: glyph).replacingOccurrences(of: "{x:ToolTip}", with: tooltip.xmlEscaped())
         let button: AppBarButton = App.context.requireXaml(withString: ui)
         return button
     }
