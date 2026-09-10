@@ -98,11 +98,11 @@ public final class AppContext {
         var result = xaml
         for match in matches {
             result = result.replacingOccurrences(
-                of: "{x:Tr \(match)}", with: tr(String(match), table: table))
+                of: "{x:Tr \(match)}", with: tr(String(match), table: table).xmlEscaped())
         }
 
         if let iconPath {
-            result = result.replacingOccurrences(of: "{x:AppIconPath}", with: iconPath)
+            result = result.replacingOccurrences(of: "{x:AppIconPath}", with: iconPath.xmlEscaped())
         }
 
         return result
