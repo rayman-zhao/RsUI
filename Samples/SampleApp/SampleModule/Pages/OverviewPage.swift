@@ -31,7 +31,7 @@ final class OverviewPage: RsUI.Page {
             makeJumpCard(
                 glyph: "\u{E740}",
                 header: tr("Tab Fullscreen"),
-                description: tr("context.enterTabFullscreen / exitTabFullscreen, Esc to exit."),
+                description: tr("context.enterFullscreen / exitFullscreen, Esc to exit."),
                 path: "/fullscreen"
             ),
             makeJumpCard(
@@ -64,7 +64,7 @@ final class OverviewPage: RsUI.Page {
             makeJumpCard(
                 glyph: "\u{E8B7}",
                 header: tr("Picker"),
-                description: tr("WindowContext.pick, parented to this window."),
+                description: tr("WindowContext.pickFolder / pickSaveFile, parented to this window."),
                 path: "/picker"
             ),
         ]

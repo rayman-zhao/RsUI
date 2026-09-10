@@ -38,7 +38,7 @@ final class FullscreenPage: RsUI.Page {
         let enterCard = SettingsCard(
             headerIconGlyph: "\u{E740}",
             header: tr("Enter tab fullscreen"),
-            description: tr("Calls context.enterTabFullscreen().")
+            description: tr("Calls context.enterFullscreen().")
         )
         enterCard.isClickEnabled = true
         enterCard.click.addHandler { [weak self] _, _ in
@@ -48,7 +48,7 @@ final class FullscreenPage: RsUI.Page {
         let exitCard = SettingsCard(
             headerIconGlyph: "\u{E73F}",
             header: tr("Exit tab fullscreen"),
-            description: tr("Calls context.exitTabFullscreen(). No-op when not in fullscreen.")
+            description: tr("Calls context.exitFullscreen(). No-op when not in fullscreen.")
         )
         exitCard.isClickEnabled = true
         exitCard.click.addHandler { [weak self] _, _ in

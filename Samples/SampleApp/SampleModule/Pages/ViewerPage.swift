@@ -30,7 +30,7 @@ final class ViewerPage: RsUI.Page {
         border.child = centerText
         viewer.centerContent = border
 
-        let loaded = (try? XamlReader.load(xamlUI)) as! Grid
+        let loaded = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as! Grid
         let fsbtn = (try? loaded.findName("FullscreenButton")) as! Button
         fsbtn.click.addHandler { [weak self] _, _ in
             guard let self else { return }
@@ -50,18 +50,19 @@ final class ViewerPage: RsUI.Page {
 
         let rightPane = SettingsPanel()
         for i in 0..<8 {
-            let card = SettingsCard(header: "Group \(i)")
+            let title = String(format: tr("Group %d"), Int32(i))
+            let card = SettingsCard(header: title)
             card.isClickEnabled = true
             card.click.addHandler { _, _ in
                 let l = TextBlock()
                 l.verticalAlignment = .center
-                l.text = "Group \(i)"
+                l.text = title
                 let t = TextBlock()
-                t.text = "Second Group"
+                t.text = tr("Second Group")
                 rightPane.navigateTo(label: l, cards: [t])
             }
-            let card2 = SettingsCard(header: "Group \(i) Not Clickable")
-            rightPane.append(glyph: "\u{F0E3}", title: "Group \(i)", cards: [card, card2])
+            let card2 = SettingsCard(header: String(format: tr("Group %d Not Clickable"), Int32(i)))
+            rightPane.append(glyph: "\u{F0E3}", title: title, cards: [card, card2])
         }
 
         viewer.rightContent = rightPane
@@ -91,7 +92,7 @@ final class ViewerPage: RsUI.Page {
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock x:Name="TopHost" Grid.Column="0" Text="The Viewer Toolbar" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock x:Name="TopHost" Grid.Column="0" Text="{x:Tr The Viewer Toolbar}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <AppBarButton x:Name="FullscreenButton" Icon="Fullscreen" Grid.Column="1" Style="{StaticResource ViewerChromeAppBarButtonStyle}">
             </AppBarButton>
         </Grid>

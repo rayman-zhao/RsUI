@@ -54,7 +54,7 @@ final class AppearancePage: RsUI.Page {
             headerIconGlyph: "\u{F2B7}",
             header: tr("Language"),
             description: tr(
-                "Sets App.context.language; the tr() helper prefixes \"翻译\" when in zh_CN."),
+                "Sets App.context.language; the tr() helper flags untranslated keys when in zh_CN."),
             content: langToggle
         )
 

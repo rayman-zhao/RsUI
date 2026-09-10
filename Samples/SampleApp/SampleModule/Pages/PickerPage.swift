@@ -71,7 +71,7 @@ final class PickerPage: RsUI.Page {
             self?.context.pickSaveFile(
                 suggestedStartLocation: .documentsLibrary,
                 fileTypeChoices: [
-                    "Text files": [".txt"], "Image files": [".jpg", ".jpeg", ".png"],
+                    tr("Text files"): [".txt"], tr("Image files"): [".jpg", ".jpeg", ".png"],
                 ],
                 suggestedFileName: "sample",
                 defaultFileExtension: ".txt",

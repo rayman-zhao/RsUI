@@ -21,7 +21,7 @@ final class NewWindowPage: RsUI.Page {
         featurePageHeader(
             title: tr("AppContext.openNewWindow"),
             description: tr(
-                "App-level new window entry — used when there is no WindowContext at hand. The collapseNavigationPane flag enables a viewer-style window that does not pollute the main window's NavPane preference."
+                "App-level new window entry — used when there is no WindowContext at hand. The forceMinimalMode flag enables a viewer-style window that does not pollute the main window's NavPane preference."
             )
         )
     }

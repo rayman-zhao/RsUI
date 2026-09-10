@@ -1,19 +1,36 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "about" : {
+    ".inplace, .newTab, .newTabBackground, .newWindow." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About"
+            "value" : ".inplace, .newTab, .newTabBackground, .newWindow."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关于"
+            "value" : ".inplace、.newTab、.newTabBackground、.newWindow。"
+          }
+        }
+      }
+    },
+    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动两滑块之间的选区整体平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，PageUp/PageDown 大步进，Home/End 到边界。"
           }
         }
       }
@@ -35,6 +52,278 @@
         }
       }
     },
+    "A RadioButtons-like single-select group built from AppBarToggleButtons laid out by a VariableSizedWrapGrid. Only one item stays checked; tapping the checked item does not uncheck it. Items are identified by their tag string." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A RadioButtons-like single-select group built from AppBarToggleButtons laid out by a VariableSizedWrapGrid. Only one item stays checked; tapping the checked item does not uncheck it. Items are identified by their tag string."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "由 AppBarToggleButton 组成、VariableSizedWrapGrid 自动布局的单选按钮组，行为类似 RadioButtons：同一时刻仅一项选中，点击已选中项不会反选。项目以 tag 字符串标识。"
+          }
+        }
+      }
+    },
+    "All items" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All items"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部项目"
+          }
+        }
+      }
+    },
+    "App-level new window entry — used when there is no WindowContext at hand. The forceMinimalMode flag enables a viewer-style window that does not pollute the main window's NavPane preference." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-level new window entry — used when there is no WindowContext at hand. The forceMinimalMode flag enables a viewer-style window that does not pollute the main window's NavPane preference."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用级新建窗口入口——手头没有 WindowContext 时使用。forceMinimalMode 标志可创建查看器式窗口，且不会污染主窗口的导航窗格偏好。"
+          }
+        }
+      }
+    },
+    "App.context.openNewWindow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.openNewWindow"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.openNewWindow"
+          }
+        }
+      }
+    },
+    "App.context.openNewWindow(forceMinimalMode: true)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.openNewWindow(forceMinimalMode: true)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.openNewWindow(forceMinimalMode: true)"
+          }
+        }
+      }
+    },
+    "App.context.theme and App.context.language are @Observable. Setting them rebuilds the chrome of every open window and persists to preferences." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.theme and App.context.language are @Observable. Setting them rebuilds the chrome of every open window and persists to preferences."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App.context.theme 与 App.context.language 均为 @Observable。修改后会重建所有已打开窗口的框架，并持久化到偏好设置。"
+          }
+        }
+      }
+    },
+    "AppContext.openNewWindow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.openNewWindow"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.openNewWindow"
+          }
+        }
+      }
+    },
+    "AppContext.openNewWindow, with optional collapsed NavPane for viewer-style windows." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.openNewWindow, with optional collapsed NavPane for viewer-style windows."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.openNewWindow，可为查看器式窗口折叠导航窗格。"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后退"
+          }
+        }
+      }
+    },
+    "Basic SettingsCard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basic SettingsCard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础 SettingsCard"
+          }
+        }
+      }
+    },
+    "Basic usage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basic usage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础用法"
+          }
+        }
+      }
+    },
+    "Batch Open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batch Open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批量打开"
+          }
+        }
+      }
+    },
+    "Calls context.enterFullscreen()." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls context.enterFullscreen()."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调用 context.enterFullscreen()。"
+          }
+        }
+      }
+    },
+    "Calls context.exitFullscreen(). No-op when not in fullscreen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls context.exitFullscreen(). No-op when not in fullscreen."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调用 context.exitFullscreen()。非全屏时不产生任何效果。"
+          }
+        }
+      }
+    },
+    "Calls context.openOrFocus(url). If a duplicate tab exists, it gets focused instead of opening another one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls context.openOrFocus(url). If a duplicate tab exists, it gets focused instead of opening another one."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调用 context.openOrFocus(url)。若已存在相同的标签页，将聚焦该页而不是再开一个。"
+          }
+        }
+      }
+    },
     "Check box selection" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -52,87 +341,155 @@
         }
       }
     },
-    "Double-tapped" : {
+    "Child rows live inside the expander's animated panel." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Double-tapped"
+            "value" : "Child rows live inside the expander's animated panel."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双击"
+            "value" : "子行位于 expander 的动画面板中。"
           }
         }
       }
     },
-    "Event items" : {
+    "Click anywhere on this card to open the picker. Selected path appears below." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Event items"
+            "value" : "Click anywhere on this card to open the picker. Selected path appears below."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "事件携带项"
+            "value" : "点击卡片任意位置即可打开选择器，选中的路径会显示在下方。"
           }
         }
       }
     },
-    "Grid View" : {
+    "Click to reveal child SettingsCard items with the WCTK animation." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Grid View"
+            "value" : "Click to reveal child SettingsCard items with the WCTK animation."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "网格视图"
+            "value" : "点击可展开子 SettingsCard 项，并带有 WCTK 动画。"
           }
         }
       }
     },
-    "Selected" : {
+    "Clickable SettingsCard" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selected"
+            "value" : "Clickable SettingsCard"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已选择"
+            "value" : "可点击的 SettingsCard"
           }
         }
       }
     },
-    "Collapse" : {
+    "CloseOthers" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Collapse"
+            "value" : "Close Others"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "折叠"
+            "value" : "关闭其他标签页"
+          }
+        }
+      }
+    },
+    "context.enterFullscreen / exitFullscreen, Esc to exit." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.enterFullscreen / exitFullscreen, Esc to exit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.enterFullscreen / exitFullscreen，按 Esc 退出。"
+          }
+        }
+      }
+    },
+    "context.open([URL]) opens many tabs in one render instead of looping over open(_:mode:)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open([URL]) opens many tabs in one render instead of looping over open(_:mode:)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open([URL]) 一次渲染即可打开多个标签页，无需循环调用 open(_:mode:)。"
+          }
+        }
+      }
+    },
+    "context.open(routes) — opens every route as a tab and selects the last one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open(routes) — opens every route as a tab and selects the last one."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open(routes)——把每条路由各开为一个标签页，并选中最后一个。"
+          }
+        }
+      }
+    },
+    "context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "context.open(routes, mode: .newTabBackground)——打开同样的标签页，但不离开当前页面。"
           }
         }
       }
@@ -154,70 +511,172 @@
         }
       }
     },
-    "Expand" : {
+    "Day view" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Expand"
+            "value" : "Day view"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "展开"
+            "value" : "日视图"
           }
         }
       }
     },
-    "SampleApp" : {
+    "Double-tapped" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SampleApp"
+            "value" : "Double-tapped"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "示例程序"
+            "value" : "双击"
           }
         }
       }
     },
-    "Overview" : {
+    "Each card opens this same page through context.open(_:mode:) using a different mode." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overview"
+            "value" : "Each card opens this same page through context.open(_:mode:) using a different mode."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "总览"
+            "value" : "每张卡片都通过 context.open(_:mode:) 以不同的模式打开同一个页面。"
           }
         }
       }
     },
-    "Back" : {
+    "Enable group" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back"
+            "value" : "Enable group"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "后退"
+            "value" : "启用按钮组"
+          }
+        }
+      }
+    },
+    "Enter tab fullscreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter tab fullscreen"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进入标签页全屏"
+          }
+        }
+      }
+    },
+    "Event items" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event items"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "事件携带项"
+          }
+        }
+      }
+    },
+    "Exit tab fullscreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit tab fullscreen"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出标签页全屏"
+          }
+        }
+      }
+    },
+    "Focuses an existing tab if its URL matches, otherwise opens a new one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses an existing tab if its URL matches, otherwise opens a new one."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "若已存在 URL 匹配的标签页则聚焦它，否则打开新标签页。"
+          }
+        }
+      }
+    },
+    "Folder Picker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder Picker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹选择器"
+          }
+        }
+      }
+    },
+    "Footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Footer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页脚示例"
           }
         }
       }
@@ -256,53 +715,172 @@
         }
       }
     },
-    "Appearance" : {
+    "Fullscreen status" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appearance"
+            "value" : "Fullscreen status"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "外观"
+            "value" : "全屏状态"
           }
         }
       }
     },
-    "Folder Picker" : {
+    "Grid View" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pick Folder"
+            "value" : "Grid View"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择文件夹"
+            "value" : "网格视图"
           }
         }
       }
     },
-    "delete_folder" : {
+    "Group %d" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove Folder"
+            "value" : "Group %d"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "移除文件夹"
+            "value" : "分组 %d"
+          }
+        }
+      }
+    },
+    "Group %d Not Clickable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group %d Not Clickable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分组 %d（不可点击）"
+          }
+        }
+      }
+    },
+    "Header icon + description + right-side control. The minimal Fluent-style settings row." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Header icon + description + right-side control. The minimal Fluent-style settings row."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题图标 + 描述 + 右侧控件，Fluent 风格的最简设置行。"
+          }
+        }
+      }
+    },
+    "Hides chrome and reparents the selected tab content to a root overlay. Press Esc to exit." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hides chrome and reparents the selected tab content to a root overlay. Press Esc to exit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏窗口框架，把当前标签页的内容重新挂载到根级覆盖层。按 Esc 退出。"
+          }
+        }
+      }
+    },
+    "Icon-less items with spacing 8 inside a width-constrained group, so the wrap grid flows them onto new rows." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icon-less items with spacing 8 inside a width-constrained group, so the wrap grid flows them onto new rows."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无图标项目、间距 8，组宽受限，wrap grid 会自动把项目排到新行。"
+          }
+        }
+      }
+    },
+    "Image files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image files"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片文件"
+          }
+        }
+      }
+    },
+    "Item %02d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item %02d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目 %02d"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
           }
         }
       }
@@ -324,19 +902,104 @@
         }
       }
     },
-    "loading" : {
+    "Live toggle of App.context.theme and App.context.language." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading..."
+            "value" : "Live toggle of App.context.theme and App.context.language."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "加载中..."
+            "value" : "实时切换 App.context.theme 与 App.context.language。"
+          }
+        }
+      }
+    },
+    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动两滑块之间可在保持窗宽的同时平移窗位。"
+          }
+        }
+      }
+    },
+    "Month view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month view"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月视图"
+          }
+        }
+      }
+    },
+    "Navigation Modes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation Modes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航模式"
+          }
+        }
+      }
+    },
+    "NavigationOpenMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NavigationOpenMode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NavigationOpenMode"
+          }
+        }
+      }
+    },
+    "New Window" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建窗口"
           }
         }
       }
@@ -358,143 +1021,415 @@
         }
       }
     },
+    "Nested item A" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nested item A"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嵌套项 A"
+          }
+        }
+      }
+    },
+    "Nested item B" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nested item B"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嵌套项 B"
+          }
+        }
+      }
+    },
+    "No folder selected yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No folder selected yet."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未选择文件夹。"
+          }
+        }
+      }
+    },
+    "No save file selected yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No save file selected yet."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未选择保存文件。"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关"
+          }
+        }
+      }
+    },
+    "On" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开"
+          }
+        }
+      }
+    },
+    "Open all in background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open all in background"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在后台打开全部"
+          }
+        }
+      }
+    },
+    "Open all in foreground" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open all in foreground"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在前台打开全部"
+          }
+        }
+      }
+    },
+    "Open or Focus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open or Focus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开或聚焦"
+          }
+        }
+      }
+    },
+    "openOrFocus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "openOrFocus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "openOrFocus"
+          }
+        }
+      }
+    },
+    "openOrFocus this page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "openOrFocus this page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "openOrFocus 本页面"
+          }
+        }
+      }
+    },
+    "Opens a new tab and switches to it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a new tab and switches to it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开新标签页并切换过去。"
+          }
+        }
+      }
+    },
+    "Opens a new tab without stealing focus (like Ctrl+Click)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a new tab without stealing focus (like Ctrl+Click)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开新标签页但不抢占焦点（类似 Ctrl+点击）。"
+          }
+        }
+      }
+    },
+    "Opens this page in a fresh MainWindow." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens this page in a fresh MainWindow."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在全新的 MainWindow 中打开此页面。"
+          }
+        }
+      }
+    },
+    "Opens the URL in a new tab, or focuses the existing tab matching the URL. Open this page a few times via Navigation Modes → .newTab first to see the dedup effect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the URL in a new tab, or focuses the existing tab matching the URL. Open this page a few times via Navigation Modes → .newTab first to see the dedup effect."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在新的标签页中打开 URL；若已有 URL 匹配的标签页，则改为聚焦它。可先通过“导航模式 → .newTab”多次打开本页，观察去重效果。"
+          }
+        }
+      }
+    },
+    "Overview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overview"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "总览"
+          }
+        }
+      }
+    },
+    "Pick a folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a folder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择文件夹"
+          }
+        }
+      }
+    },
+    "Pick a folder right from the nav" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a folder right from the nav"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接在导航栏中选取文件夹"
+          }
+        }
+      }
+    },
+    "Pick a save file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a save file"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择保存文件"
+          }
+        }
+      }
+    },
+    "Picker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择器"
+          }
+        }
+      }
+    },
+    "Range Slider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Range Slider"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "范围滑块"
+          }
+        }
+      }
+    },
+    "Replaces the current tab's page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replaces the current tab's page."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换当前标签页的页面。"
+          }
+        }
+      }
+    },
+    "SampleApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SampleApp"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "示例程序"
+          }
+        }
+      }
+    },
+    "SampleApp demo module. Each item in the navigation pane focuses on one public RsUI surface. Tap a card below to jump straight to it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SampleApp demo module. Each item in the navigation pane focuses on one public RsUI surface. Tap a card below to jump straight to it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SampleApp 演示模块。导航栏中的每个条目聚焦一项 RsUI 公开能力，点击下方卡片可直接跳转。"
+          }
+        }
+      }
+    },
     "Samples" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Samples"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导航示例"
-          }
-        }
-      }
-    },
-    "Footer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Footer Samples"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "页脚导航示例"
-          }
-        }
-      }
-    },
-    "sample2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 2"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例2"
-          }
-        }
-      }
-    },
-    "sample3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 3"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例3"
-          }
-        }
-      }
-    },
-    "sample4" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 4"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例4"
-          }
-        }
-      }
-    },
-    "sample5" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 5"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例5"
-          }
-        }
-      }
-    },
-    "sample5Detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 5 Detail"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例5详情"
-          }
-        }
-      }
-    },
-    "sample5Sub" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sample 5 Sub"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例5子项"
-          }
-        }
-      }
-    },
-    "samples" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -528,240 +1463,172 @@
         }
       }
     },
-    "settings" : {
+    "Second Group" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings"
+            "value" : "Second Group"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设置"
+            "value" : "第二个分组"
           }
         }
       }
     },
-    "CloseOthers" : {
+    "Select Month" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close Others"
+            "value" : "Select Month"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关闭其它标签页"
+            "value" : "选中“月”"
           }
         }
       }
     },
-    "TabDragHint" : {
+    "Selected" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag onto another window to merge, or release outside any window to detach it as a new window"
+            "value" : "Selected"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拖到其他窗口可合并，拖到窗口外释放可分离为新窗口"
+            "value" : "已选择"
           }
         }
       }
     },
-    "On" : {
+    "Selected tag:" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On"
+            "value" : "Selected tag:"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开"
+            "value" : "选中 tag："
           }
         }
       }
     },
-    "Off" : {
+    "selectionChanged reports the tag of the newly checked item. The button sets selectedTag programmatically — same commit path, same event." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Off"
+            "value" : "selectionChanged reports the tag of the newly checked item. The button sets selectedTag programmatically — same commit path, same event."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关"
+            "value" : "selectionChanged 回报新选中项的 tag。按钮演示程序化设置 selectedTag——与用户点击走同一条 commit 路径、触发同一事件。"
           }
         }
       }
     },
-    "Range Slider" : {
+    "Set isClickEnabled = true to turn the whole row into a button. Logs on click." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Range Slider"
+            "value" : "Set isClickEnabled = true to turn the whole row into a button. Logs on click."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "范围滑块"
+            "value" : "设置 isClickEnabled = true 可把整行变成按钮，点击时会记录日志。"
           }
         }
       }
     },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or use the keyboard (←/→ adjust, ↑/↓ switch the active thumb, Home/End jump to bounds)." : {
+    "Sets App.context.language; the tr() helper flags untranslated keys when in zh_CN." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or use the keyboard (←/→ adjust, ↑/↓ switch the active thumb, Home/End jump to bounds)."
+            "value" : "Sets App.context.language; the tr() helper flags untranslated keys when in zh_CN."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或使用键盘（←/→ 调整，↑/↓ 切换当前滑块，Home/End 跳到边界）。"
+            "value" : "设置 App.context.language；zh_CN 下 tr() 助手会标记未翻译的键。"
           }
         }
       }
     },
-    "Basic usage" : {
+    "Sets App.context.theme." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Basic usage"
+            "value" : "Sets App.context.theme."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "基础用法"
+            "value" : "设置 App.context.theme。"
           }
         }
       }
     },
-    "The readout shows the current lower – upper values." : {
+    "Settings Controls Demo" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The readout shows the current lower – upper values."
+            "value" : "Settings Controls Demo"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "右侧文本实时显示当前下限 – 上限。"
+            "value" : "设置控件演示"
           }
         }
       }
     },
-    "Window / Level (CT)" : {
+    "SettingsExpander" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Window / Level (CT)"
+            "value" : "SettingsExpander"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "窗宽 / 窗位（CT）"
-          }
-        }
-      }
-    },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射。"
-          }
-        }
-      }
-    },
-    "Window Width (WW)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Window Width (WW)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "窗宽 (WW)"
-          }
-        }
-      }
-    },
-    "Window Level (WL)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Window Level (WL)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "窗位 (WL)"
-          }
-        }
-      }
-    },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag the highlighted range to slide the whole window (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the window." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag the highlighted range to slide the whole window (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the window."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动高亮选区整体平移窗口（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Shift+←/→ 平移窗口。"
+            "value" : "SettingsExpander"
           }
         }
       }
@@ -783,160 +1650,144 @@
         }
       }
     },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag the highlighted range to pan the level while keeping the width." : {
+    "Starts with NavPane collapsed and skips writeback on close." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag the highlighted range to pan the level while keeping the width."
+            "value" : "Starts with NavPane collapsed and skips writeback on close."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动高亮选区可在保持窗宽的同时平移窗位。"
+            "value" : "启动时折叠导航窗格，关闭时跳过偏好回写。"
           }
         }
       }
     },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Shift while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the range." : {
+    "System folder picker parented to the owning MainWindow." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Shift while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Shift+←/→ slides the range."
+            "value" : "System folder picker parented to the owning MainWindow."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或按住 Shift 拖动任意滑块使两者同步平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Shift+←/→ 平移选区。"
+            "value" : "系统文件夹选择器，以所属的 MainWindow 为属主窗口。"
           }
         }
       }
     },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Shift while dragging a thumb to pan the level keeping the width." : {
+    "Tab Fullscreen" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Shift while dragging a thumb to pan the level keeping the width."
+            "value" : "Tab Fullscreen"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；按住 Shift 拖动滑块可在保持窗宽的同时平移窗位。"
+            "value" : "标签页全屏"
           }
         }
       }
     },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Ctrl (or Shift) while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range." : {
+    "Text files" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or hold Ctrl (or Shift) while dragging a thumb to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range."
+            "value" : "Text files"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或按住 Ctrl（或 Shift）拖动任意滑块使两者同步平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，Ctrl/Shift+←/→ 平移选区。"
+            "value" : "文本文件"
           }
         }
       }
     },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Ctrl (or Shift) while dragging a thumb to pan the level keeping the width." : {
+    "The Viewer Toolbar" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Hold Ctrl (or Shift) while dragging a thumb to pan the level keeping the width."
+            "value" : "The Viewer Toolbar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；按住 Ctrl（或 Shift）拖动滑块可在保持窗宽的同时平移窗位。"
+            "value" : "查看器工具栏"
           }
         }
       }
     },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, drag between the thumbs to slide both together (width kept), or hold Ctrl/Shift while dragging. Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range." : {
+    "The readout shows the current lower – upper values." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, drag between the thumbs to slide both together (width kept), or hold Ctrl/Shift while dragging. Tab to a thumb for keyboard: ←/→ adjust, Ctrl/Shift+←/→ slides the range."
+            "value" : "The readout shows the current lower – upper values."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，拖动两滑块之间的选区可整体平移（保持窗宽），或按住 Ctrl/Shift 拖动滑块。Tab 聚焦滑块后可用键盘：←/→ 调整，Ctrl/Shift+←/→ 平移选区。"
+            "value" : "右侧文本实时显示当前下限 – 上限。"
           }
         }
       }
     },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs (or hold Ctrl/Shift) to pan the level keeping the width." : {
+    "Theme" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs (or hold Ctrl/Shift) to pan the level keeping the width."
+            "value" : "Theme"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动两滑块之间（或按住 Ctrl/Shift 拖动）可在保持窗宽的同时平移窗位。"
+            "value" : "主题"
           }
         }
       }
     },
-    "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds." : {
+    "Theme & Language" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds."
+            "value" : "Theme & Language"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动两滑块之间的选区整体平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，PageUp/PageDown 大步进，Home/End 到边界。"
-          }
-        }
-      }
-    },
-    "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "医学影像把选中的 HU 区间映射为灰阶：窗宽 = 上限 − 下限，窗位 = (上限 + 下限) / 2。色带实时预览该映射；拖动两滑块之间可在保持窗宽的同时平移窗位。"
+            "value" : "主题与语言"
           }
         }
       }
     },
     "Toggle Buttons" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -952,23 +1803,59 @@
         }
       }
     },
-    "A RadioButtons-like single-select group built from AppBarToggleButtons laid out by a VariableSizedWrapGrid. Only one item stays checked; tapping the checked item does not uncheck it. Items are identified by their tag string." : {
+    "Updated when window context changed." : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A RadioButtons-like single-select group built from AppBarToggleButtons laid out by a VariableSizedWrapGrid. Only one item stays checked; tapping the checked item does not uncheck it. Items are identified by their tag string."
+            "value" : "Updated when window context changed."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "由 AppBarToggleButton 组成、VariableSizedWrapGrid 自动布局的单选按钮组，行为类似 RadioButtons：同一时刻仅一项选中，点击已选中项不会反选。项目以 tag 字符串标识。"
+            "value" : "窗口上下文变化时更新。"
+          }
+        }
+      }
+    },
+    "Use itemsHeader / itemsFooter for static content around the list." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use itemsHeader / itemsFooter for static content around the list."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用 itemsHeader / itemsFooter 在列表前后放置静态内容。"
+          }
+        }
+      }
+    },
+    "Uses the persisted NavPane state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uses the persisted NavPane state."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沿用已持久化的导航窗格状态。"
           }
         }
       }
     },
     "View mode" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -984,71 +1871,127 @@
         }
       }
     },
-    "selectionChanged reports the tag of the newly checked item. The button sets selectedTag programmatically — same commit path, same event." : {
+    "Viewer" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "selectionChanged reports the tag of the newly checked item. The button sets selectedTag programmatically — same commit path, same event."
+            "value" : "Viewer"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "selectionChanged 回报新选中项的 tag。按钮演示程序化设置 selectedTag——与用户点击走同一条 commit 路径、触发同一事件。"
+            "value" : "查看器"
           }
         }
       }
     },
-    "Day" : {
+    "Viewer bottom pane" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Day"
+            "value" : "Viewer bottom pane"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "日"
+            "value" : "查看器底部窗格"
           }
         }
       }
     },
-    "Day view" : {
+    "Viewer center content" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Day view"
+            "value" : "Viewer center content"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "日视图"
+            "value" : "查看器中央内容"
           }
         }
       }
     },
-    "Week" : {
+    "Viewer left pane" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Week"
+            "value" : "Viewer left pane"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "周"
+            "value" : "查看器左侧窗格"
+          }
+        }
+      }
+    },
+    "ViewerChromeMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle toolbar mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换工具栏模式"
+          }
+        }
+      }
+    },
+    "ViewerLeftPane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle left pane"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换左侧窗格"
+          }
+        }
+      }
+    },
+    "ViewerRightPane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle right pane"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换右侧窗格"
           }
         }
       }
     },
     "Week view" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1064,135 +2007,93 @@
         }
       }
     },
-    "Month" : {
+    "Window / Level (CT)" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Month"
+            "value" : "Window / Level (CT)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "月"
+            "value" : "窗宽 / 窗位（CT）"
           }
         }
       }
     },
-    "Month view" : {
+    "Window Level (WL)" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Month view"
+            "value" : "Window Level (WL)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "月视图"
+            "value" : "窗位 (WL)"
           }
         }
       }
     },
-    "Year" : {
+    "Window Width (WW)" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Year"
+            "value" : "Window Width (WW)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "年"
+            "value" : "窗宽 (WW)"
           }
         }
       }
     },
-    "Year view" : {
+    "WindowContext.pickFolder" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Year view"
+            "value" : "WindowContext.pickFolder"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "年视图"
+            "value" : "WindowContext.pickFolder"
           }
         }
       }
     },
-    "All" : {
+    "WindowContext.pickFolder / pickSaveFile, parented to this window." : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All"
+            "value" : "WindowContext.pickFolder / pickSaveFile, parented to this window."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全部"
-          }
-        }
-      }
-    },
-    "All items" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All items"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全部项目"
-          }
-        }
-      }
-    },
-    "Select Month" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select Month"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选中“月”"
-          }
-        }
-      }
-    },
-    "Selected tag:" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected tag:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选中 tag："
+            "value" : "WindowContext.pickFolder / pickSaveFile，选择器以当前窗口为属主。"
           }
         }
       }
     },
     "Wrapping and spacing" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1208,34 +2109,19 @@
         }
       }
     },
-    "Icon-less items with spacing 8 inside a width-constrained group, so the wrap grid flows them onto new rows." : {
+    "Year view" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Icon-less items with spacing 8 inside a width-constrained group, so the wrap grid flows them onto new rows."
+            "value" : "Year view"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无图标项目、间距 8，组宽受限，wrap grid 会自动把项目排到新行。"
-          }
-        }
-      }
-    },
-    "Enable group" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable group"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启用按钮组"
+            "value" : "年视图"
           }
         }
       }

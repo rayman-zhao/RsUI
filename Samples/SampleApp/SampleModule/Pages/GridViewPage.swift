@@ -36,7 +36,7 @@ final class GridViewPage: RsUI.Page {
         let gridView = RsUI.GridView()
         gridView.selectionMode = .extended
         gridView.height = 360
-        gridView.setItems((1...12).map { String(format: "Item %02d", Int32($0)) })
+        gridView.setItems((1...12).map { String(format: tr("Item %02d"), Int32($0)) })
 
         func updateSelectionText(_ gridView: RsUI.GridView) {
             selectionText.text = tr("Selected") + ": " + String(gridView.selectedCount)
