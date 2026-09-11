@@ -121,7 +121,6 @@ Sources/RsUI/
     SettingsCard.swift                  — Fluent-style settings row
     SettingsExpander.swift              — Expander for nested rows
     SettingsGroup.swift                 — Group container with title
-    SettingsBrushes.swift               — Theme-aware brush factories (also contains a `UWP.Color(a:0x18,...)` call for a card top-stop, not for nav buttons)
     ChevronIcon.swift                   — Chevron glyph helper
     RangeSlider.swift                   — Dual-thumb range slider replicating the native Slider look (real `Thumb` controls + official `Slider*` theme resources; control-level visual states driven manually via `goToVisualState` — `goToElementStateCore` always returns false on XamlReader loose XAML); dragging between the thumbs slides both thumbs together width-kept via a transparent Thumb hit-surface (`RangeSliderState.shiftRaw`/`settleToStep`); keyboard is per-thumb only (←/→, PageUp/PageDown, Home/End); `isToolTipEnabled` gates the value tooltip; `valueChanged` event
   Support/

@@ -1,4 +1,3 @@
-import UWP
 import WinUI
 import WindowsFoundation
 
@@ -42,7 +41,6 @@ public class SettingsExpander: StackPanel {
         return t
     }()
 
-    private var interactionVisualTarget: WinUI.Border?
     private var items: [SettingsCard] = []
 
     // MARK: - Init
@@ -118,8 +116,6 @@ public class SettingsExpander: StackPanel {
     // MARK: - Setup
 
     private func setup(headerCard: SettingsCard) {
-        let theme = App.context.theme
-
         headerCard.isClickEnabled = true
         headerCard.suppressCardStyling()
         headerCard.isActionIconVisible = true
@@ -129,7 +125,7 @@ public class SettingsExpander: StackPanel {
         }
 
         expandedHost.renderTransform = expandedTransform
-        buildExpandedContent(theme: theme)
+        buildExpandedContent()
 
         let cardStack = WinUI.StackPanel()
         cardStack.orientation = .vertical
@@ -137,20 +133,27 @@ public class SettingsExpander: StackPanel {
         cardStack.children.append(headerCard)
         cardStack.children.append(expandedHost)
 
-        let outerCard = WinUI.Border()
+        let outerCard = WinUI.Grid()
         outerCard.cornerRadius = WinUI.CornerRadius(
             topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        outerCard.background = cardBackgroundBrush(theme: theme)
-        outerCard.borderBrush = cardBorderBrush(theme: theme)
+        outerCard.background = themeBrush("CardBackgroundFillColorDefaultBrush")
+        outerCard.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
-        outerCard.child = cardStack
-        interactionVisualTarget = outerCard
+        let backgroundTransition = WinUI.BrushTransition()
+        backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
+        outerCard.backgroundTransition = backgroundTransition
+        outerCard.children.append(cardStack)
         headerCard.setInteractionVisualTarget(outerCard)
 
         self.children.append(outerCard)
     }
 
-    private func buildExpandedContent(theme: AppTheme) {
+    /// Fetches a system Fluent token brush, resolved against the current application theme.
+    private func themeBrush(_ key: String) -> WinUI.Brush? {
+        Application.current.resources?.lookup(key) as? WinUI.Brush
+    }
+
+    private func buildExpandedContent() {
         // Clear existing children (keep transform)
         while expandedHost.children.count > 0 {
             expandedHost.children.removeAt(0)
@@ -167,8 +170,8 @@ public class SettingsExpander: StackPanel {
             item.suppressCardStyling()
             item.applyExpanderItemPadding()
             // Top border only (0,1,0,0) to match WCTK item separator style
-            item.cardBorder.borderThickness = WinUI.Thickness(left: 0, top: 1, right: 0, bottom: 0)
-            item.cardBorder.borderBrush = dividerBrush(theme: theme)
+            item.cardRoot.borderThickness = WinUI.Thickness(left: 0, top: 1, right: 0, bottom: 0)
+            item.cardRoot.borderBrush = themeBrush("DividerStrokeColorDefaultBrush")
             expandedHost.children.append(item)
         }
 
@@ -179,7 +182,7 @@ public class SettingsExpander: StackPanel {
     }
 
     private func rebuildItems() {
-        buildExpandedContent(theme: App.context.theme)
+        buildExpandedContent()
     }
 
     // MARK: - Animation

@@ -1,5 +1,3 @@
-import UWP
-import WinAppSDK
 import WinUI
 import WindowsFoundation
 
@@ -14,42 +12,143 @@ public enum SettingsCardContentAlignment {
 }
 
 /// A card control for consistent settings UI, matching the Windows 11 design language.
+/// Mirrors the Community Toolkit SettingsCard: a ButtonBase whose CommonStates
+/// (Normal/PointerOver/Pressed/Disabled) are driven by pointer and keyboard input,
+/// with a smooth background transition between states.
 /// Can be used standalone or hosted inside a SettingsExpander.
 public class SettingsCard: ButtonBase {
 
     // MARK: - Properties
 
-    public var header: Any?
-    public var description: Any?
-    public var headerIcon: IconElement?
+    public var header: Any? {
+        didSet { rebuildLayout() }
+    }
+
+    public var description: Any? {
+        didSet { rebuildLayout() }
+    }
+
+    public var headerIcon: IconElement? {
+        didSet { rebuildLayout() }
+    }
+
     public var actionIcon: FontIcon? = {
         let icon = WinUI.FontIcon()
         icon.glyph = "\u{E974}"  // ChevronRight
+        icon.mirroredWhenRightToLeft = true
         return icon
     }()
-    public var actionIconToolTip: String?
+    {
+        didSet { rebuildLayout() }
+    }
+
+    public var actionIconToolTip: String? {
+        didSet { rebuildLayout() }
+    }
+
     public var isClickEnabled: Bool = false {
         didSet { onIsClickEnabledChanged() }
     }
-    public var contentAlignment: SettingsCardContentAlignment = .right
+
+    public var contentAlignment: SettingsCardContentAlignment = .right {
+        didSet { rebuildLayout() }
+    }
+
     public var isActionIconVisible: Bool = true {
         didSet { updateActionIconVisibility() }
     }
 
     // MARK: - Internal layout parts
 
-    let cardBorder = WinUI.Border()
-    private var rootGrid: WinUI.Grid?
+    /// Root visual of the card. A Grid carries the same background/border/cornerRadius chrome a
+    /// Border would, but can also animate background changes between visual states, matching the
+    /// toolkit card's PART_RootGrid.
+    let cardRoot = WinUI.Grid()
+    private var contentElement: FrameworkElement?
+    private var descriptionElement: FrameworkElement?
+    private var headerIconHolder: Viewbox?
     private var actionIconHolder: Viewbox?
-    private weak var interactionVisualTarget: WinUI.Border?
+    private weak var interactionVisualTarget: WinUI.Grid?
+    private var isLayoutBatchActive = false
 
-    // Event cleanups for proper handler removal
-    private var pointerEnteredToken: EventCleanup?
-    private var pointerExitedToken: EventCleanup?
-    private var pointerPressedToken: EventCleanup?
-    private var pointerReleasedToken: EventCleanup?
-    private var pointerCaptureLostToken: EventCleanup?
-    private var pointerCanceledToken: EventCleanup?
+    // MARK: - Visual state
+
+    private enum VisualState {
+        case normal
+        case pointerOver
+        case pressed
+        case disabled
+    }
+
+    private var lastAppliedVisualState: VisualState?
+
+    /// Computed from the framework-maintained ButtonBase inputs (IsPressed/IsPointerOver), so the
+    /// card follows the exact native button semantics: release-while-over stays hovered, dragging
+    /// off during a press clears the pressed fill, keyboard activation presses without hover.
+    private var visualState: VisualState {
+        if !isEnabled { return .disabled }
+        guard isClickEnabled else { return .normal }
+        if isPressed { return .pressed }
+        if isPointerOver { return .pointerOver }
+        return .normal
+    }
+
+    private func applyVisualState(force: Bool = false) {
+        let state = visualState
+        if !force && state == lastAppliedVisualState { return }
+        lastAppliedVisualState = state
+
+        let visualTarget = interactionVisualTarget ?? cardRoot
+        switch state {
+        case .normal:
+            visualTarget.background = themeBrush("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
+            self.foreground = themeBrush("TextFillColorPrimaryBrush")
+        case .pointerOver:
+            visualTarget.background = themeBrush("ControlFillColorSecondaryBrush")
+            visualTarget.borderBrush = themeBrush("ControlElevationBorderBrush")
+            self.foreground = themeBrush("TextFillColorPrimaryBrush")
+        case .pressed:
+            visualTarget.background = themeBrush("ControlFillColorTertiaryBrush")
+            visualTarget.borderBrush = themeBrush("ControlStrokeColorDefaultBrush")
+            self.foreground = themeBrush("TextFillColorSecondaryBrush")
+        case .disabled:
+            // Toolkit parity: disabling dims the foreground only, the card fill is unchanged.
+            visualTarget.background = themeBrush("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
+            self.foreground = themeBrush("TextFillColorDisabledBrush")
+        }
+
+        let disabled = !isEnabled
+        if let descriptionText = descriptionElement as? WinUI.TextBlock {
+            descriptionText.foreground = themeBrush(
+                disabled ? "TextFillColorDisabledBrush" : "TextFillColorSecondaryBrush")
+        }
+        // Bitmap icons cannot be dimmed through the foreground; reduce opacity instead.
+        if headerIcon is ImageIcon {
+            headerIconHolder?.opacity = disabled ? 0.4 : 1
+        }
+    }
+
+    /// Fetches a system Fluent token brush, resolved against the current application theme.
+    private func themeBrush(_ key: String) -> WinUI.Brush? {
+        Application.current.resources?.lookup(key) as? WinUI.Brush
+    }
+
+    private func registerStateCallbacks() {
+        // IsPressed/IsPointerOver/IsEnabled changes are the exact inputs of the native
+        // CommonStates, kept current by ButtonBase itself for pointer and keyboard input.
+        // The change-callback tokens are intentionally kept for the control's lifetime.
+        _ = try? registerPropertyChangedCallback(Self.isPressedProperty) { [weak self] _, _ in
+            self?.applyVisualState()
+        }
+        _ = try? registerPropertyChangedCallback(Self.isPointerOverProperty) { [weak self] _, _ in
+            self?.applyVisualState()
+        }
+        _ = try? registerPropertyChangedCallback(Self.isEnabledProperty) { [weak self] _, _ in
+            self?.applyVisualState()
+        }
+    }
 
     // MARK: - Init
 
@@ -61,20 +160,28 @@ public class SettingsCard: ButtonBase {
         self.horizontalContentAlignment = .stretch
         self.verticalContentAlignment = .stretch
 
-        cardBorder.minWidth = 148
-        cardBorder.minHeight = 68
-        cardBorder.padding = WinUI.Thickness(left: 16, top: 16, right: 16, bottom: 16)
-        cardBorder.horizontalAlignment = .stretch
-        cardBorder.verticalAlignment = .center
-        cardBorder.backgroundSizing = .innerBorderEdge
-        cardBorder.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
-        cardBorder.cornerRadius = WinUI.CornerRadius(
+        cardRoot.minWidth = 148
+        cardRoot.minHeight = 68
+        cardRoot.padding = WinUI.Thickness(left: 16, top: 16, right: 16, bottom: 16)
+        cardRoot.horizontalAlignment = .stretch
+        cardRoot.verticalAlignment = .center
+        cardRoot.backgroundSizing = .innerBorderEdge
+        cardRoot.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
+        cardRoot.cornerRadius = WinUI.CornerRadius(
             topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        cardBorder.background = cardBackgroundBrush()
-        cardBorder.borderBrush = cardBorderBrush()
-        self.foreground = cardForegroundBrush()
+        let backgroundTransition = WinUI.BrushTransition()
+        backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
+        cardRoot.backgroundTransition = backgroundTransition
 
-        self.content = cardBorder
+        // Like the toolkit style: the card only joins tab navigation when it acts as a button.
+        self.isTabStop = false
+        self.useSystemFocusVisuals = true
+        self.focusVisualMargin = WinUI.Thickness(left: -3, top: -3, right: -3, bottom: -3)
+
+        self.content = cardRoot
+
+        registerStateCallbacks()
+        applyVisualState()
     }
 
     /// Header + description (text) + right-side content control, with a glyph icon.
@@ -86,21 +193,18 @@ public class SettingsCard: ButtonBase {
         actionIcon: FontIcon? = nil
     ) {
         self.init()
-        self.header = header
-        self.description = description
-        self.actionIcon = actionIcon
+        batchLayoutChanges {
+            contentElement = content
+            self.header = header
+            self.description = description
+            if let actionIcon {
+                self.actionIcon = actionIcon
+            }
 
-        let icon = WinUI.FontIcon()
-        icon.glyph = headerIconGlyph
-        self.headerIcon = icon
-
-        cardBorder.child = buildLayout(
-            headerIcon: icon,
-            header: header,
-            description: makeDescriptionView(description),
-            content: content,
-            actionIcon: actionIcon
-        )
+            let icon = WinUI.FontIcon()
+            icon.glyph = headerIconGlyph
+            headerIcon = icon
+        }
     }
 
     /// Header + description (text) + right-side text content, with an image icon.
@@ -112,29 +216,25 @@ public class SettingsCard: ButtonBase {
         actionIcon: FontIcon? = nil
     ) {
         self.init()
-        self.header = header
-        self.description = description
-        self.actionIcon = actionIcon
+        batchLayoutChanges {
+            self.header = header
+            self.description = description
+            if let actionIcon {
+                self.actionIcon = actionIcon
+            }
 
-        let bitmap = BitmapImage()
-        bitmap.uriSource = Uri(headerIconPath)
-        let icon = ImageIcon()
-        icon.source = bitmap
-        self.headerIcon = icon
+            let bitmap = BitmapImage()
+            bitmap.uriSource = Uri(headerIconPath)
+            let icon = ImageIcon()
+            icon.source = bitmap
+            headerIcon = icon
 
-        let contentView: FrameworkElement? = contentText.map {
-            let tb = TextBlock()
-            tb.text = $0
-            return tb
+            if let contentText {
+                let tb = TextBlock()
+                tb.text = contentText
+                contentElement = tb
+            }
         }
-
-        cardBorder.child = buildLayout(
-            headerIcon: icon,
-            header: header,
-            description: makeDescriptionView(description),
-            content: contentView,
-            actionIcon: actionIcon
-        )
     }
 
     /// Header only, with a right-side content control (no icon).
@@ -145,21 +245,21 @@ public class SettingsCard: ButtonBase {
         actionIcon: FontIcon? = nil
     ) {
         self.init()
-        self.header = header
-        self.description = description
-        self.actionIcon = actionIcon
-
-        cardBorder.child = buildLayout(
-            header: header,
-            description: description,
-            content: content,
-            actionIcon: actionIcon
-        )
+        batchLayoutChanges {
+            contentElement = content
+            self.header = header
+            self.description = description
+            if let actionIcon {
+                self.actionIcon = actionIcon
+            }
+        }
     }
 
     public convenience init(content: FrameworkElement) {
         self.init()
-        cardBorder.child = content
+        batchLayoutChanges {
+            contentElement = content
+        }
     }
 
     /// Positional: glyph, header, description, content
@@ -181,10 +281,10 @@ public class SettingsCard: ButtonBase {
 
     /// Suppresses the card border/background for use as an inner item inside SettingsExpander.
     func suppressCardStyling() {
-        cardBorder.background = nil
-        cardBorder.borderBrush = nil
-        cardBorder.borderThickness = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
-        cardBorder.cornerRadius = WinUI.CornerRadius(
+        cardRoot.background = nil
+        cardRoot.borderBrush = nil
+        cardRoot.borderThickness = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
+        cardRoot.cornerRadius = WinUI.CornerRadius(
             topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0)
     }
 
@@ -192,122 +292,83 @@ public class SettingsCard: ButtonBase {
     func applyExpanderItemPadding() {
         // Clickable items: right=16 (no action icon space); others: right=44
         let rightPadding: Double = isClickEnabled ? 16 : 44
-        cardBorder.padding = WinUI.Thickness(left: 58, top: 8, right: rightPadding, bottom: 8)
+        cardRoot.padding = WinUI.Thickness(left: 58, top: 8, right: rightPadding, bottom: 8)
     }
 
-    /// Redirects hover/pressed visuals to an outer border, used by SettingsExpander headers.
-    func setInteractionVisualTarget(_ target: WinUI.Border?) {
+    /// Redirects hover/pressed visuals to an outer grid, used by SettingsExpander headers.
+    func setInteractionVisualTarget(_ target: WinUI.Grid?) {
         interactionVisualTarget = target
-        goToNormalState()
+        applyVisualState(force: true)
     }
 
     // MARK: - State management
 
     private func onIsClickEnabledChanged() {
+        isTabStop = isClickEnabled
         updateActionIconVisibility()
-        if isClickEnabled {
-            enableInteraction()
-        } else {
-            disableInteraction()
-        }
+        applyVisualState(force: true)
     }
 
     private func updateActionIconVisibility() {
-        guard let holder = actionIconHolder else { return }
-        holder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
+        guard let actionIconHolder else { return }
+        actionIconHolder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
     }
 
-    private func enableInteraction() {
-        disableInteraction()
+    // MARK: - Layout
 
-        pointerEnteredToken = pointerEntered.addHandler { [weak self] _, _ in
-            self?.goToPointerOverState()
-        }
-        pointerExitedToken = pointerExited.addHandler { [weak self] _, _ in
-            self?.goToNormalState()
-        }
-        pointerPressedToken = pointerPressed.addHandler { [weak self] _, _ in
-            self?.goToPressedState()
-        }
-        pointerReleasedToken = pointerReleased.addHandler { [weak self] _, _ in
-            self?.goToNormalState()
-        }
-        pointerCaptureLostToken = pointerCaptureLost.addHandler { [weak self] _, _ in
-            self?.goToNormalState()
-        }
-        pointerCanceledToken = pointerCanceled.addHandler { [weak self] _, _ in
-            self?.goToNormalState()
-        }
+    /// Groups several property assignments into a single layout rebuild.
+    private func batchLayoutChanges(_ changes: () -> Void) {
+        isLayoutBatchActive = true
+        changes()
+        isLayoutBatchActive = false
+        rebuildLayout()
     }
 
-    private func disableInteraction() {
-        pointerEnteredToken?.dispose()
-        pointerEnteredToken = nil
-        pointerExitedToken?.dispose()
-        pointerExitedToken = nil
-        pointerPressedToken?.dispose()
-        pointerPressedToken = nil
-        pointerReleasedToken?.dispose()
-        pointerReleasedToken = nil
-        pointerCaptureLostToken?.dispose()
-        pointerCaptureLostToken = nil
-        pointerCanceledToken?.dispose()
-        pointerCanceledToken = nil
+    private func rebuildLayout() {
+        guard !isLayoutBatchActive else { return }
 
-        goToNormalState()
+        // UIElement single-parent rule: detach the retained elements from the discarded layout
+        // before they get parented into the fresh one.
+        for element in [headerIcon, description as? FrameworkElement, contentElement, actionIcon] {
+            if let element {
+                _ = element.detachFromVisualParent()
+            }
+        }
+
+        while cardRoot.children.count > 0 {
+            cardRoot.children.removeAt(0)
+        }
+        cardRoot.children.append(buildLayout())
+        applyVisualState(force: true)
+        updateAccessibleContentName()
     }
 
-    // Visual state transitions
-    private func goToNormalState() {
-        let visualTarget = interactionVisualTarget ?? cardBorder
-        visualTarget.background = cardBackgroundBrush()
-        visualTarget.borderBrush = cardBorderBrush()
-        self.foreground = cardForegroundBrush()
+    private func resolvedDescriptionView() -> FrameworkElement? {
+        if let element = description as? FrameworkElement {
+            return element
+        }
+        if let text = description as? String, !text.isEmpty {
+            return makeDescriptionView(text)
+        }
+        return nil
     }
 
-    private func goToPointerOverState() {
-        let visualTarget = interactionVisualTarget ?? cardBorder
-        visualTarget.background = cardHoverBrush()
-        visualTarget.borderBrush = cardBorderBrushPointerOver()
-        self.foreground = cardForegroundHoverBrush()
-    }
-
-    private func goToPressedState() {
-        let visualTarget = interactionVisualTarget ?? cardBorder
-        visualTarget.background = cardPressedBrush()
-        visualTarget.borderBrush = cardBorderBrushPressed()
-        self.foreground = cardForegroundPressedBrush()
-    }
-
-    // MARK: - Layout builder
-
-    private func buildLayout(
-        headerIcon: IconElement? = nil,
-        header: String? = nil,
-        description: FrameworkElement? = nil,
-        content: FrameworkElement? = nil,
-        actionIcon: FontIcon? = nil
-    ) -> WinUI.Grid {
-        let secondaryForeground = secondaryBrush()
+    private func buildLayout() -> WinUI.Grid {
+        let secondaryForeground = themeBrush("TextFillColorSecondaryBrush")
 
         let container = WinUI.Grid()
 
         // Columns: [icon] [text*] [content auto] [actionIcon auto]
-        let iconCol = WinUI.ColumnDefinition()
-        iconCol.width = WinUI.GridLength(value: 1, gridUnitType: .auto)
-        container.columnDefinitions.append(iconCol)
-
-        let textCol = WinUI.ColumnDefinition()
-        textCol.width = WinUI.GridLength(value: 1, gridUnitType: .star)
-        container.columnDefinitions.append(textCol)
-
-        let contentCol = WinUI.ColumnDefinition()
-        contentCol.width = WinUI.GridLength(value: 1, gridUnitType: .auto)
-        container.columnDefinitions.append(contentCol)
-
-        let actionCol = WinUI.ColumnDefinition()
-        actionCol.width = WinUI.GridLength(value: 1, gridUnitType: .auto)
-        container.columnDefinitions.append(actionCol)
+        for width in [
+            WinUI.GridLength(value: 1, gridUnitType: .auto),
+            WinUI.GridLength(value: 1, gridUnitType: .star),
+            WinUI.GridLength(value: 1, gridUnitType: .auto),
+            WinUI.GridLength(value: 1, gridUnitType: .auto),
+        ] {
+            let column = WinUI.ColumnDefinition()
+            column.width = width
+            container.columnDefinitions.append(column)
+        }
 
         // Rows: [header row*] [content/description row auto]
         let headerRow = WinUI.RowDefinition()
@@ -319,9 +380,11 @@ public class SettingsCard: ButtonBase {
         container.rowDefinitions.append(descRow)
 
         // Determine visibility based on contentAlignment
+        let headerText = (header as? String) ?? ""
+        let descriptionView = resolvedDescriptionView()
         let showHeaderIcon = (contentAlignment != .left) && (headerIcon != nil)
-        let showHeaderText = (contentAlignment != .left) && (header != nil && !header!.isEmpty)
-        let showDescription = (contentAlignment != .left) && (description != nil)
+        let showHeaderText = (contentAlignment != .left) && !headerText.isEmpty
+        let showDescription = (contentAlignment != .left) && (descriptionView != nil)
 
         // Header Icon Holder (col 0, row 0)
         if showHeaderIcon, let icon = headerIcon {
@@ -333,16 +396,19 @@ public class SettingsCard: ButtonBase {
             }
             icon.verticalAlignment = .center
 
-            let headerIconHolder: Viewbox = WinUI.Viewbox()
-            headerIconHolder.width = 20
-            headerIconHolder.height = 20
-            headerIconHolder.margin = WinUI.Thickness(left: 2, top: 0, right: 20, bottom: 0)
-            headerIconHolder.verticalAlignment = .center
-            headerIconHolder.stretch = .uniform
-            headerIconHolder.child = icon
-            container.children.append(headerIconHolder)
-            try? WinUI.Grid.setRow(headerIconHolder, 0)
-            try? WinUI.Grid.setColumn(headerIconHolder, 0)
+            let holder: Viewbox = WinUI.Viewbox()
+            holder.maxWidth = 20
+            holder.maxHeight = 20
+            holder.margin = WinUI.Thickness(left: 2, top: 0, right: 20, bottom: 0)
+            holder.verticalAlignment = .center
+            holder.stretch = .uniform
+            holder.child = icon
+            headerIconHolder = holder
+            container.children.append(holder)
+            try? WinUI.Grid.setRow(holder, 0)
+            try? WinUI.Grid.setColumn(holder, 0)
+        } else {
+            headerIconHolder = nil
         }
 
         // Header Panel (col 1, row 0)
@@ -359,31 +425,28 @@ public class SettingsCard: ButtonBase {
             container.children.append(headerPanel)
 
             // Header label
-            if showHeaderText, let headerText = header {
+            if showHeaderText {
                 let titleLabel = WinUI.TextBlock()
                 titleLabel.text = headerText
                 titleLabel.fontSize = 14
                 titleLabel.textWrapping = .wrap
-                titleLabel.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
                 headerPanel.children.append(titleLabel)
             }
 
             // Description
-            if showDescription, let desc = description {
-                if let tb = desc as? TextBlock {
+            if showDescription, let desc = descriptionView {
+                if let tb = desc as? WinUI.TextBlock {
                     tb.foreground = secondaryForeground
                     tb.fontSize = 12
                     tb.textWrapping = .wrap
-                    tb.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
-                } else {
-                    desc.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
                 }
                 headerPanel.children.append(desc)
             }
         }
+        descriptionElement = showDescription ? descriptionView : nil
 
         // Content placement based on contentAlignment
-        if let ctrl = content {
+        if let ctrl = contentElement {
             switch contentAlignment {
             case .right:
                 // Content in col 2, row 0, right-aligned
@@ -412,43 +475,62 @@ public class SettingsCard: ButtonBase {
             }
         }
 
+        // Vertical content sits below the header block; give it the toolkit's 8px spacing.
+        if contentAlignment == .vertical, contentElement != nil,
+            showHeaderText || showDescription
+        {
+            container.rowSpacing = 8
+        }
+
         // Action icon (col 3, spans both rows)
-        let effectiveActionIcon = actionIcon ?? self.actionIcon
-        if let aIcon = effectiveActionIcon {
-            let actionIconHolder: Viewbox = Viewbox()
-            actionIconHolder.width = 13
-            actionIconHolder.height = 13
-            actionIconHolder.margin = WinUI.Thickness(left: 14, top: 0, right: 0, bottom: 0)
-            actionIconHolder.horizontalAlignment = .center
-            actionIconHolder.verticalAlignment = .center
-            actionIconHolder.stretch = .uniform
+        if let aIcon = actionIcon {
+            let holder: Viewbox = WinUI.Viewbox()
+            holder.maxWidth = 13
+            holder.maxHeight = 13
+            holder.margin = WinUI.Thickness(left: 14, top: 0, right: 0, bottom: 0)
+            holder.horizontalAlignment = .center
+            holder.verticalAlignment = .center
+            holder.stretch = .uniform
 
             aIcon.fontSize = 13
-            aIcon.margin = WinUI.Thickness(left: 0, top: 0, right: 0, bottom: 0)
             aIcon.verticalAlignment = .center
 
             // Apply ToolTip if available
             if let toolTip = actionIconToolTip, !toolTip.isEmpty {
-                try? WinUI.ToolTipService.setToolTip(actionIconHolder, toolTip)
+                try? WinUI.ToolTipService.setToolTip(holder, toolTip)
             }
 
-            actionIconHolder.visibility =
+            holder.visibility =
                 (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
-            actionIconHolder.child = aIcon
-            self.actionIconHolder = actionIconHolder
-            container.children.append(actionIconHolder)
-            try? WinUI.Grid.setRowSpan(actionIconHolder, 2)
-            try? WinUI.Grid.setColumn(actionIconHolder, 3)
+            holder.child = aIcon
+            actionIconHolder = holder
+            container.children.append(holder)
+            try? WinUI.Grid.setRowSpan(holder, 2)
+            try? WinUI.Grid.setColumn(holder, 3)
+        } else {
+            actionIconHolder = nil
         }
 
-        rootGrid = container
         return container
+    }
+
+    // MARK: - Accessibility
+
+    /// Gives the content element the header text as its automation name, unless one was already
+    /// set or the content announces itself (buttons, plain text).
+    private func updateAccessibleContentName() {
+        guard let headerText = header as? String, !headerText.isEmpty,
+            let element = contentElement,
+            !(element is WinUI.TextBlock),
+            !(element is WinUI.ButtonBase),
+            (try? WinUI.AutomationProperties.getName(element))?.isEmpty == true
+        else { return }
+        try? WinUI.AutomationProperties.setName(element, headerText)
     }
 
     // MARK: - Helpers
 
-    private func makeDescriptionView(_ text: String?) -> FrameworkElement? {
-        guard let text, !text.isEmpty else { return nil }
+    private func makeDescriptionView(_ text: String) -> FrameworkElement {
         let tb: TextBlock = App.context.requireXaml(
             withString:
                 """
