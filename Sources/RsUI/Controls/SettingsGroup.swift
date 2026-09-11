@@ -145,7 +145,7 @@ private var xamlUI: String {
                 </Storyboard>
             </ResourceDictionary>
         </Grid.Resources>
-        <Grid Name="HeaderGrid" Grid.Row="0" ColumnDefinitions="*,Auto">
+        <Grid Name="HeaderGrid" Grid.Row="0" ColumnDefinitions="*,Auto" MinHeight="40">
             <TextBlock Name="TitleLabel" Grid.Column="0"
                 Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"/>
             <AppBarButton Name="ToggleButton" Grid.Column="1"
