@@ -379,6 +379,22 @@ public class SettingsCard: ButtonBase {
         descRow.height = WinUI.GridLength(value: 1, gridUnitType: .auto)
         container.rowDefinitions.append(descRow)
 
+        // A card built with only content (init(content:)) hosts the element full-bleed across
+        // the whole card face; it does not participate in the header/content column layout.
+        if header == nil, description == nil, headerIcon == nil, let ctrl = contentElement {
+            headerIconHolder = nil
+            actionIconHolder = nil
+            descriptionElement = nil
+            ctrl.horizontalAlignment = .stretch
+            ctrl.verticalAlignment = .stretch
+            container.children.append(ctrl)
+            try? WinUI.Grid.setRow(ctrl, 0)
+            try? WinUI.Grid.setColumn(ctrl, 0)
+            try? WinUI.Grid.setRowSpan(ctrl, 2)
+            try? WinUI.Grid.setColumnSpan(ctrl, 4)
+            return container
+        }
+
         // Determine visibility based on contentAlignment
         let headerText = (header as? String) ?? ""
         let descriptionView = resolvedDescriptionView()
