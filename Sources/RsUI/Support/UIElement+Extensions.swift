@@ -5,12 +5,15 @@ extension UIElement {
     /// 把 `element` 从其当前 visual parent 断开。
     ///
     /// - Returns: 返回原 parent + 该 element 在其 children 中的位置。
-    /// （Border/ContentControl/ContentPresenter 的 index 无意义，统一返回 nil）。
-    /// VisualTreeHelper.getParent 返回 DependencyObject，这里强转回 UIElement，
-    /// 转不出即当作 unsupported parent，返回 nil。
+    /// （Border/Viewbox/ContentControl/ContentPresenter 的 index 无意义，统一返回 nil）。
+    /// 父级解析优先 `FrameworkElement.parent`（逻辑父级）：它在子树未加载进可视树时依然有效
+    /// （例如页面构造期间），且直接指向持有 child/content 属性的容器本身；构造中的子树里
+    /// `VisualTreeHelper.getParent` 返回 nil，模板内部元素也只会误导。两者都拿不到即当作
+    /// 无父级，返回 nil。
     public func detachFromVisualParent() -> (parent: UIElement, index: UInt32?)? {
-        guard let raw = try? VisualTreeHelper.getParent(self),
-            let parent = raw as? UIElement
+        let logicalParent: DependencyObject? = (self as? FrameworkElement)?.parent
+        let raw = logicalParent ?? (try? VisualTreeHelper.getParent(self))
+        guard let parent = raw as? UIElement
         else { return nil }
 
         if let parentBorder = parent as? Border {
@@ -27,6 +30,10 @@ extension UIElement {
             return (parent, nil)
         } else if let parentPresenter = parent as? ContentPresenter {
             parentPresenter.content = nil
+            return (parent, nil)
+        } else if let parentViewbox = parent as? Viewbox {
+            // Viewbox 直接继承 FrameworkElement（非 ContentControl），child 即单子挂点。
+            parentViewbox.child = nil
             return (parent, nil)
         }
 
@@ -49,6 +56,8 @@ extension UIElement {
             parentContent.content = self
         } else if let parentPresenter = parent as? ContentPresenter {
             parentPresenter.content = self
+        } else if let parentViewbox = parent as? Viewbox {
+            parentViewbox.child = self
         } else {
             log.warning(
                 "UIElement.restoreToVisualParent: unsupported parent type \(type(of: parent)) — element left un-parented"

@@ -68,6 +68,7 @@ public class SettingsCard: ButtonBase {
     private var descriptionElement: FrameworkElement?
     private var headerIconHolder: Viewbox?
     private var actionIconHolder: Viewbox?
+    private var headerPanel: StackPanel?
     private weak var interactionVisualTarget: WinUI.Grid?
     private var isLayoutBatchActive = false
 
@@ -327,14 +328,14 @@ public class SettingsCard: ButtonBase {
     private func rebuildLayout() {
         guard !isLayoutBatchActive else { return }
 
-        // UIElement single-parent rule: detach the retained elements from the discarded layout
-        // before they get parented into the fresh one.
-        for element in [headerIcon, description as? FrameworkElement, contentElement, actionIcon] {
-            if let element {
-                _ = element.detachFromVisualParent()
-            }
-        }
-
+        // UIElement single-parent rule: release the retained elements from the discarded tree
+        // before they get re-parented into the fresh one. The teardown goes container-side
+        // (the card owns every wrapper here) — in a subtree that is not loaded yet, neither
+        // FrameworkElement.parent nor VisualTreeHelper can see any relationship, while
+        // mutating the collections/properties themselves always works.
+        headerIconHolder?.child = nil
+        actionIconHolder?.child = nil
+        headerPanel?.children.clear()
         while cardRoot.children.count > 0 {
             cardRoot.children.removeAt(0)
         }
@@ -384,6 +385,7 @@ public class SettingsCard: ButtonBase {
         if header == nil, description == nil, headerIcon == nil, let ctrl = contentElement {
             headerIconHolder = nil
             actionIconHolder = nil
+            headerPanel = nil
             descriptionElement = nil
             ctrl.horizontalAlignment = .stretch
             ctrl.verticalAlignment = .stretch
@@ -439,6 +441,7 @@ public class SettingsCard: ButtonBase {
             try? WinUI.Grid.setRow(headerPanel, 0)
             try? WinUI.Grid.setColumn(headerPanel, 1)
             container.children.append(headerPanel)
+            self.headerPanel = headerPanel
 
             // Header label
             if showHeaderText {
@@ -458,6 +461,8 @@ public class SettingsCard: ButtonBase {
                 }
                 headerPanel.children.append(desc)
             }
+        } else {
+            self.headerPanel = nil
         }
         descriptionElement = showDescription ? descriptionView : nil
 
