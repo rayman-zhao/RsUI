@@ -120,10 +120,16 @@ class SettingsPage: Page {
         winrt.navigateUri = Uri("https://github.com/thebrowsercompany/swift-winrt")
         winrt.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
+        let swift = HyperlinkButton()
+        swift.content = "Swift"
+        swift.navigateUri = Uri("https://www.swift.org")
+        swift.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
+
         let depends = WinUI.StackPanel()
         depends.children.append(wasdk)
         depends.children.append(winui)
         depends.children.append(winrt)
+        depends.children.append(swift)
 
         return SettingsCard(tr("Dependencies & references"), depends)
     }

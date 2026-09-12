@@ -1,5 +1,4 @@
 import UWP
-
 import WinAppSDK
 
 extension RuntimeInfo {
@@ -15,6 +14,8 @@ extension RuntimeInfo {
             return "1.8.9"
         case PackageVersion(major: 8000, minor: 921, build: 1539, revision: 0):
             return "1.8.10"
+        case PackageVersion(major: 8000, minor: 946, build: 1701, revision: 0):
+            return "1.8.11"
         default:
             return RuntimeInfo.asString
         }
