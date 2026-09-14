@@ -114,7 +114,7 @@ public struct WindowContext {
         primaryButtonText: String? = nil,
         secondaryButtonText: String? = nil,
         closeButtonText: String? = nil,
-        handler: @escaping (ContentDialogResult) -> Void
+        handler: @escaping (ContentDialogResult) -> Void = { _ in }
     ) {
         guard let host else { return }
 
