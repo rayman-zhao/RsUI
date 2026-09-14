@@ -188,6 +188,23 @@
         }
       }
     },
+    "AppContext.revealInFileExplorer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.revealInFileExplorer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppContext.revealInFileExplorer"
+          }
+        }
+      }
+    },
     "Appearance" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -528,6 +545,23 @@
         }
       }
     },
+    "Directory case: selects the app support directory in its parent folder." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directory case: selects the app support directory in its parent folder."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目录场景：在父文件夹中选中应用支持目录。"
+          }
+        }
+      }
+    },
     "Double-tapped" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -541,6 +575,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "双击"
+          }
+        }
+      }
+    },
+    "Each card below triggers one reveal call." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each card below triggers one reveal call."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击下方每张卡片都会触发一次 reveal 调用。"
           }
         }
       }
@@ -626,6 +677,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "退出标签页全屏"
+          }
+        }
+      }
+    },
+    "File case with spaces in the name: creates Reveal Demo.txt under the support directory, then selects it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File case with spaces in the name: creates Reveal Demo.txt under the support directory, then selects it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件场景（文件名含空格）：在支持目录下创建 Reveal Demo.txt 后选中它。"
           }
         }
       }
@@ -783,6 +851,23 @@
         }
       }
     },
+    "Guard case: unreachable paths are skipped with a log warning; no File Explorer window opens." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guard case: unreachable paths are skipped with a log warning; no File Explorer window opens."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "守卫场景：不可达路径仅记录警告日志，不弹出资源管理器窗口。"
+          }
+        }
+      }
+    },
     "Header icon + description + right-side control. The minimal Fluent-style settings row." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -881,6 +966,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "语言"
+          }
+        }
+      }
+    },
+    "Last request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last request"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近请求"
           }
         }
       }
@@ -1089,6 +1191,23 @@
         }
       }
     },
+    "Nothing revealed yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing revealed yet."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未触发任何请求。"
+          }
+        }
+      }
+    },
     "Off" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1242,6 +1361,23 @@
         }
       }
     },
+    "Opens File Explorer with LaunchFolderPathAsync and selects the item via FolderLauncherOptions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens File Explorer with LaunchFolderPathAsync + FolderLauncherOptions first, falling back to explorer.exe /select."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 LaunchFolderPathAsync 打开资源管理器，并用 FolderLauncherOptions 选中目标项。"
+          }
+        }
+      }
+    },
     "Opens this page in a fresh MainWindow." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1391,6 +1527,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "替换当前标签页的页面。"
+          }
+        }
+      }
+    },
+    "Requested reveal: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requested reveal: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已请求显示：%@"
+          }
+        }
+      }
+    },
+    "Reveal a demo file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reveal a demo file"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示演示文件"
+          }
+        }
+      }
+    },
+    "Reveal a missing path" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reveal a missing path"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示不存在的路径"
+          }
+        }
+      }
+    },
+    "Reveal in File Explorer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reveal in File Explorer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在文件资源管理器中显示"
+          }
+        }
+      }
+    },
+    "Reveal the support directory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reveal the support directory"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示支持目录"
           }
         }
       }

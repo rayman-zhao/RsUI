@@ -62,6 +62,9 @@ final class SampleModule: Module {
             NavigationViewItem.build(
                 iconGlyph: "\u{E8B7}", label: tr("Picker"), url: "rs://\(id)/picker"),
             NavigationViewItem.build(
+                iconGlyph: "\u{E838}", label: tr("Reveal in File Explorer"),
+                url: "rs://\(id)/reveal"),
+            NavigationViewItem.build(
                 iconGlyph: "\u{E91B}", label: tr("Viewer"), url: "rs://\(id)/viewer"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
@@ -155,6 +158,8 @@ final class SampleModule: Module {
             return AppearancePage(context: context)
         case "/picker":
             return PickerPage(context: context)
+        case "/reveal":
+            return RevealPage()
         case "/viewer":
             return ViewerPage(context: context)
         case "/range-slider":

@@ -147,4 +147,27 @@ public final class AppContext {
     ) {
         try? MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
     }
+
+    /// Reveals a file or directory in File Explorer with the item selected in its parent folder.
+    public func revealInFileExplorer(_ url: URL) {
+        Task { @MainActor in
+            let options = FolderLauncherOptions()
+            let folder: URL
+
+            if url.hasDirectoryPath {
+                folder = url
+            } else {
+                folder = url.deletingLastPathComponent()
+
+                let filePath = url.filePath.replacingOccurrences(of: "/", with: "\\")
+                if let fileItem = try? await StorageFile.getFileFromPathAsync(filePath).get() {
+                    options.itemsToSelect?.append(fileItem)
+                }
+            }
+
+            // The WinRT path APIs and explorer.exe /select both take native separators.
+            let folderPath = folder.filePath.replacingOccurrences(of: "/", with: "\\")
+            _ = try? await Launcher.launchFolderPathAsync(folderPath, options).get()
+        }
+    }
 }
