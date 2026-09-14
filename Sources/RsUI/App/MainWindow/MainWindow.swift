@@ -110,6 +110,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     // MARK: WindowContextHost protocol
 
     var hwnd: WindowId { self.appWindow.id }
+    var xamlRoot: XamlRoot { ui.root.xamlRoot }
 
     var isInFullscreenPage: Bool {
         return isInFullscreen

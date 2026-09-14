@@ -81,6 +81,65 @@ public struct WindowContext {
         }
     }
 
+    /// Shows a modal message dialog parented to the owning `MainWindow`.
+    ///
+    /// The `ContentDialog` is built here so every dialog in the app shares one
+    /// style. Provide the texts of the buttons you need (`nil` hides the button);
+    /// the pressed one is reported to `handler` as a `ContentDialogResult`
+    /// (`.none` means dismissed). When no button text is given at all, a single
+    /// localized "OK" close button is used.
+    ///
+    /// - Parameters:
+    ///   - title: The dialog title.
+    ///   - message: The dialog body text.
+    ///   - primaryButtonText: Text of the primary button; `nil` hides it.
+    ///   - secondaryButtonText: Text of the secondary button; `nil` hides it.
+    ///   - closeButtonText: Text of the close (Esc) button; `nil` hides it.
+    ///   - handler: Called on the main actor with the pressed button's result.
+    ///
+    /// Example:
+    /// ```swift
+    /// context.showDialog(
+    ///     title: "Delete item",
+    ///     message: "This cannot be undone.",
+    ///     primaryButtonText: "Delete",
+    ///     closeButtonText: "Cancel"
+    /// ) { result in
+    ///     if result == .primary { /* perform deletion */ }
+    /// }
+    /// ```
+    public func showDialog(
+        title: String,
+        message: String,
+        primaryButtonText: String? = nil,
+        secondaryButtonText: String? = nil,
+        closeButtonText: String? = nil,
+        handler: @escaping (ContentDialogResult) -> Void
+    ) {
+        guard let host else { return }
+
+        let dialog = ContentDialog()
+        dialog.title = title
+        dialog.content = message
+        if let primaryButtonText { dialog.primaryButtonText = primaryButtonText }
+        if let secondaryButtonText { dialog.secondaryButtonText = secondaryButtonText }
+        if let closeButtonText {
+            dialog.closeButtonText = closeButtonText
+        } else if primaryButtonText == nil && secondaryButtonText == nil {
+            dialog.closeButtonText = App.context.tr("OK")
+        }
+
+        dialog.xamlRoot = host.xamlRoot
+
+        Task { @MainActor in
+            guard let result = try? await dialog.showAsync().get() else { return }
+
+            await MainActor.run {
+                handler(result)
+            }
+        }
+    }
+
     public func open(
         _ page: Page,
         mode: NavigationOpenMode = .inplace,

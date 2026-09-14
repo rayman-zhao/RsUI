@@ -4,6 +4,7 @@ import WinUI
 
 protocol WindowContextHost: AnyObject {
     var hwnd: WindowId { get }
+    var xamlRoot: XamlRoot { get }
 
     var isInFullscreenPage: Bool { get }
     func enterFullscreenPage()
