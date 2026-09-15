@@ -16,6 +16,9 @@ public enum SettingsCardContentAlignment {
 /// (Normal/PointerOver/Pressed/Disabled) are driven by pointer and keyboard input,
 /// with a smooth background transition between states.
 /// Can be used standalone or hosted inside a SettingsExpander.
+/// Unlike the toolkit card, the action icon is shown by default not only when the card is
+/// click-enabled but also when it hosts a content control; opt out via `isActionIconVisible`.
+/// (Content-only full-bleed cards from `init(content:)` never show an action icon.)
 public class SettingsCard: ButtonBase {
 
     // MARK: - Properties
@@ -54,6 +57,8 @@ public class SettingsCard: ButtonBase {
         didSet { rebuildLayout() }
     }
 
+    /// Hides the action icon even when the card would show it by default
+    /// (click-enabled or hosting a content control).
     public var isActionIconVisible: Bool = true {
         didSet { updateActionIconVisibility() }
     }
@@ -310,9 +315,16 @@ public class SettingsCard: ButtonBase {
         applyVisualState(force: true)
     }
 
+    /// The action icon is shown by default both on click-enabled cards and on cards hosting a
+    /// content control. Content-only full-bleed cards build no action icon holder at all.
+    private var showsActionIconByDefault: Bool {
+        isClickEnabled || contentElement != nil
+    }
+
     private func updateActionIconVisibility() {
         guard let actionIconHolder else { return }
-        actionIconHolder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
+        actionIconHolder.visibility =
+            (showsActionIconByDefault && isActionIconVisible) ? .visible : .collapsed
     }
 
     // MARK: - Layout
@@ -522,7 +534,7 @@ public class SettingsCard: ButtonBase {
             }
 
             holder.visibility =
-                (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
+                (showsActionIconByDefault && isActionIconVisible) ? .visible : .collapsed
             holder.child = aIcon
             actionIconHolder = holder
             container.children.append(holder)
