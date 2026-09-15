@@ -16,9 +16,6 @@ public enum SettingsCardContentAlignment {
 /// (Normal/PointerOver/Pressed/Disabled) are driven by pointer and keyboard input,
 /// with a smooth background transition between states.
 /// Can be used standalone or hosted inside a SettingsExpander.
-/// Unlike the toolkit card, the action icon is shown by default not only when the card is
-/// click-enabled but also when it hosts a content control; opt out via `isActionIconVisible`.
-/// (Content-only full-bleed cards from `init(content:)` never show an action icon.)
 public class SettingsCard: ButtonBase {
 
     // MARK: - Properties
@@ -57,8 +54,6 @@ public class SettingsCard: ButtonBase {
         didSet { rebuildLayout() }
     }
 
-    /// Hides the action icon even when the card would show it by default
-    /// (click-enabled or hosting a content control).
     public var isActionIconVisible: Bool = true {
         didSet { updateActionIconVisibility() }
     }
@@ -315,16 +310,9 @@ public class SettingsCard: ButtonBase {
         applyVisualState(force: true)
     }
 
-    /// The action icon is shown by default both on click-enabled cards and on cards hosting a
-    /// content control. Content-only full-bleed cards build no action icon holder at all.
-    private var showsActionIconByDefault: Bool {
-        isClickEnabled || contentElement != nil
-    }
-
     private func updateActionIconVisibility() {
         guard let actionIconHolder else { return }
-        actionIconHolder.visibility =
-            (showsActionIconByDefault && isActionIconVisible) ? .visible : .collapsed
+        actionIconHolder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
     }
 
     // MARK: - Layout
@@ -394,9 +382,10 @@ public class SettingsCard: ButtonBase {
 
         // A card built with only content (init(content:)) hosts the element full-bleed across
         // the whole card face; it does not participate in the header/content column layout.
+        // The action icon still gets its col-3 slot so these cards can show it too; a collapsed
+        // holder keeps the auto column zero-width, so non-clickable cards remain full-bleed.
         if header == nil, description == nil, headerIcon == nil, let ctrl = contentElement {
             headerIconHolder = nil
-            actionIconHolder = nil
             headerPanel = nil
             descriptionElement = nil
             ctrl.horizontalAlignment = .stretch
@@ -405,7 +394,8 @@ public class SettingsCard: ButtonBase {
             try? WinUI.Grid.setRow(ctrl, 0)
             try? WinUI.Grid.setColumn(ctrl, 0)
             try? WinUI.Grid.setRowSpan(ctrl, 2)
-            try? WinUI.Grid.setColumnSpan(ctrl, 4)
+            try? WinUI.Grid.setColumnSpan(ctrl, 3)
+            appendActionIconHolder(to: container)
             return container
         }
 
@@ -516,35 +506,41 @@ public class SettingsCard: ButtonBase {
         }
 
         // Action icon (col 3, spans both rows)
-        if let aIcon = actionIcon {
-            let holder: Viewbox = WinUI.Viewbox()
-            holder.maxWidth = 13
-            holder.maxHeight = 13
-            holder.margin = WinUI.Thickness(left: 14, top: 0, right: 0, bottom: 0)
-            holder.horizontalAlignment = .center
-            holder.verticalAlignment = .center
-            holder.stretch = .uniform
-
-            aIcon.fontSize = 13
-            aIcon.verticalAlignment = .center
-
-            // Apply ToolTip if available
-            if let toolTip = actionIconToolTip, !toolTip.isEmpty {
-                try? WinUI.ToolTipService.setToolTip(holder, toolTip)
-            }
-
-            holder.visibility =
-                (showsActionIconByDefault && isActionIconVisible) ? .visible : .collapsed
-            holder.child = aIcon
-            actionIconHolder = holder
-            container.children.append(holder)
-            try? WinUI.Grid.setRowSpan(holder, 2)
-            try? WinUI.Grid.setColumn(holder, 3)
-        } else {
-            actionIconHolder = nil
-        }
+        appendActionIconHolder(to: container)
 
         return container
+    }
+
+    /// Appends the col-3 action icon holder shared by the header layout and the content-only
+    /// full-bleed layout; clears `actionIconHolder` when no icon is set.
+    private func appendActionIconHolder(to container: WinUI.Grid) {
+        guard let aIcon = actionIcon else {
+            actionIconHolder = nil
+            return
+        }
+
+        let holder: Viewbox = WinUI.Viewbox()
+        holder.maxWidth = 13
+        holder.maxHeight = 13
+        holder.margin = WinUI.Thickness(left: 14, top: 0, right: 0, bottom: 0)
+        holder.horizontalAlignment = .center
+        holder.verticalAlignment = .center
+        holder.stretch = .uniform
+
+        aIcon.fontSize = 13
+        aIcon.verticalAlignment = .center
+
+        // Apply ToolTip if available
+        if let toolTip = actionIconToolTip, !toolTip.isEmpty {
+            try? ToolTipService.setToolTip(holder, toolTip)
+        }
+
+        holder.visibility = (isClickEnabled && isActionIconVisible) ? .visible : .collapsed
+        holder.child = aIcon
+        actionIconHolder = holder
+        container.children.append(holder)
+        try? WinUI.Grid.setRowSpan(holder, 2)
+        try? WinUI.Grid.setColumn(holder, 3)
     }
 
     // MARK: - Accessibility
