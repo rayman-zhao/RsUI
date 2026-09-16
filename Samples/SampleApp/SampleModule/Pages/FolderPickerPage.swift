@@ -47,7 +47,9 @@ final class FolderPickerPage: RsUI.Page {
         card.isClickEnabled = true
         card.click.addHandler { [weak self] _, _ in
             self?.context.pickFolder { path in
-                resultBlock.text = path
+                if let path {
+                    resultBlock.text = path
+                }
             }
         }
 

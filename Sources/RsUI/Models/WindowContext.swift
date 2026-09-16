@@ -38,15 +38,14 @@ public struct WindowContext {
     ///     print("Selected folder: \(path)")
     /// }
     /// ```
-    public func pickFolder(_ handler: @escaping (String) -> Void) {
+    public func pickFolder(_ handler: @escaping (String?) -> Void) {
         guard let host else { return }
 
         let picker = FolderPicker(host.hwnd)
         Task { @MainActor in
-            guard let result = try? await picker.pickSingleFolderAsync().get() else { return }
-
+            let result = try? await picker.pickSingleFolderAsync().get()
             await MainActor.run {
-                handler(result.path)
+                handler(result?.path)
             }
         }
     }
@@ -56,7 +55,7 @@ public struct WindowContext {
         fileTypeChoices: [String: [String]] = [:],
         suggestedFileName: String? = nil,
         defaultFileExtension: String? = nil,
-        handler: @escaping (String) -> Void
+        handler: @escaping (String?) -> Void
     ) {
         guard let host else { return }
 
@@ -73,10 +72,9 @@ public struct WindowContext {
         }
 
         Task { @MainActor in
-            guard let result = try? await picker.pickSaveFileAsync().get() else { return }
-
+            let result = try? await picker.pickSaveFileAsync().get()
             await MainActor.run {
-                handler(result.path)
+                handler(result?.path)
             }
         }
     }

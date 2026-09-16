@@ -45,7 +45,9 @@ final class PickerPage: RsUI.Page {
         card.isClickEnabled = true
         card.click.addHandler { [weak self] _, _ in
             self?.context.pickFolder { path in
-                resultBlock.text = path
+                if let path {
+                    resultBlock.text = path
+                }
             }
         }
 
@@ -76,7 +78,9 @@ final class PickerPage: RsUI.Page {
                 suggestedFileName: "sample",
                 defaultFileExtension: ".txt",
             ) { path in
-                resultBlock2.text = path
+                if let path {
+                    resultBlock2.text = path
+                }
             }
         }
 
