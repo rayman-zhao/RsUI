@@ -70,10 +70,21 @@ final class SampleModule: Module {
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E71D}", label: tr("Grid View"), url: "rs://\(id)/grid-view"),
+            itemsViewNavItem(id: id),
             NavigationViewItem.build(
                 iconGlyph: "\u{E73E}", label: tr("Toggle Buttons"), url: "rs://\(id)/toggle-buttons"),
         ]
         return items
+    }
+
+    /// “条目视图”导航项：交互演示页 + 文档页作为嵌套子项。
+    private func itemsViewNavItem(id: String) -> NavigationViewItemBase {
+        let item = NavigationViewItem.build(
+            iconGlyph: "\u{E8E5}", label: tr("Items View"), url: "rs://\(id)/items-view")
+        item.menuItems.append(
+            NavigationViewItem.build(
+                iconGlyph: "\u{E70F}", label: tr("Documentation"), url: "rs://\(id)/items-view-doc"))
+        return item
     }
 
     func navigationViewFooterMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
@@ -166,6 +177,10 @@ final class SampleModule: Module {
             return RangeSliderPage(context: context)
         case "/grid-view":
             return GridViewPage(context: context)
+        case "/items-view":
+            return ItemsViewPage(context: context)
+        case "/items-view-doc":
+            return ItemsViewDocumentationPage(context: context)
         case "/toggle-buttons":
             return ToggleButtonsPage(context: context)
         case "/footer-picker":
