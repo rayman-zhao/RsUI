@@ -57,9 +57,28 @@ final class ViewerPage: RsUI.Page {
                 let l = TextBlock()
                 l.verticalAlignment = .center
                 l.text = title
-                let t = TextBlock()
-                t.text = tr("Second Group")
-                rightPane.navigateTo(label: l, cards: [t])
+
+                // 二级页不提供滚动，显示与滚动方式由 client 决定：
+                // 首组演示自滚动控件（GridView 内部是 ItemsView）直接传入，
+                // 其余组演示普通内容自行包 ScrollView。
+                let content: UIElement
+                if i == 0 {
+                    let gridView = RsUI.GridView()
+                    gridView.setItems((0..<60).map { String(format: tr("Snapshot %d"), Int32($0)) })
+                    content = gridView
+                } else {
+                    let scroller = ScrollView()
+                    let listPanel = StackPanel()
+                    listPanel.spacing = 16
+                    for j in 0..<20 {
+                        listPanel.children.append(
+                            SettingsCard(header: String(format: tr("Second Item %d"), Int32(j))))
+                    }
+                    scroller.content = listPanel
+                    content = scroller
+                }
+
+                rightPane.navigateTo(label: l, content: content)
             }
             let card2 = SettingsCard(header: String(format: tr("Group %d Not Clickable"), Int32(i)))
             rightPane.append(glyph: "\u{F0E3}", title: title, cards: [card, card2])

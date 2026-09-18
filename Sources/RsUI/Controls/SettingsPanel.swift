@@ -11,7 +11,7 @@ open class SettingsPanel: WinUI.Grid {
 
             mainScrollView: ScrollView,
             mainPanel: StackPanel,
-            secondPanel: StackPanel,
+            secondPanel: Grid,
 
             mainShownStoryboard: Storyboard,
             mainHiddenStoryboard: Storyboard,
@@ -81,15 +81,19 @@ open class SettingsPanel: WinUI.Grid {
         return append(glyph: glyph, group: group)
     }
 
-    public func navigateTo(label: UIElement, cards: [UIElement]) {
+    /// 二级页占满内容区；content 的显示与滚动由调用方决定——
+    /// 自滚动控件（ItemsView/ScrollView 等）可直接传入，普通内容请自行包 ScrollView。
+    public func navigateTo(label: UIElement, content: UIElement) {
         ui.backButton.visibility = .visible
         ui.headerPanel.visibility = .collapsed
         ui.secondHeaderPanel.visibility = .visible
         ui.mainPanel.visibility = .collapsed
         ui.secondPanel.visibility = .visible
 
+        ui.secondHeaderPanel.children.clear()
+        ui.secondPanel.children.clear()
         ui.secondHeaderPanel.children.append(label)
-        cards.forEach { ui.secondPanel.children.append($0) }
+        ui.secondPanel.children.append(content)
 
         try? ui.mainHiddenStoryboard.begin()
         try? ui.secondShownStoryboard.begin()
@@ -149,31 +153,15 @@ private var xamlUI: String {
                         <CompositeTransform x:Name="MainPanelTransform" />
                     </StackPanel.RenderTransform>
                 </StackPanel>
-                <StackPanel x:Name="SecondPanel" Visibility="Collapsed" Opacity="0" Padding="16,0,16,16" Spacing="16">
-                    <StackPanel.RenderTransform>
-                        <CompositeTransform x:Name="SecondPanelTransform" TranslateX="12" />
-                    </StackPanel.RenderTransform>
-                </StackPanel>
             </Grid>
         </ScrollView>
+        <!-- 二级页在 ScrollView 之外，占满内容区；内容的显示与滚动由调用方决定
+             （自滚动控件直接传入，普通内容自行包 ScrollView）。 -->
+        <Grid x:Name="SecondPanel" Grid.Row="1" Visibility="Collapsed" Opacity="0" Padding="16,0,16,16">
+            <Grid.RenderTransform>
+                <CompositeTransform x:Name="SecondPanelTransform" TranslateX="12" />
+            </Grid.RenderTransform>
+        </Grid>
     </Grid>
-    """
-}
-
-private var xamlAppBarButton: String {
-    """
-    <AppBarButton xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        ToolTipService.ToolTip="{x:ToolTip}">
-        <AppBarButton.Resources>
-        <!-- The style can make button without padding and corner. -->
-        <Style x:Key="ViewerChromeAppBarButtonStyle" TargetType="AppBarButton">
-            <Setter Property="Width" Value="48"/>
-            <Setter Property="LabelPosition" Value="Collapsed"/>
-        </Style>
-        </AppBarButton.Resources>
-        <AppBarButton.Style>
-            <StaticResource ResourceKey="ViewerChromeAppBarButtonStyle"/>
-        </AppBarButton.Style>
-    </AppBarButton>
     """
 }
