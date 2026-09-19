@@ -43,6 +43,16 @@ final class SampleModule: Module {
         let header = NavigationViewItemHeader()
         header.content = tr("Samples")
 
+        // Action-icon demos: the glyph is hidden until the row is hovered (or focused) and
+        // reveals itself like the TabView close button. Each one exercises a different
+        // action surface: theme toggle, new window, and batch tab opening.
+        let newWindowActionURL = URL(string: "rs://\(id)/new-window")!
+        let batchActionURLs: [URL] = [
+            URL(string: "rs://\(id)")!,
+            URL(string: "rs://\(id)/navigation")!,
+            URL(string: "rs://\(id)/openorfocus")!,
+        ]
+
         let items: [NavigationViewItemBase] = [
             header,
             NavigationViewItem.build(
@@ -53,12 +63,30 @@ final class SampleModule: Module {
                 iconGlyph: "\u{ECCD}", label: tr("Navigation Modes"), url: "rs://\(id)/navigation"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E8A7}", label: tr("Open or Focus"), url: "rs://\(id)/openorfocus"),
-            NavigationViewItem.build(
-                iconGlyph: "\u{E8FD}", label: tr("Batch Open"), url: "rs://\(id)/batch-open"),
-            NavigationViewItem.build(
-                iconGlyph: "\u{E78B}", label: tr("New Window"), url: "rs://\(id)/new-window"),
-            NavigationViewItem.build(
-                iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance"),
+            NavigationViewItemWithAction(
+                iconGlyph: "\u{E8FD}", label: tr("Batch Open"), url: "rs://\(id)/batch-open",
+                actionGlyph: "\u{E710}",
+                actionTooltip: tr("Open three sample pages as tabs"),
+                actionHandler: { _, _ in
+                    _ = context.open(batchActionURLs, mode: .newTab)
+                }
+            ),
+            NavigationViewItemWithAction(
+                iconGlyph: "\u{E78B}", label: tr("New Window"), url: "rs://\(id)/new-window",
+                actionGlyph: "\u{E8F4}",
+                actionTooltip: tr("Open this page in a new window"),
+                actionHandler: { _, _ in
+                    App.context.openNewWindow(with: [newWindowActionURL])
+                }
+            ),
+            NavigationViewItemWithAction(
+                iconGlyph: "\u{E771}", label: tr("Appearance"), url: "rs://\(id)/appearance",
+                actionGlyph: "\u{E706}",
+                actionTooltip: tr("Toggle light / dark theme"),
+                actionHandler: { _, _ in
+                    App.context.theme = App.context.theme == .dark ? .light : .dark
+                }
+            ),
             NavigationViewItem.build(
                 iconGlyph: "\u{E8B7}", label: tr("Picker"), url: "rs://\(id)/picker"),
             NavigationViewItem.build(
@@ -90,11 +118,11 @@ final class SampleModule: Module {
     func navigationViewFooterMenuItems(in context: WindowContext) -> [NavigationViewItemBase] {
         let header = NavigationViewItemHeader()
         header.content = tr("Footer")
-        let pickerItem = NavigationViewItem.build(
+        let pickerItem = NavigationViewItemWithAction(
             iconGlyph: "\u{E8B7}",
             label: tr("Folder Picker"),
             url: "rs://\(id)/footer-picker",
-            actionGlyph: "\u{E8F4}",
+            actionGlyph: "\u{E8B7}",
             actionTooltip: tr("Pick a folder right from the nav"),
             actionHandler: { _, _ in
                 context.pickFolder {

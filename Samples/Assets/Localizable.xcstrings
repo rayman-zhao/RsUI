@@ -1293,6 +1293,40 @@
         }
       }
     },
+    "Open three sample pages as tabs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open three sample pages as tabs"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以标签页打开三个示例页面"
+          }
+        }
+      }
+    },
+    "Open this page in a new window" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open this page in a new window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在新窗口中打开此页面"
+          }
+        }
+      }
+    },
     "openOrFocus" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2020,6 +2054,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "单选按钮组"
+          }
+        }
+      }
+    },
+    "Toggle light / dark theme" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle light / dark theme"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在亮色 / 暗色主题间切换"
           }
         }
       }
