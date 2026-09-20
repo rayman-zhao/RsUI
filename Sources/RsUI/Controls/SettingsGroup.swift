@@ -31,6 +31,9 @@ public class SettingsGroup: StackPanel {
         )
     private let isExpandable: Bool
     private var isAnimating = false
+    // 动画进行中到达的程序化展开/收起请求暂存于此，当前动画完成后接着跑，
+    // 避免 isExpanded 已翻转而视觉状态被丢弃导致的失步。
+    private var pendingExpanded: Bool?
 
     // MARK: - Init
 
@@ -72,6 +75,10 @@ public class SettingsGroup: StackPanel {
         ui.toggleButton.click.addHandler { [weak self] _, _ in
             self?.toggleExpanded()
         }
+        // 图标按钮无可见文字（LabelPosition=Collapsed）：补 Tooltip 与自动化名称。
+        let toggleLabel = App.context.tr("Expand or collapse")
+        try? ToolTipService.setToolTip(ui.toggleButton, toggleLabel)
+        try? AutomationProperties.setName(ui.toggleButton, toggleLabel)
         // A single click on the chevron triggers both the button's `click` and the header's
         // `tapped` (AppBarButton does not swallow pointer events); `toggleExpanded()` ignores
         // the second call so one physical click toggles exactly once.
@@ -81,12 +88,12 @@ public class SettingsGroup: StackPanel {
         }
         // The storyboards are reused across runs, so completed handlers are wired once here.
         ui.expandStoryboard.completed.addHandler { [weak self] _, _ in
-            self?.isAnimating = false
+            self?.finishAnimation()
         }
         ui.collapseStoryboard.completed.addHandler { [weak self] _, _ in
             guard let self else { return }
             self.ui.cardsHost.visibility = .collapsed
-            self.isAnimating = false
+            self.finishAnimation()
         }
     }
 
@@ -101,7 +108,10 @@ public class SettingsGroup: StackPanel {
     }
 
     private func runExpandCollapseAnimation(expanding: Bool) {
-        guard !isAnimating else { return }
+        guard !isAnimating else {
+            pendingExpanded = expanding
+            return
+        }
         isAnimating = true
 
         if expanding {
@@ -111,6 +121,13 @@ public class SettingsGroup: StackPanel {
         }
 
         try? (expanding ? ui.expandStoryboard : ui.collapseStoryboard).begin()
+    }
+
+    private func finishAnimation() {
+        isAnimating = false
+        guard let pending = pendingExpanded else { return }
+        pendingExpanded = nil
+        runExpandCollapseAnimation(expanding: pending)
     }
 }
 

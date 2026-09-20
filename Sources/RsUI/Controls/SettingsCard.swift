@@ -149,6 +149,11 @@ public class SettingsCard: ButtonBase {
         _ = try? registerPropertyChangedCallback(Self.isEnabledProperty) { [weak self] _, _ in
             self?.applyVisualState()
         }
+        // 画刷是 setup 时从当前主题字典解析出的实例，不跟随主题更新；
+        // ActualTheme 变化后强制重刷（同 RangeSlider 的做法）。
+        actualThemeChanged.addHandler { [weak self] _, _ in
+            self?.applyVisualState(force: true)
+        }
     }
 
     // MARK: - Init

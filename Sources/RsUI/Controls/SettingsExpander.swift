@@ -28,6 +28,10 @@ public class SettingsExpander: StackPanel {
     // MARK: - Private state
 
     private var isAnimating = false
+    // 动画进行中到达的展开/收起请求暂存于此，当前动画完成后接着跑，
+    // 保证 isExpanded 与视觉状态最终一致（而不是静默丢弃请求导致失步）。
+    private var pendingExpanded: Bool?
+    private var outerCard: WinUI.Grid?
     private let chevron = ChevronIcon(glyph: "\u{E70D}", expandAngle: 180)
     private let expandedHost: WinUI.StackPanel = {
         let host = WinUI.StackPanel()
@@ -144,13 +148,28 @@ public class SettingsExpander: StackPanel {
         outerCard.backgroundTransition = backgroundTransition
         outerCard.children.append(cardStack)
         headerCard.setInteractionVisualTarget(outerCard)
+        self.outerCard = outerCard
 
         self.children.append(outerCard)
+
+        // setup 时一次性解析的 Fluent 画刷不跟随主题更新，主题切换后重取。
+        actualThemeChanged.addHandler { [weak self] _, _ in
+            self?.refreshThemeBrushes()
+        }
     }
 
     /// Fetches a system Fluent token brush, resolved against the current application theme.
     private func themeBrush(_ key: String) -> WinUI.Brush? {
         Application.current.resources?.lookup(key) as? WinUI.Brush
+    }
+
+    private func refreshThemeBrushes() {
+        guard let outerCard else { return }
+        outerCard.background = themeBrush("CardBackgroundFillColorDefaultBrush")
+        outerCard.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
+        for item in itemsSource ?? items {
+            item.cardRoot.borderBrush = themeBrush("DividerStrokeColorDefaultBrush")
+        }
     }
 
     private func buildExpandedContent() {
@@ -188,7 +207,10 @@ public class SettingsExpander: StackPanel {
     // MARK: - Animation
 
     private func runExpandCollapseAnimation(expanding: Bool) {
-        guard !isAnimating else { return }
+        guard !isAnimating else {
+            pendingExpanded = expanding
+            return
+        }
         isAnimating = true
 
         if expanding {
@@ -236,6 +258,10 @@ public class SettingsExpander: StackPanel {
                 self.onExpanded?()
             } else {
                 self.onCollapsed?()
+            }
+            if let pending = self.pendingExpanded {
+                self.pendingExpanded = nil
+                self.runExpandCollapseAnimation(expanding: pending)
             }
         }
 

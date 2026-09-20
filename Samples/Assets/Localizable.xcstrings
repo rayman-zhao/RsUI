@@ -681,6 +681,23 @@
         }
       }
     },
+    "Expand or collapse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand or collapse"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开或折叠"
+          }
+        }
+      }
+    },
     "File case with spaces in the name: creates Reveal Demo.txt under the support directory, then selects it." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1017,6 +1034,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "实时切换 App.context.theme 与 App.context.language。"
+          }
+        }
+      }
+    },
+    "Lower thumb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lower thumb"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下限滑块"
           }
         }
       }
@@ -1527,6 +1561,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "选择器"
+          }
+        }
+      }
+    },
+    "Range" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Range"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选区"
           }
         }
       }
@@ -2088,6 +2139,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "窗口上下文变化时更新。"
+          }
+        }
+      }
+    },
+    "Upper thumb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upper thumb"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上限滑块"
           }
         }
       }
