@@ -36,7 +36,7 @@ App (entry point, lifecycle, single-instance, module init)
 
 - **`App`** — `open class App: SwiftApplication` ([`Sources/RsUI/App/App.swift`](./Sources/RsUI/App/App.swift)). The single source of truth is `static let context = AppContext()`. The convenience initializer `init(group:product:resourceBundle:moduleTypes:)` calls `App.context.bootstrap(...)` then `AppInstance.redirectOrRegister(for:)` for single-instance coordination. `onLaunched` runs `bootstrapGUI()` + `initializeModules()`, registers the JumpList "New Window" entry, and creates a `MainWindow` at the persisted `App.context.route.lastPageURL` (falling back to the first nav item). `onActivated` and `onShutdown` are overridden.
 - **`Module`** — `public protocol Module: ExpressibleByEmptyLiteral` ([`Sources/RsUI/Models/Module.swift`](./Sources/RsUI/Models/Module.swift)). Requires `var id: String` plus a set of defaultable methods modules override to contribute to the shell: `titleBarRightHeaderItem(in:)`, `navigationViewMenuItems(in:)`, `navigationViewFooterMenuItems(in:)`, `settingsGroup()`, `navigationDidRequest(for:in:)`. The protocol provides empty/`nil` defaults, so a conforming type may implement only what it needs.
-- **`Page`** — `public protocol Page: AnyObject` ([`Sources/RsUI/Models/Page.swift`](./Sources/RsUI/Models/Page.swift)). Meta info `var url: URL` + `var title: String`; UI `var header: Any?` (default `nil`) and `var content: UIElement`. The lifecycle hook `func windowContextDidChange(to: WindowContext)` (default no-op) is called when the page is moved to another window or the host window enters/exits fullscreen (Page impls that cache a `WindowContext` should rebind it here, and flip fullscreen UI affordances). The defaultable `startObserving(_:onChanged:)` helper drives the UI off an `@Observable` state via the RsFoundation `Observations` async sequence.
+- **`Page`** — `public protocol Page: AnyObject` ([`Sources/RsUI/Models/Page.swift`](./Sources/RsUI/Models/Page.swift)). Meta info `var url: URL` + `var title: String`; UI `var header: Any?` (default `nil`) and `var content: UIElement`. The lifecycle hook `func windowContextDidChange(to: WindowContext)` (default no-op) is called when the page is moved to another window or the host window enters/exits fullscreen (Page impls that cache a `WindowContext` should rebind it here, and flip fullscreen UI affordances). The defaultable `startObserving(_:onChanged:)` helper drives the UI off an `@Observable` state via the `Observations` async sequence (toolchain `Observation` module); it returns a cancellable `Task<Void, Never>`.
 - **`WindowContext`** — `public struct WindowContext` ([`Sources/RsUI/Models/WindowContext.swift`](./Sources/RsUI/Models/WindowContext.swift)). Window-scoped service facade exposed to modules/pages; it delegates to a weak `WindowContextHost` (internal protocol, see below). Public surface: `pickFolder(_:)`, `open(_:mode:transitionInfoOverride:)` overloads (single `Page`, `[Page]`, single `URL`, `[URL]`), `openOrFocus(_:)` (focus an existing tab matching the URL, else open a new one) and `isInFullscreen` / `enterFullscreen()` / `exitFullscreen()`, plus `NavigationOpenMode` (`.inplace` / `.newTab` / `.newTabNoFocus`).
 - **`MainWindow`** — `class MainWindow: NavigationViewWindow, WindowContextHost` ([`Sources/RsUI/App/MainWindow/MainWindow.swift`](./Sources/RsUI/App/MainWindow/MainWindow.swift)). Modern minimal shell: it owns a `PageControl` (instantiated as a `PageTabView`) and wires host-event surface to it (see Core UI Composition Model). The only file with active tear-out scaffolding is [`MainWindow+TearOutTabs.swift`](./Sources/RsUI/App/MainWindow/MainWindow+TearOutTabs.swift), but it is **entirely a `/* ... */` commented-out block** — see [Tab Tear-Out Currently Disabled](#tab-tear-out-currently-disabled).
 - **`AppContext`** — `@Observable public final class AppContext` ([`Sources/RsUI/Models/AppContext.swift`](./Sources/RsUI/Models/AppContext.swift)). Global singleton (`App.context`) holding `groupName`/`productName`/`supportDirectory`/`preferences` (`JSONPreferences`)/`resourceBundle`, the observable `theme`/`language` enums, `route: AppRoute` (persisted last page + `maxHistoryPages`), and the loaded `[any Module]`. Methods: `bootstrap(...)` / `bootstrapGUI()` / `initializeModules()` / `releaseModules()`, the localization helpers `tr(_:table:)` and `tr(xaml:table:)` (the latter substitutes `{x:Tr key}` placeholders in XAML strings), and `openNewWindow(with:forceMinimalMode:)`.
@@ -117,21 +117,32 @@ Sources/RsUI/
     Settings/
       SettingsPage.swift                — `class SettingsPage: Page` with `static let url = "rs://ui/settings"`; imperative content (personalization combo + per-module groups + about / dependencies)
   Controls/
-    NavigationViewItem+Extensions.swift — `startObserving` mirror + `static build(icon( ​:iconGlyph):label:url:)` factories and `build(…:actionGlyph:actionTooltip:actionHandler:)` (the url is stored in `tag` as `HString`)
+    NavigationViewItem+Extensions.swift — `startObserving` mirror + `static build(iconGlyph:label:url:)` factory (the url is stored in `tag` as `HString`)
+    NavigationViewItemWithAction.swift   — `NavigationViewItem` subclass with a hover-revealed action button at the row end (hover signal via the template's PointerStates `currentStateChanged`; strong `self` captures are intentional for swift-winrt wrapper lifetime)
     SettingsCard.swift                  — Fluent-style settings row
-    SettingsExpander.swift              — Expander for nested rows
+    SettingsExpander.swift              — Expander for nested rows (`itemsSource` is the single data source; the init `items` parameter seeds it directly)
     SettingsGroup.swift                 — Group container with title
-    ChevronIcon.swift                   — Chevron glyph helper
+    SettingsPanel.swift                 — Panel chrome + back button for settings-like pages
+    ChevronIcon.swift                   — Chevron glyph rotation helper (interruptible: mid-animation requests stop the running storyboard and continue from the current angle)
     RangeSlider.swift                   — Dual-thumb range slider replicating the native Slider look (real `Thumb` controls + official `Slider*` theme resources; control-level visual states driven manually via `goToVisualState` — `goToElementStateCore` always returns false on XamlReader loose XAML); dragging between the thumbs slides both thumbs together width-kept via a transparent Thumb hit-surface (`RangeSliderState.shiftRaw`/`settleToStep`); keyboard is per-thumb only (←/→, PageUp/PageDown, Home/End); `isToolTipEnabled` gates the value tooltip; `valueChanged` event
+    ItemsView.swift                     — `open class ItemsView: WinUI.ItemsView` id-driven list (observable vector + `ItemsRepeater`; `makeIdView` closure supplies element per id)
+    GridView.swift                      — `GridView: Grid` multi-select grid built on `ItemsView` (marquee selection, checkbox selection, keyboard; note the name shadows `WinUI.GridView`)
+    GridViewSelectionModel.swift        — Pure-logic selection state for GridView's marquee diffing (unit-tested)
+    ToggleButtons.swift                 — Grouped toggle buttons control
+    Viewer.swift                        — Multi-pane viewer shell (top/center/bottom/left/right panes + draggable splitters)
+    FadeSlideItemTransitionProvider.swift — `ItemCollectionTransitionProvider` providing fade+slide item transitions for ItemsView/GridView
   Support/
-    AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension
+    AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension (waits for activation redirect before `exit(0)`)
+    AppBarButton+Extensions.swift       — `build(glyph:tooltip:)` factory on `AppBarButton` ({x:Glyph}/{x:Tr} XAML template)
+    FrameworkElement+Extensions.swift   — `requireElement(_:)` / `requireResource(_:)` named-lookup crash-with-message helpers
     JumpList+Extensions.swift           — `JumpList.register(arguments:displayName:logo:)` taskbar jump-list extension
     NavigationTransitionInfo+Extensions.swift — `static func make(slideEffect:)` factory
     NavigationView+Extensions.swift     — `selectItem(with:)`, `selectFirstItem()`, `firstItemURL`, settings-item handling
     NavigationViewItemBase+Extensions.swift — `var url: URL?` computed from `tag as? HString`
-    ProgressBar+Extensions.swift / ProgressRing+Extensions.swift — `startObserving` mirrors
+    ProgressBar+Extensions.swift / ProgressRing+Extensions.swift — `startObserving` mirrors + `ProgressBarEx`/`ProgressRingEx` subclasses (projection lifetime workaround; currently kept for reference)
     RuntimeInfo+Extensions.swift        — `static var sdkVersion` mapping Windows App SDK 1.8.x versions to display strings
-    TabView+Extentions.swift            — `var canAutoCloseTabs` setter-only convenience (pairs `tabCloseRequested` to strip removal)
+    StartObserving.swift                — `startObservingChanges(on:emitting:onChanged:)`: the shared body behind all `startObserving` mirrors; returns a cancellable `Task<Void, Never>`
+    TabView+Extentions.swift            — `var canAutoCloseTabs` setter-only convenience (unused; kept for reference)
     UIElement+Extensions.swift          — `detachFromVisualParent()` / `attachToParent(_:index:)` canonical single-parent helpers
     Window+Extensions.swift             — `useMicaBackdrop()`, `useRestoration(_:)`, `startObserving(_:onChanged:)`; defines private `WindowPosition` PreferenceValue
   Models/
@@ -146,14 +157,16 @@ Samples/
   SampleApp/
     SampleApp.swift                     — `@main class SampleApp: App`; registration via `super.init(group:product:resourceBundle:moduleTypes:)`
     SampleModule/SampleModule.swift     — `@Observable final class SampleModule: Module`; demo of nav items / footer items / settingsGroup / navigationDidRequest
-    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance / FolderPicker / RangeSlider (incl. a window-width/level CT demo) + FeaturePageHelpers)
+    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance (MVVM pattern demo) / Picker (also serves the footer nav item via `path`) / Reveal / Viewer / GridView / ItemsView / ItemsViewDocumentation / RangeSlider (incl. a window-width/level CT demo) / ToggleButtons + FeaturePageHelpers with shared `makeClickableCard` / caption / section-title factories)
   Assets/                               — SampleApp.ico / .rc / .res / Localizable.xcstrings / SettingsPage.xcstrings
 Tests/
   RsUITests/PageModelTests.swift        — Swift Testing `@Suite struct PageModelTests`: PageModel navigate/goBack/goForward/history-limit/clears-forward history
-  RsUITests/RangeSliderStateTests.swift — Swift Testing `@Suite struct RangeSliderStateTests`: RangeSliderState clamping/step-snap/minGap/setRange/domain-revalidate/fraction math
+  RsUITests/RangeSliderStateTests.swift — Swift Testing `@Suite struct RangeSliderStateTests`: RangeSliderState clamping/step-snap (minimum-anchored grid)/minGap/setRange/domain-revalidate/fraction math
+  RsUITests/GridViewSelectionModelTests.swift — marquee diff selection-model tests
+  RsUITests/ModelsTests.swift           — AppTheme mapping / AppLanguage display+locale / AppRoute defaults
   PageControlTests/                     — GUI test host executable target
     App.swift                           — launches PageControlTestWindow(mode: .frame/.tabView) + TabViewPageFrameTestWindow()
-    MockPages.swift                     — test Page impls (string/UIElement/nil header) + `makePage(name:headerKind:effect:)` helper
+    MockPages.swift                     — test Page impls (string/UIElement/nil header) + `makePage(name:headerKind:)` helper
     PageControlTestWindow.swift          — single window, runs PageFrame or PageTabView behind a shared `any PageControl`, drives Back/Forward/+Page polymorphically; reads `PageTabView.tabCount` to assert strip auto-hide
     TabViewPageFrameTestWindow.swift    — frame-per-tab demonstration (each TabViewItem.content = toolbar + PageFrame; `framesByName` keyed by `TabViewItem.name`)
   WindowTests/                          — window-shell GUI test host executable target
@@ -175,7 +188,7 @@ Tests/
 ### UI & MVVM Conventions
 
 - **Architecture pattern — MVVM**: Follow Model-View-ViewModel. ViewModels are the source of truth for UI state. Mark ViewModel types `@Observable` (see `AppContext` in `Models/` and `SampleModule` in `Samples/`). In event-handler closures, call ViewModel methods rather than mutating UI controls directly.
-- **Observation driver**: UI reacts to `@Observable` state through the `Observations` async-sequence helper from `RsFoundation`, surfaced via `startObserving(emitting:onChanged:)` extended on `Page` (`Page.swift`), `NavigationViewItem` (`Controls/NavigationViewItem+Extensions.swift`), `ProgressBar`/`ProgressRing` (`Support/`), and `Window` (`Support/Window+Extensions.swift`). Prefer this flow: emit the relevant ViewModel state, run the update on `MainActor`, and mutate UI only inside the `onChanged` callback. (The concrete `appearanceChanged` / `fullscreenChanged` shells — `AppearanceWindow` and `NavigationViewWindow` — additionally expose a plain `EventHandler`/`EventWithArgumentHandler` for surface-level one-shot fan-out that is not tied to a long-lived ViewModel.)
+- **Observation driver**: UI reacts to `@Observable` state through the `Observations` async-sequence helper (from the toolchain's `Observation` module), surfaced via `startObserving(_:onChanged:)` extended on `Page` (`Page.swift`), `NavigationViewItem` (`Support/NavigationViewItem+Extensions.swift`), `ProgressBar`/`ProgressRing` (`Support/`), and `Window` (`Support/Window+Extensions.swift`) — all five delegate to the shared `startObservingChanges(on:emitting:onChanged:)` in `Support/StartObserving.swift` and return a cancellable `Task<Void, Never>` (cancel e.g. when the observed owner's content is rebuilt). Prefer this flow: emit the relevant ViewModel state, run the update on `MainActor`, and mutate UI only inside the `onChanged` callback; event handlers call ViewModel methods instead of mutating controls directly (see `AppearancePage` for the full pattern). (The concrete `appearanceChanged` / `fullscreenChanged` shells — `AppearanceWindow` and `NavigationViewWindow` — additionally expose a plain `EventHandler`/`EventWithArgumentHandler` for surface-level one-shot fan-out that is not tied to a long-lived ViewModel; `addHandler` returns an `EventHandlerToken` and `removeHandler(_:)` unregisters.)
 
 ### Naming Conventions for Events & Templates
 
@@ -196,6 +209,7 @@ Besides, GUI callback and template-method naming follows four distinct rules —
 ### Swift on Windows Specifics
 - This is NOT Apple Swift. Some toolchain behaviors and available APIs differ.
 - All WinUI types are WinRT projections. `HString`, `AnyIVector<Any?>`, `Uri`, `Color`, etc. are projection types, not native Swift types.
+- **RsUI type names shadow WinUI projections**: `RsUI.GridView` (a `Grid` subclass) shadows `WinUI.GridView`, and `RsUI.ItemsView` (a `WinUI.ItemsView` subclass) shadows `WinUI.ItemsView`. Inside the RsUI module an unqualified `GridView` / `ItemsView` always means the RsUI wrapper — reference the projections with the `WinUI.` prefix. This is an accepted naming decision (kept deliberately); do not rename without weighing the public API break.
 
 ### COM Callback Exceptions
 - Swift exceptions thrown inside COM callback paths do NOT propagate correctly to the main thread. The process won't terminate but UI operations will fail silently. Prefer `try?` / `do-catch`-to-log at WinRT call boundaries and surface failures through logging (`log.warning`), not through thrown errors.

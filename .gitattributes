@@ -1,0 +1,13 @@
+# 统一行尾：仓库内文本文件一律 LF（AGENTS.md 约定），
+# 防止 Windows 上 core.autocrlf 引入 CRLF。
+* text=auto eol=lf
+
+# 二进制资源（.rc 为 UTF-16 编码的资源脚本，按二进制处理不做行尾归一化）
+*.ico binary
+*.res binary
+*.png binary
+*.jpg binary
+*.rc binary
+
+# UTF-16 编码的配置文件，不能按文本归一化
+.swift-format binary
