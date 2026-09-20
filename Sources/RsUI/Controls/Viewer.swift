@@ -38,7 +38,7 @@ private enum ViewerChromeMode: String, Codable {
 // MARK: - 内部状态模型
 
 /// 单个 Viewer 实例对应的持久化状态。宽度可选值 `nil` 代表由内容自动决定尺寸。
-/// FIXME: Should disible spliter when pane is auto-size.
+/// FIXME: Should disable splitters when the pane is auto-sized.
 private struct ViewerPreferenceEntry: Codable {
     let leftPaneWidth: Double?
     let rightPaneWidth: Double?
@@ -90,7 +90,7 @@ private struct OverlayRuntimeState {
 /// - 调用方负责创建各区域内容，并通过回调协调区域、主内容和 ViewModel。
 /// - Viewer 可以通过 `preferenceKey` 自行保存通用布局偏好；业务偏好仍由调用方维护。
 /// - 同一个 UIElement 同一时间只能属于一个父容器，设置内容前应确保它未挂载到其他位置。
-/// - 左右区域支持拖拽调整尺寸；顶部和底部当前只支持固定尺寸或内容自适应。
+/// - 左右区域支持拖拽调整尺寸；顶部和底部当前只支持内容自适应尺寸。
 open class Viewer: WinUI.Grid {
     private let ui:
         (
@@ -110,8 +110,6 @@ open class Viewer: WinUI.Grid {
             bottomRow: RowDefinition,
             leftColumn: ColumnDefinition,
             rightColumn: ColumnDefinition,
-            leftSplitterColumn: ColumnDefinition,
-            rightSplitterColumn: ColumnDefinition,
             leftSplitter: Border,
             rightSplitter: Border,
             topHotzone: Border,
@@ -146,6 +144,11 @@ open class Viewer: WinUI.Grid {
     private var panes = Dictionary(uniqueKeysWithValues: ViewerEdge.allCases.map { ($0, PaneRuntimeState()) })
     private var overlay = OverlayRuntimeState()
     private var resizingEdge: ViewerEdge?
+    /// 上次已播放的悬浮上下栏显示动画状态；状态未变化时跳过重复播放。
+    private var topChromeShownState: Bool?
+    private var bottomChromeShownState: Bool?
+    /// 上次已播放的左右栏展开动画状态。
+    private var paneAnimationStates: [ViewerEdge: ViewerPaneState] = [:]
 
     /// 鼠标离开悬浮区域后，自动隐藏上下栏的延迟时间。
     private let overlayHideDelayNanoseconds: UInt64 = 200_000_000
@@ -200,8 +203,6 @@ open class Viewer: WinUI.Grid {
             bottomRow: loaded.requireElement("BottomRow"),
             leftColumn: loaded.requireElement("LeftColumn"),
             rightColumn: loaded.requireElement("RightColumn"),
-            leftSplitterColumn: loaded.requireElement("LeftSplitterColumn"),
-            rightSplitterColumn: loaded.requireElement("RightSplitterColumn"),
             leftSplitter: loaded.requireElement("LeftSplitter"),
             rightSplitter: loaded.requireElement("RightSplitter"),
             topHotzone: loaded.requireElement("TopHotzone"),
@@ -239,6 +240,7 @@ open class Viewer: WinUI.Grid {
         setupChromeControlEvents()
         updateChromeControls()
         applyStoredPreferences()
+        updateOverlayVisibility()
     }
 
     // MARK: - 公开区域接口
@@ -355,7 +357,8 @@ open class Viewer: WinUI.Grid {
         }
     }
 
-    /// 返回指定区域是否有调用方提供的内容。没有内容的区域即使状态为 expanded 也不会占位。
+    /// 返回指定区域是否有调用方提供的内容。没有内容的区域即使状态为 expanded 也不会占位；
+    /// 顶部例外——内置 chrome 按钮常驻，即使未设置 topContent 也始终占位。
     private func hasPaneContent(_ edge: ViewerEdge) -> Bool {
         edge == .top || paneContent(edge) != nil
     }
@@ -411,15 +414,12 @@ open class Viewer: WinUI.Grid {
             value: expanded ? (runtime.length ?? 1) : 0,
             gridUnitType: expanded && runtime.length == nil ? .auto : .pixel
         )
-        let splitLength = WinUI.GridLength(value: 0, gridUnitType: .pixel)
         if edge == .left {
             ui.leftColumn.width = paneLength
-            ui.leftSplitterColumn.width = splitLength
             ui.leftHost.visibility = expanded ? .visible : .collapsed
             ui.leftSplitter.visibility = expanded ? .visible : .collapsed
         } else {
             ui.rightColumn.width = paneLength
-            ui.rightSplitterColumn.width = splitLength
             ui.rightHost.visibility = expanded ? .visible : .collapsed
             ui.rightSplitter.visibility = expanded ? .visible : .collapsed
         }
@@ -516,11 +516,11 @@ open class Viewer: WinUI.Grid {
         }
         splitter.pointerMoved.addHandler { [weak self] _, args in
             guard let self, self.resizingEdge == edge, let args else { return }
-            let point = try? args.getCurrentPoint(self)
+            guard let point = try? args.getCurrentPoint(self) else { return }
             let rawLength =
                 edge == .left
-                ? Double(point?.position.x ?? 0)
-                : Double(self.actualWidth) - Double(point?.position.x ?? 0)
+                ? Double(point.position.x)
+                : Double(self.actualWidth) - Double(point.position.x)
             let length = self.pane(edge).constrained(rawLength)
             self.setPaneLength(length, for: edge)
             args.handled = true
@@ -583,6 +583,9 @@ open class Viewer: WinUI.Grid {
         guard overlay.mode == .overlay else { return }
         overlay.hideTask?.cancel()
         overlay.hideTask = nil
+        // 热区是瞬时触发器而非驻留区域：reveal 后热区即被折叠，若收不到
+        // pointerExited，残留 region 会让 pointerRegions 永远非空、卡死自动隐藏。
+        overlay.pointerRegions.subtract([.topHotzone, .bottomHotzone])
         guard !overlay.isVisible else { return }
         overlay.isVisible = true
         updateOverlayVisibility()
@@ -618,14 +621,22 @@ open class Viewer: WinUI.Grid {
         ui.topHotzone.visibility = isOverlay && !overlay.isVisible && topAvailable ? .visible : .collapsed
         ui.bottomHotzone.visibility = isOverlay && !overlay.isVisible && bottomAvailable ? .visible : .collapsed
 
-        showTop ? try? ui.overlayTopShownStoryboard.begin() : try? ui.overlayTopHiddenStoryboard.begin()
-        showBottom ? try? ui.overlayBottomShownStoryboard.begin() : try? ui.overlayBottomHiddenStoryboard.begin()
+        if topChromeShownState != showTop {
+            topChromeShownState = showTop
+            try? (showTop ? ui.overlayTopShownStoryboard : ui.overlayTopHiddenStoryboard).begin()
+        }
+        if bottomChromeShownState != showBottom {
+            bottomChromeShownState = showBottom
+            try? (showBottom ? ui.overlayBottomShownStoryboard : ui.overlayBottomHiddenStoryboard).begin()
+        }
     }
 
     // MARK: - XAML 动画
 
     /// 根据左右栏展开状态选择并播放对应动画。
     private func runPaneAnimation(_ edge: ViewerEdge, state: ViewerPaneState) {
+        guard paneAnimationStates[edge] != state else { return }
+        paneAnimationStates[edge] = state
         switch (edge, state) {
         case (.left, .expanded): try? ui.leftExpandedStoryboard.begin()
         case (.left, .collapsed): try? ui.leftCollapsedStoryboard.begin()
@@ -689,73 +700,70 @@ private var xamlUI: String {
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Name="LeftColumn" Width="0"/>
-            <ColumnDefinition x:Name="LeftSplitterColumn" Width="0"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition x:Name="RightSplitterColumn" Width="0"/>
             <ColumnDefinition x:Name="RightColumn" Width="0"/>
         </Grid.ColumnDefinitions>
 
-        <ContentControl x:Name="CenterContentHost" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-        <ContentControl x:Name="CenterOverlayHost" Grid.Row="1" Grid.Column="2" IsHitTestVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <ContentControl x:Name="CenterContentHost" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <ContentControl x:Name="CenterOverlayHost" Grid.Row="1" Grid.Column="1" IsHitTestVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
 
-        <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}">
+        <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <AppBarButton x:Name="ViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
+            <AppBarButton x:Name="ViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerLeftPane}" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
                 <AppBarButton.Icon>
                     <FontIcon x:Name="ViewerLeftPaneIcon"/>
                 </AppBarButton.Icon>
             </AppBarButton>
             <ContentControl x:Name="TopHost" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-            <AppBarButton x:Name="ViewerChromeModeButton" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
+            <AppBarButton x:Name="ViewerChromeModeButton" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerChromeMode}" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
                 <AppBarButton.Icon>
                     <FontIcon x:Name="ViewerChromeModeIcon"/>
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Name="ViewerRightPaneButton" Grid.Column="3" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
+            <AppBarButton x:Name="ViewerRightPaneButton" Grid.Column="3" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerRightPane}" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
                 <AppBarButton.Icon>
                     <FontIcon x:Name="ViewerRightPaneIcon"/>
                 </AppBarButton.Icon>
             </AppBarButton>
         </Grid>
 
-        <ContentControl x:Name="BottomHost" Grid.Row="2" Grid.Column="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        <ContentControl x:Name="BottomHost" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
 
-        <Border x:Name="OverlayTopContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" VerticalAlignment="Top" Canvas.ZIndex="100">
+        <Border x:Name="OverlayTopContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" VerticalAlignment="Top" Visibility="Collapsed" Canvas.ZIndex="100">
             <Border.RenderTransform>
                 <CompositeTransform x:Name="OverlayTopTransform" />
             </Border.RenderTransform>
-            <Grid x:Name="OverlayTopChromeRoot" Background="{ThemeResource LayerFillColorDefaultBrush
-            }">
+            <Grid x:Name="OverlayTopChromeRoot" Background="{ThemeResource LayerFillColorDefaultBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <AppBarButton x:Name="OverlayViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
+                <AppBarButton x:Name="OverlayViewerLeftPaneButton" Grid.Column="0" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerLeftPane}" ToolTipService.ToolTip="{x:Tr ViewerLeftPane}">
                     <AppBarButton.Icon>
                         <FontIcon x:Name="OverlayViewerLeftPaneIcon"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <ContentControl x:Name="OverlayTopHost" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
-                <AppBarButton x:Name="OverlayViewerChromeModeButton" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
+                <AppBarButton x:Name="OverlayViewerChromeModeButton" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerChromeMode}" ToolTipService.ToolTip="{x:Tr ViewerChromeMode}">
                     <AppBarButton.Icon>
                         <FontIcon x:Name="OverlayViewerChromeModeIcon"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Name="OverlayViewerRightPaneButton" Grid.Column="3" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
+                <AppBarButton x:Name="OverlayViewerRightPaneButton" Grid.Column="3" Style="{StaticResource ViewerChromeAppBarButtonStyle}" Label="{x:Tr ViewerRightPane}" ToolTipService.ToolTip="{x:Tr ViewerRightPane}">
                     <AppBarButton.Icon>
                         <FontIcon x:Name="OverlayViewerRightPaneIcon"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </Grid>
         </Border>
-        <Border x:Name="OverlayBottomContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" VerticalAlignment="Bottom" Canvas.ZIndex="100">
+        <Border x:Name="OverlayBottomContainer" Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" VerticalAlignment="Bottom" Visibility="Collapsed" Canvas.ZIndex="100">
             <Border.RenderTransform>
                 <CompositeTransform x:Name="OverlayBottomTransform" />
             </Border.RenderTransform>
@@ -769,7 +777,7 @@ private var xamlUI: String {
                 <CompositeTransform x:Name="LeftHostTransform"/>
             </ContentControl.RenderTransform>
         </ContentControl>
-        <ContentControl x:Name="RightHost" Grid.Row="0" Grid.RowSpan="3" Grid.Column="4"
+        <ContentControl x:Name="RightHost" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
                         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
             <ContentControl.RenderTransform>
@@ -780,17 +788,19 @@ private var xamlUI: String {
         <Border x:Name="LeftSplitter" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"
                 Width="6" Margin="0,0,-3,0" HorizontalAlignment="Right" Background="Transparent"
                 Visibility="Collapsed" Canvas.ZIndex="102"/>
-        <Border x:Name="RightSplitter" Grid.Row="0" Grid.RowSpan="3" Grid.Column="4"
+        <Border x:Name="RightSplitter" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
                 Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent"
                 Visibility="Collapsed" Canvas.ZIndex="102"/>
 
-        <Border x:Name="TopHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
-                Width="200" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.ZIndex="101">
+        <Border x:Name="TopHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                Width="200" HorizontalAlignment="Center" VerticalAlignment="Top" Background="Transparent"
+                Visibility="Collapsed" Canvas.ZIndex="101">
             <Border Width="50" Height="4" Margin="0,4,0,0"
                 Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="2"/>
         </Border>
-        <Border x:Name="BottomHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
-                Width="200" HorizontalAlignment="Center" VerticalAlignment="Bottom" Canvas.ZIndex="101">
+        <Border x:Name="BottomHotzone" Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                Width="200" HorizontalAlignment="Center" VerticalAlignment="Bottom" Background="Transparent"
+                Visibility="Collapsed" Canvas.ZIndex="101">
             <Border Width="50" Height="4" Margin="0,0,0,4"
                 Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="2"/>
         </Border>
