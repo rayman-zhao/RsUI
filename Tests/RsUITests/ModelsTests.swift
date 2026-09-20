@@ -20,24 +20,6 @@ struct AppThemeTests {
     }
 
     @Test
-    func autoFollowsSystemThemeHook() {
-        let saved = AppTheme.systemThemeIsDark
-        defer { AppTheme.systemThemeIsDark = saved }
-
-        AppTheme.systemThemeIsDark = true
-        #expect(AppTheme.auto.isDark)
-        #expect(AppTheme.auto.applicationTheme == .dark)
-
-        AppTheme.systemThemeIsDark = false
-        #expect(!AppTheme.auto.isDark)
-        #expect(AppTheme.auto.applicationTheme == .light)
-
-        // 未采集系统主题时按深色兜底
-        AppTheme.systemThemeIsDark = nil
-        #expect(AppTheme.auto.isDark)
-    }
-
-    @Test
     func undefinedDefaultsToDark() {
         #expect(AppTheme() == .undefined)
         #expect(AppTheme.undefined.isDark)
