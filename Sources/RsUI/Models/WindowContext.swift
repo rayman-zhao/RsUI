@@ -128,6 +128,9 @@ public struct WindowContext {
         }
 
         dialog.xamlRoot = host.xamlRoot
+        if let style = Application.current.resources["DefaultContentDialogStyle"] as? Style {
+            dialog.style = style
+        }
 
         Task { @MainActor in
             guard let result = try? await dialog.showAsync().get() else { return }
@@ -151,6 +154,7 @@ public struct WindowContext {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
+        guard !pages.isEmpty else { return 0 }
         return host?.open(pages, mode: mode, transitionInfoOverride: transitionInfoOverride) ?? 0
     }
 
