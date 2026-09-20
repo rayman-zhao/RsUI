@@ -149,11 +149,37 @@ final class ItemsViewPage: RsUI.Page {
             list.layout = layoutToggle.isOn ? gridLayout : listLayout
         }
 
+        // 过渡动画风格三选：内置 FadeSlide（默认）、原生 LinedFlowLayout 的缩放
+        // 洗牌风格、关闭。直接改赋 itemTransitionProvider，演示进阶出口。
+        let transitionButtons = ToggleButtons()
+        transitionButtons.addItem(iconGlyph: "\u{E711}", label: tr("None"), tag: "none")
+        transitionButtons.addItem(iconGlyph: "\u{E70D}", label: tr("Fade & slide"), tag: "fadeSlide")
+        transitionButtons.addItem(iconGlyph: "\u{E8E9}", label: tr("Scale"), tag: "scale")
+        transitionButtons.selectionChanged.addHandler { _, tag in
+            switch tag {
+            case "none": list.itemTransitionProvider = nil
+            case "scale": list.itemTransitionProvider = LinedFlowLayoutItemCollectionTransitionProvider()
+            default: list.itemTransitionProvider = FadeSlideItemTransitionProvider()
+            }
+        }
+        transitionButtons.selectedTag = "fadeSlide"
+
+        let transitionLabel = TextBlock()
+        transitionLabel.text = tr("Item animations")
+        transitionLabel.verticalAlignment = .center
+
+        let transitionPanel = StackPanel()
+        transitionPanel.orientation = .horizontal
+        transitionPanel.spacing = 8
+        transitionPanel.children.append(transitionLabel)
+        transitionPanel.children.append(transitionButtons)
+
         let controls = StackPanel()
         controls.orientation = .horizontal
         controls.spacing = 16
         controls.children.append(modePanel)
         controls.children.append(layoutToggle)
+        controls.children.append(transitionPanel)
         controls.children.append(addButton)
         controls.children.append(insertButton)
         controls.children.append(removeButton)

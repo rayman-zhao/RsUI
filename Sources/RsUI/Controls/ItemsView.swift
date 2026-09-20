@@ -29,6 +29,12 @@ import WindowsFoundation
 ///   取 id 与增删都直接走它，不维护 Swift 侧镜像），增删走 `appendIds` /
 ///   `insertIds` / `removeIds(_:)` 等增量接口，原生 `VectorChanged` 驱动
 ///   repeater 增量实现化，选择随条目保留。
+/// - 条目增删/顺移默认播放过渡动画（`animatesItemChanges` 可关）：内置
+///   `FadeSlideItemTransitionProvider` —— 新增淡入上滑、移除淡出、索引顺移
+///   平滑位移；`setIds` 整体重置按新增动画整体重新入场。需要其他风格时直接
+///   改赋继承的 `itemTransitionProvider`（如原生缩放风格的
+///   `LinedFlowLayoutItemCollectionTransitionProvider`，或继承
+///   `ItemCollectionTransitionProvider` 自写子类）。
 /// - 布局沿用 ItemsView 原生 `layout` 属性（默认样式即单列 StackLayout），
 ///   需要条目间距或网格布局时由调用方自行设置。
 /// - 选择沿用 ItemsView 原生语义（`selectionMode` / `select` / `deselect`，按索引），
@@ -47,6 +53,9 @@ open class ItemsView: WinUI.ItemsView {
     /// itemsSource 的载体：单一可观察向量（经 C++ shim 创建，投影里没有对应工厂）。
     /// 元素即 id 字符串；计数、按索引取 id 与增删都直接走它，不维护 Swift 侧镜像。
     private let items: WinUI.IVectorAny
+    /// 条目过渡动画的载体（内置 `FadeSlideItemTransitionProvider`，
+    /// 见 `animatesItemChanges`）。
+    private let transitionProvider: FadeSlideItemTransitionProvider
 
     /// - Parameter makeIdView: 条目视图构建闭包（按 id）。
     public init(makeIdView: @escaping (String) -> UIElement) {
@@ -55,12 +64,16 @@ open class ItemsView: WinUI.ItemsView {
             fatalError("ItemsView: failed to create the observable items vector")
         }
         items = vector
+        transitionProvider = FadeSlideItemTransitionProvider()
         super.init()
 
         // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
         // 经 elementPrepared 在代码里填 child，见文件尾的 ItemContainerFactory。
         itemTemplate = ItemContainerFactory()
         itemsSource = vector
+        // StackLayout / UniformGridLayout 都不带默认 transition provider
+        // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
+        itemTransitionProvider = transitionProvider
 
         // elementPrepared 挂在内部 ItemsRepeater 上。loaded 时 repeater 可能尚未
         // 进视觉树（模板应用时序），layoutUpdated 重试到成功为止。
@@ -69,6 +82,20 @@ open class ItemsView: WinUI.ItemsView {
         }
         layoutUpdated.addHandler { [weak self] _, _ in
             self?.wireRepeater()
+        }
+    }
+
+    /// 条目增删/顺移是否播放过渡动画（默认 `true`）。
+    ///
+    /// 内置 `FadeSlideItemTransitionProvider`：新增淡入上滑、移除淡出、索引
+    /// 顺移平滑位移；`setIds` 整体重置按新增动画整体重新入场。需要其他风格时，
+    /// 直接改赋继承自 `WinUI.ItemsView` 的 `itemTransitionProvider`（如原生
+    /// 缩放风格的 `LinedFlowLayoutItemCollectionTransitionProvider`；置 `nil`
+    /// 即完全关闭）。
+    public var animatesItemChanges = true {
+        didSet {
+            guard animatesItemChanges != oldValue else { return }
+            itemTransitionProvider = animatesItemChanges ? transitionProvider : nil
         }
     }
 

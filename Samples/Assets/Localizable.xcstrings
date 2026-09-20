@@ -3009,6 +3009,74 @@
           }
         }
       }
+    },
+    "Item animations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item animations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条目动画"
+          }
+        }
+      }
+    },
+    "animatesItemChanges — item add/remove/move transition animations, on by default. Built on the code subclass FadeSlideItemTransitionProvider (fade+slide in, fade out, smooth reflows); other styles — e.g. the native LinedFlowLayoutItemCollectionTransitionProvider (scale in/out) — can be assigned via the inherited itemTransitionProvider." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "animatesItemChanges — item add/remove/move transition animations, on by default. Built on the code subclass FadeSlideItemTransitionProvider (fade+slide in, fade out, smooth reflows); other styles — e.g. the native LinedFlowLayoutItemCollectionTransitionProvider (scale in/out) — can be assigned via the inherited itemTransitionProvider."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "animatesItemChanges —— 条目增删/顺移过渡动画，默认开启。基于代码子类 FadeSlideItemTransitionProvider（新增淡入上滑、移除淡出、顺移平滑位移）；其他风格——如原生 LinedFlowLayoutItemCollectionTransitionProvider（缩放进出）——可经继承的 itemTransitionProvider 改赋。"
+          }
+        }
+      }
+    },
+    "Fade & slide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fade & slide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "淡入滑动"
+          }
+        }
+      }
+    },
+    "Scale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scale"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

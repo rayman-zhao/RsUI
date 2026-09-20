@@ -134,6 +134,9 @@ final class ItemsViewDocumentationPage: RsUI.Page {
                     "selectedIds — id-based selection readout built on selectedIndexes + string(at:), the same reading primitive as ids (ItemsView exposes no native selection set; its selectionChanged args are an empty shell)."
                 ),
                 tr(
+                    "animatesItemChanges — item add/remove/move transition animations, on by default. Built on the code subclass FadeSlideItemTransitionProvider (fade+slide in, fade out, smooth reflows); other styles — e.g. the native LinedFlowLayoutItemCollectionTransitionProvider (scale in/out) — can be assigned via the inherited itemTransitionProvider."
+                ),
+                tr(
                     "Everything else (layout, selectionMode, select/deselect, events) is inherited from ItemsView unchanged."
                 ),
             ]),
@@ -192,6 +195,8 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             /// itemsSource 载体：单一可观察向量；计数、按索引取 id 与增删都
             /// 直接走它，不维护 Swift 侧镜像。
             private let items: WinUI.IVectorAny
+            /// 条目过渡动画载体（内置 FadeSlide，见 animatesItemChanges）。
+            private let transitionProvider: FadeSlideItemTransitionProvider
 
             public init(makeIdView: @escaping (String) -> UIElement) {
                 self.makeIdView = makeIdView
@@ -199,15 +204,28 @@ final class ItemsViewDocumentationPage: RsUI.Page {
                     fatalError("ItemsView: failed to create the observable items vector")
                 }
                 items = vector
+                transitionProvider = FadeSlideItemTransitionProvider()
                 super.init()
                 itemTemplate = ItemContainerFactory()
                 itemsSource = vector
+                // StackLayout / UniformGridLayout 都不带默认 transition provider
+                // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
+                itemTransitionProvider = transitionProvider
 
                 loaded.addHandler { [weak self] _, _ in
                     self?.wireRepeater()
                 }
                 layoutUpdated.addHandler { [weak self] _, _ in
                     self?.wireRepeater()
+                }
+            }
+
+            /// 条目增删/顺移过渡动画开关（默认 true；自定义风格可改赋
+            /// itemTransitionProvider，置 nil 完全关闭）。
+            public var animatesItemChanges = true {
+                didSet {
+                    guard animatesItemChanges != oldValue else { return }
+                    itemTransitionProvider = animatesItemChanges ? transitionProvider : nil
                 }
             }
 
