@@ -73,7 +73,9 @@ class PageTabView: Grid, PageControl {
         }
         tabView.addTabButtonClick.addHandler { [weak self] _, _ in
             guard let self else { return }
-            self.tabView.selectedItem = self.addTabItems(with: [nil])
+            if let item = self.addTabItems(with: [nil]) {
+                self.tabView.selectedItem = item
+            }
         }
         closeOthersButton.click.addHandler { [weak self] _, _ in
             guard let self else { return }
@@ -114,16 +116,14 @@ class PageTabView: Grid, PageControl {
         transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) {
         if self.tabView.tabItems.count == 0 {
-            let item = addTabItems(with: [page])
             // The very first item will not fire selection changed event, have to do it manually.
-            if let model = item.tag as? PageModel {
+            if let item = addTabItems(with: [page]), let model = item.tag as? PageModel {
                 pageFrame.rebind(to: model)
             }
         } else if case .inplace = mode {
             pageFrame.navigate(to: page, mode: mode, transitionInfoOverride: transitionInfoOverride)
         } else {
-            let item = addTabItems(with: [page])
-            if case .newTab = mode {
+            if let item = addTabItems(with: [page]), case .newTab = mode {
                 tabView.selectedItem = item
             }
         }
@@ -134,6 +134,7 @@ class PageTabView: Grid, PageControl {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
+        guard !pages.isEmpty else { return tabCount }
         if case .inplace = mode {
             if self.tabView.tabItems.count == 0 {
                 _ = addTabItems(with: [nil])
@@ -141,8 +142,7 @@ class PageTabView: Grid, PageControl {
             _ = pageFrame.navigate(
                 to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride)
         } else {
-            let item = addTabItems(with: pages)
-            if case .newTab = mode {
+            if let item = addTabItems(with: pages), case .newTab = mode {
                 tabView.selectedItem = item
             }
         }
@@ -188,7 +188,8 @@ class PageTabView: Grid, PageControl {
         }
     }
 
-    private func addTabItems(with pages: [Page?]) -> TabViewItem {
+    private func addTabItems(with pages: [Page?]) -> TabViewItem? {
+        guard !pages.isEmpty else { return nil }
         for page in pages {
             let item = TabViewItem()
             item.minWidth = 120
@@ -204,9 +205,8 @@ class PageTabView: Grid, PageControl {
 
         tabView.closeButtonOverlayMode = .onPointerOver  // Have to reset the mode, otherwise item become display close button.
         tabView.visibility = tabView.tabItems.count > 1 ? .visible : .collapsed
-        let lastIndex = tabView.tabItems.count - 1
-        let lastItem = tabView.tabItems[lastIndex] as! TabViewItem
-        if tabView.selectedItem == nil {
+        let lastItem = tabView.tabItems[tabView.tabItems.count - 1] as? TabViewItem
+        if let lastItem, tabView.selectedItem == nil {
             tabView.selectedItem = lastItem
         }
         return lastItem

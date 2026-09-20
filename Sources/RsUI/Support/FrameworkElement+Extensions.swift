@@ -9,7 +9,7 @@ extension FrameworkElement {
                 fatalError("The \(Self.self) missing element named: \(name)")
             }
             guard let element = obj as? T else {
-                fatalError("The element \(name) is not a type of \(T.self) ")
+                fatalError("The element \(name) is not a type of \(T.self)")
             }
             return element
         } catch {
@@ -22,7 +22,7 @@ extension FrameworkElement {
             fatalError("The \(Self.self) missing resource named: \(name)")
         }
         guard let res = obj as? T else {
-            fatalError("The resource \(name) is not a type of \(T.self) ")
+            fatalError("The resource \(name) is not a type of \(T.self)")
         }
         return res
     }

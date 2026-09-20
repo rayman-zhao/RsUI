@@ -560,13 +560,10 @@ public class SettingsCard: ButtonBase {
     // MARK: - Helpers
 
     private func makeDescriptionView(_ text: String) -> FrameworkElement {
-        let tb: TextBlock = App.context.requireXaml(
-            withString:
-                """
-                <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" >
-                \(text)
-                </TextBlock>
-                """)
+        // 直接构造而非 XamlReader：description 文本可能含 &、<、> 等字符，
+        // 插值进 XAML 会导致解析失败（requireXaml fatalError）。
+        let tb = WinUI.TextBlock()
+        tb.text = text
         return tb
     }
 }

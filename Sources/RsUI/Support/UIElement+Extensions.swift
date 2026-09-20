@@ -60,7 +60,7 @@ extension UIElement {
             parentViewbox.child = self
         } else {
             log.warning(
-                "UIElement.restoreToVisualParent: unsupported parent type \(type(of: parent)) — element left un-parented"
+                "UIElement.attachToParent: unsupported parent type \(type(of: parent)) — element left un-parented"
             )
         }
     }

@@ -24,8 +24,8 @@ extension NavigationView {
     }
 
     public var firstItemURL: URL {
-        if let item = self.first(where: { item in item.url != nil }) {
-            return item.url!
+        if let url = self.first(where: { item in item.url != nil })?.url {
+            return url
         } else {
             return SettingsPage.url
         }

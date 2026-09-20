@@ -1,3 +1,4 @@
+import RsFoundation
 import WinAppSDK
 import WinUI
 import WindowsFoundation
@@ -17,6 +18,7 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
     public let actionButton: Button
     private var rowHovered = false
     private var buttonFocused = false
+    private var hoverStateCleanups: [EventCleanup] = []
 
     public init(
         iconGlyph: String,
@@ -53,7 +55,15 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
         // actionIcon.fontSize = 16
         actionButton.content = actionIcon
         try? ToolTipService.setToolTip(actionButton, actionTooltip)
-        actionButton.click.addHandler(actionHandler)
+        actionButton.click.addHandler { _, args in
+            // handler 的 throws 不能跨 COM 回调边界（Swift 异常无法逃逸，会静默失败），
+            // 就地捕获并记录。
+            do {
+                try actionHandler(actionButton, args)
+            } catch {
+                log.warning("NavigationViewItemWithAction action handler threw: \(error)")
+            }
+        }
         actionButton.opacity = 0
         actionButton.isHitTestVisible = false
         try? Grid.setColumn(actionButton, 1)
@@ -74,7 +84,8 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
             bindHoverStates()
             update()
         }
-        // 主题/语言切换会重建模板，使已绑定的状态组失效；重新绑定是幂等的。
+        // 主题/语言切换会重建模板，使已绑定的状态组失效；重新绑定前先解除旧绑定，
+        // 模板未重建时（如元素重新挂树再次触发 loaded）不会累积 handler。
         actualThemeChanged.addHandler { [self] _, _ in
             bindHoverStates()
         }
@@ -97,15 +108,21 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
     /// Finds the item template's CommonStates (the group that defines a "PointerOver" state)
     /// and mirrors its transitions into `rowHovered`.
     private func bindHoverStates() {
+        for cleanup in hoverStateCleanups {
+            cleanup.dispose()
+        }
+        hoverStateCleanups = []
+
         for group in collectStateGroups(from: self, depth: 0) {
             guard let states = group.states else { continue }
             let names = Array(states).compactMap { $0?.name }
             guard names.contains("PointerOver") else { continue }
 
-            group.currentStateChanged.addHandler { [self] _, args in
+            let cleanup = group.currentStateChanged.addHandler { [self] _, args in
                 let name = args?.newState?.name ?? ""
                 setRowHovered(name.contains("PointerOver") || name.contains("Pressed"))
             }
+            hoverStateCleanups.append(cleanup)
             let current = group.currentState?.name ?? ""
             setRowHovered(current.contains("PointerOver") || current.contains("Pressed"))
         }

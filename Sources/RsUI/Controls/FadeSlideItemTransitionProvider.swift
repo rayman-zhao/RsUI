@@ -41,8 +41,6 @@ public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProv
 
     /// 基类默认恒返回 `false`（不动画），这里放开为全部参与（未实现的屏幕外
     /// 条目本就不会产生 transition）。
-    /// 基类默认恒返回 `false`（不动画），这里放开为全部参与（未实现的屏幕外
-    /// 条目本就不会产生 transition）。
     public override func shouldAnimateCore(_ transition: ItemCollectionTransition!) throws -> Bool {
         true
     }

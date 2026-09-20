@@ -358,7 +358,6 @@ public class RangeSlider: ContentControl {
 
         isEnabledChanged.addHandler { [weak self] _, _ in self?.updateControlState() }
 
-        // ThemeResource 画刷随主题自动更新;重进当前状态以刷新状态 Storyboard 持有的画刷。
         // ThemeResource 画刷随主题自动更新;清掉状态缓存以重跑当前状态的 Storyboard。
         root.actualThemeChanged.addHandler { [weak self] _, _ in
             guard let self else { return }

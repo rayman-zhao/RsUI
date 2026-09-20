@@ -70,6 +70,7 @@ class SettingsPage: Page {
         combo.selectedIndex = App.context.theme.isDark ? Int32(1) : Int32(0)
         combo.selectionChanged.addHandler { sender, _ in
             guard let sender = sender as? ComboBox else { return }
+            guard sender.selectedIndex >= 0 else { return }
 
             let theme = sender.selectedIndex == 1 ? AppTheme.dark : AppTheme.light
             if theme != App.context.theme {
@@ -95,6 +96,7 @@ class SettingsPage: Page {
             guard let sender = sender as? WinUI.ComboBox else { return }
 
             let index = Int(sender.selectedIndex)
+            guard index >= 0, index < AppLanguage.availableCases.count else { return }
             let language = AppLanguage.availableCases[index]
             if language != App.context.language {
                 App.context.language = language

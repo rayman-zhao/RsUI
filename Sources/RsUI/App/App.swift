@@ -48,11 +48,4 @@ open class App: SwiftApplication {
     override open func onShutdown(exitCode: Int32) {
         App.context.releaseModules()
     }
-
-    private func launchHasFlag(_ flag: String, _ args: WinUI.LaunchActivatedEventArgs) -> Bool {
-        if CommandLine.arguments.contains(flag) {
-            return true
-        }
-        return args.arguments.split(separator: " ").contains { $0 == flag }
-    }
 }

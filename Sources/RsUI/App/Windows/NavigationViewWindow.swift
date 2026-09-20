@@ -44,6 +44,7 @@ class NavigationViewWindow: AppearanceWindow {
         preParent: UIElement?(nil),
         preIndex: UInt32?(nil),
         preWindowMaximized: false,
+        preExtendsContentIntoTitleBar: true,
         installedEscapeAccelerator: false,
     )
 
@@ -232,7 +233,8 @@ class NavigationViewWindow: AppearanceWindow {
         ui.titleBar.visibility = .collapsed
         ui.navWrapper.visibility = .collapsed
         // setPresenter(.fullScreen) 不清除 caption 配置，顶部仍可拖动窗口，
-        // 临时关掉 extendsContentIntoTitleBar，退出时恢复。
+        // 临时关掉 extendsContentIntoTitleBar，退出时恢复进入前的原值。
+        fullscreen.preExtendsContentIntoTitleBar = self.extendsContentIntoTitleBar
         self.extendsContentIntoTitleBar = false
 
         try? hwnd.setPresenter(.fullScreen)
@@ -253,7 +255,7 @@ class NavigationViewWindow: AppearanceWindow {
         ui.fullscreenOverlay.visibility = .collapsed
         ui.titleBar.visibility = .visible
         ui.navWrapper.visibility = .visible
-        self.extendsContentIntoTitleBar = true
+        self.extendsContentIntoTitleBar = fullscreen.preExtendsContentIntoTitleBar
 
         // 已关窗口时 appWindow 为 nil（IUO）—— 此时只清理本地状态，跳过 setPresenter。
         if let hwnd = self.appWindow {
@@ -267,6 +269,7 @@ class NavigationViewWindow: AppearanceWindow {
         fullscreen.preParent = nil
         fullscreen.preIndex = nil
         fullscreen.preWindowMaximized = false
+        fullscreen.preExtendsContentIntoTitleBar = true
         fullscreenChanged.invoke(self, false)
     }
 

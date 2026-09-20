@@ -1,5 +1,6 @@
 import CppWinRT
 import RsFoundation
+import UWP
 import WinUI
 import WindowsFoundation
 
@@ -177,7 +178,8 @@ open class GridView: WinUI.Grid {
                 let localPoint = (try? args.getCurrentPoint(self))?.position
             else { return }
             _ = try? self.itemsView.capturePointer(args.pointer)
-            let ctrl = args.keyModifiers == .control
+            // 位测试而非 ==：Ctrl+Shift 等组合修饰键也应命中框选加速路径。
+            let ctrl = (args.keyModifiers.rawValue & VirtualKeyModifiers.control.rawValue) != 0
             self.marquee = MarqueeSession(
                 startLocal: localPoint,
                 startHost: pointerPoint.position,
