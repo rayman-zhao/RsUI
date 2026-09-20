@@ -81,6 +81,9 @@ class NavigationViewWindow: AppearanceWindow {
 
         let paneOpen = windowLayout.navigationViewPaneOpen
         ui.navigationView.isPaneOpen = paneOpen
+        // Splitter 宽度唯一来源是 splitterState.splitterWidth（applyPaneLength 按
+        // 它计算 margin），XAML 不再重复声明，避免双源漂移。
+        ui.splitterBorder.width = splitterState.splitterWidth
         ui.splitterBorder.protectedCursor = try? InputSystemCursor.create(.sizeWestEast)
         ui.splitterBorder.visibility = paneOpen ? .visible : .collapsed
         applyPaneLength(windowLayout.navigationViewOpenPaneLength)
@@ -116,10 +119,11 @@ class NavigationViewWindow: AppearanceWindow {
     private func bindSplitterEvents() {
         ui.splitterBorder.pointerPressed.addHandler { [weak self] _, args in
             guard let self, let args else { return }
+            // getCurrentPoint 失败时放弃本次拖拽起点，避免基线退化为 0 导致 pane 跳到最小宽度。
+            guard let point = try? args.getCurrentPoint(nil) else { return }  // window-relative
 
-            let point = try? args.getCurrentPoint(nil)  // window-relative
             self.splitterState.isDraggingSplitter = true
-            self.splitterState.dragStartX = Double(point?.position.x ?? 0)
+            self.splitterState.dragStartX = Double(point.position.x)
             self.splitterState.dragStartPaneLength = self.ui.navigationView.openPaneLength
             _ = try? self.ui.splitterBorder.capturePointer(args.pointer)
 
@@ -128,9 +132,9 @@ class NavigationViewWindow: AppearanceWindow {
         ui.splitterBorder.pointerMoved.addHandler { [weak self] _, args in
             guard let self, let args else { return }
             guard self.splitterState.isDraggingSplitter else { return }
+            guard let point = try? args.getCurrentPoint(nil) else { return }  // window-relative
 
-            let point = try? args.getCurrentPoint(nil)  // window-relative
-            let currentX = Double(point?.position.x ?? 0)
+            let currentX = Double(point.position.x)
             let delta = currentX - self.splitterState.dragStartX
             let newLength = min(
                 self.windowLayout.navigationViewMaxPaneLength,
@@ -179,6 +183,9 @@ class NavigationViewWindow: AppearanceWindow {
             self.ui.titleBar.title = str
             try? ToolTipService.setToolTip(self.ui.backButton, tr("Back"))
             try? ToolTipService.setToolTip(self.ui.forwardButton, tr("Forward"))
+            // 图标按钮无可见文字，Tooltip 不等于 UIA 名称，需单独提供自动化名称。
+            try? AutomationProperties.setName(self.ui.backButton, tr("Back"))
+            try? AutomationProperties.setName(self.ui.forwardButton, tr("Forward"))
             self.ui.searchBox.placeholderText = App.context.tr("Search ...")
         }
 
@@ -341,7 +348,7 @@ private var xamlUI: String {
                             IsPaneToggleButtonVisible="False"
                             IsTitleBarAutoPaddingEnabled="False"
                             CompactModeThresholdWidth="0"/>
-            <Border Name="SplitterBorder" Width="6"
+            <Border Name="SplitterBorder"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     Background="Transparent"/>
