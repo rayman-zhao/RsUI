@@ -1,3 +1,4 @@
+import RsFoundation
 import WinUI
 
 @testable import RsUI
@@ -13,11 +14,19 @@ final class App: SwiftApplication {
         testFullScreen()
     }
 
+    private func activate(_ window: some WinUI.Window) {
+        do {
+            try window.activate()
+        } catch {
+            log.error("failed to activate \(type(of: window)): \(error)")
+        }
+    }
+
     private func testWindow() {
         let window = NavigationViewWindow()
         window.useMicaBackdrop()
         window.useRestoration()
-        try! window.activate()
+        activate(window)
     }
 
     private func testFullScreen() {
@@ -46,6 +55,6 @@ final class App: SwiftApplication {
                 toggle.content = "Enter Fullscreen"
             }
         }
-        try! window.activate()
+        activate(window)
     }
 }

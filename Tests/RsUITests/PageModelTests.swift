@@ -60,7 +60,10 @@ struct PageModelTests {
 
     @Test
     func historyLimitEnforced() {
+        let savedLimit = App.context.route.maxHistoryPages
         App.context.route.maxHistoryPages = 3
+        defer { App.context.route.maxHistoryPages = savedLimit }
+
         let view1 = MockView()
         let view2 = MockView()
         let view3 = MockView()
@@ -165,6 +168,9 @@ struct PageModelTests {
         tab.navigate(to: view3)
         tab.goBack()
 
+        #expect(tab.currentPage === view2)
+        #expect(tab.backwardPages.count == 1 && tab.backwardPages[0] === view1)
+        #expect(tab.forwardPages.count == 1 && tab.forwardPages[0] === view3)
         #expect(
             tab.backwardPages.count + tab.forwardPages.count + (tab.currentPage != nil ? 1 : 0) == 3
         )

@@ -1,19 +1,19 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    ".inplace, .newTab, .newTabBackground, .newWindow." : {
+    ".inplace, .newTab, .newTabNoFocus, .newWindow." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ".inplace, .newTab, .newTabBackground, .newWindow."
+            "value" : ".inplace, .newTab, .newTabNoFocus, .newWindow."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ".inplace、.newTab、.newTabBackground、.newWindow。"
+            "value" : ".inplace、.newTab、.newTabNoFocus、.newWindow。"
           }
         }
       }
@@ -494,19 +494,19 @@
         }
       }
     },
-    "context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page." : {
+    "context.open(routes, mode: .newTabNoFocus) — opens the same tabs without leaving this page." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "context.open(routes, mode: .newTabBackground) — opens the same tabs without leaving this page."
+            "value" : "context.open(routes, mode: .newTabNoFocus) — opens the same tabs without leaving this page."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "context.open(routes, mode: .newTabBackground)——打开同样的标签页，但不离开当前页面。"
+            "value" : "context.open(routes, mode: .newTabNoFocus)——打开同样的标签页，但不离开当前页面。"
           }
         }
       }

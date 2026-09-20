@@ -5,12 +5,6 @@ import WinUI
 import WindowsFoundation
 
 final class RangeSliderPage: RsUI.Page {
-    let context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
-
     var url: URL { URL(string: "rs://sample/range-slider")! }
     var title: String { tr("Range Slider") }
 
@@ -46,7 +40,7 @@ final class RangeSliderPage: RsUI.Page {
         slider.valueChanged.addHandler { _, change in
             readout.text = String(format: "%.0f – %.0f", change.new.lowerBound, change.new.upperBound)
         }
-        readout.text = "20 - 80"
+        readout.text = String(format: "%.0f – %.0f", slider.range.lowerBound, slider.range.upperBound)
 
         let panel = StackPanel()
         panel.orientation = .horizontal

@@ -6,12 +6,6 @@ import WinUI
 import WindowsFoundation
 
 final class ItemsViewPage: RsUI.Page {
-    let context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
-
     var url: URL { URL(string: "rs://sample/items-view")! }
     var title: String { tr("Items View") }
 

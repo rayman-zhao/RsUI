@@ -37,7 +37,7 @@ final class OverviewPage: RsUI.Page {
             makeJumpCard(
                 glyph: "\u{ECCD}",
                 header: tr("NavigationOpenMode"),
-                description: tr(".inplace, .newTab, .newTabBackground, .newWindow."),
+                description: tr(".inplace, .newTab, .newTabNoFocus, .newWindow."),
                 path: "/navigation"
             ),
             makeJumpCard(

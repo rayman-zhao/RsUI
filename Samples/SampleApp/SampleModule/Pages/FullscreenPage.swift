@@ -12,8 +12,9 @@ final class FullscreenPage: RsUI.Page {
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
-        (self.statusCard.headerIcon as! FontIcon).glyph =
-            context.isInFullscreen ? "\u{E922}" : "\u{E93A}"
+        if let icon = statusCard.headerIcon as? FontIcon {
+            icon.glyph = context.isInFullscreen ? "\u{E922}" : "\u{E93A}"
+        }
     }
 
     var url: URL { URL(string: "rs://sample/fullscreen")! }

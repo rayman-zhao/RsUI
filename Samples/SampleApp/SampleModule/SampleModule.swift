@@ -125,8 +125,8 @@ final class SampleModule: Module {
             actionGlyph: "\u{E8B7}",
             actionTooltip: tr("Pick a folder right from the nav"),
             actionHandler: { _, _ in
-                context.pickFolder {
-                    print($0)
+                context.pickFolder { path in
+                    log.info("picked folder: \(String(describing: path))")
                 }
             }
         )
@@ -202,15 +202,15 @@ final class SampleModule: Module {
         case "/viewer":
             return ViewerPage(context: context)
         case "/range-slider":
-            return RangeSliderPage(context: context)
+            return RangeSliderPage()
         case "/grid-view":
-            return GridViewPage(context: context)
+            return GridViewPage()
         case "/items-view":
-            return ItemsViewPage(context: context)
+            return ItemsViewPage()
         case "/items-view-doc":
-            return ItemsViewDocumentationPage(context: context)
+            return ItemsViewDocumentationPage()
         case "/toggle-buttons":
-            return ToggleButtonsPage(context: context)
+            return ToggleButtonsPage()
         case "/footer-picker":
             return FolderPickerPage(context: context, path: url.path)
         default:

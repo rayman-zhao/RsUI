@@ -9,11 +9,7 @@ var colorCycle: UInt32 = 0
 enum HeaderKind { case string, uiElement, nilHeader }
 
 // MARK: - Concrete test pages
-func makePage(
-    name: String,
-    headerKind: HeaderKind,
-    effect: SlideNavigationTransitionEffect
-) -> RsUI.Page {
+func makePage(name: String, headerKind: HeaderKind) -> RsUI.Page {
     // 循环颜色用肉眼分辨转场
     let palette: [(r: UInt8, g: UInt8, b: UInt8)] = [
         (0xE6, 0xF2, 0xFB), (0xFB, 0xF3, 0xE6), (0xF3, 0xE6, 0xFB),
@@ -119,7 +115,17 @@ private func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElem
             </Border>
         </Grid>
         """
-    return (try? XamlReader.load(xaml)) as! UIElement
+    guard let element = (try? XamlReader.load(xaml)) as? UIElement else {
+        // XAML 解析失败时退化为纯代码卡片，避免测试宿主崩溃。
+        let fallback = Border()
+        fallback.background = bg
+        fallback.padding = Thickness(left: 24, top: 24, right: 24, bottom: 24)
+        let text = TextBlock()
+        text.text = name
+        fallback.child = text
+        return fallback
+    }
+    return element
 }
 
 /// 把可能影响 XAML 解析的字串做最小转义。XamlReader.load 走 XML 解析器，

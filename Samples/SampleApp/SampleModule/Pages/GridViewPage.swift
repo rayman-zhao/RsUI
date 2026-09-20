@@ -5,12 +5,6 @@ import WinUI
 import WindowsFoundation
 
 final class GridViewPage: RsUI.Page {
-    let context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
-
     var url: URL { URL(string: "rs://sample/grid-view")! }
     var title: String { tr("Grid View") }
 

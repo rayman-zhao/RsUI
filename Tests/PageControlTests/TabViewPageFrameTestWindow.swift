@@ -32,11 +32,6 @@ final class TabViewPageFrameTestWindow: Window {
     // 成为 window 的 title-bar drag region（TabStripFooter）。
     private var dragRegion: Grid!
     private var framesByName: [String: PageFrame] = [:]
-    // 程序化选中时挂起 selectionChanged，避免重复处理（参照 MainWindow 的
-    // isSyncingTabSelection）。
-    private var isSyncingSelection = false
-    // 首次导航帧抑制进入动画（参照 MainWindow.isFirstNavigation）。
-    private var isFirstNavigation = true
     // 跨 tab 全局递增，保证 Tab #N / Page #N 编号唯一，便于肉眼区分。
     private var counter = 0
 
@@ -76,20 +71,10 @@ final class TabViewPageFrameTestWindow: Window {
             guard let self, let args, let item = args.tab else { return }
             self.closeTab(for: item)
         }
-        tabView.selectionChanged.addHandler { _, _ in
-            // 内容切换由 TabView native 处理；窗口级无状态可同步。
-        }
 
         Task { @MainActor in
-            let homePage = makePage(
-                name: "Home", headerKind: .string, effect: .fromBottom
-            )
-            _ = addTab(
-                page: homePage,
-                tabHeader: "Home",
-                transitionInfoOverride: NavigationTransitionInfo.make(
-                    slideEffect: .fromBottom)
-            )
+            let homePage = makePage(name: "Home", headerKind: .string)
+            _ = addTab(page: homePage, tabHeader: "Home")
         }
     }
 
@@ -98,13 +83,9 @@ final class TabViewPageFrameTestWindow: Window {
     // MARK: - Tab lifecycle
 
     /// 新建一个 tab：建 model → 建 PageFrame → 建 TabViewItem，content 设为
-    /// "工具条 + PageFrame" 复合容器，插入 strip，渲染首页并按需要切到新 tab。
+    /// "工具条 + PageFrame" 复合容器，插入 strip，渲染首页并切到新 tab。
     @discardableResult
-    private func addTab(
-        page: RsUI.Page,
-        tabHeader: String,
-        transitionInfoOverride: NavigationTransitionInfo? = nil
-    ) -> TabViewItem? {
+    private func addTab(page: RsUI.Page, tabHeader: String) -> TabViewItem? {
         let model = PageModel(page: page)
         let frame = PageFrame(model: model)
 
@@ -122,13 +103,7 @@ final class TabViewPageFrameTestWindow: Window {
         guard let items = tabView.tabItems else { return item }
         items.insertAt(items.size, item)
 
-        // 切到新 tab；isSyncingSelection 屏蔽期间 selectionChanged 不触发。
-        isSyncingSelection = true
         tabView.selectedItem = item
-        isSyncingSelection = false
-
-        // 首次首页抑制进入动画；后续 tab 顺其自然播放 transitionInfo。
-        isFirstNavigation = false
 
         updateClosableStates()
         return item
@@ -158,9 +133,7 @@ final class TabViewPageFrameTestWindow: Window {
 
         // 若关掉的是当前选中 tab，找一个剩余 tab 接管选中。
         if wasSelected, tabView.selectedItem == nil, let next = anyRemainingItem() {
-            isSyncingSelection = true
             tabView.selectedItem = next
-            isSyncingSelection = false
         }
 
         updateClosableStates()
@@ -198,7 +171,12 @@ final class TabViewPageFrameTestWindow: Window {
     /// 工具条按钮闭包 capture 本 tab 的 `frame`，所有加页 / Back / Forward
     /// 仅作用于本 frame。
     private func makeTabContent(frame: PageFrame, tabHeader: String) -> Grid {
-        let root = (try? XamlReader.load(tabContentXAML)) as! Grid
+        guard let root = (try? XamlReader.load(tabContentXAML)) as? Grid else {
+            // XAML 解析失败时退化为仅含 PageFrame 的简单容器，避免测试宿主崩溃。
+            let fallback = Grid()
+            fallback.children.append(frame)
+            return fallback
+        }
 
         // 命名控件：findName 在 XamlReader.Load 返回的根上调用即可访问该 namescope。
         let backButton = (try? root.findName("BackButton")) as? Button
@@ -325,7 +303,7 @@ final class TabViewPageFrameTestWindow: Window {
         case 1: effect = .fromRight
         default: effect = .fromLeft
         }
-        let page = makePage(name: pageName, headerKind: headerKind, effect: effect)
+        let page = makePage(name: pageName, headerKind: headerKind)
         frame.navigate(
             to: page,
             transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect)
@@ -339,13 +317,7 @@ final class TabViewPageFrameTestWindow: Window {
         counter += 1
         let n = counter
         let tabHeader = "Tab #\(n)"
-        let page = makePage(
-            name: "Home \(n)", headerKind: .string, effect: .fromBottom
-        )
-        _ = addTab(
-            page: page,
-            tabHeader: tabHeader,
-            transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: .fromBottom)
-        )
+        let page = makePage(name: "Home \(n)", headerKind: .string)
+        _ = addTab(page: page, tabHeader: tabHeader)
     }
 }

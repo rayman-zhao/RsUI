@@ -6,12 +6,6 @@ import WinUI
 /// ItemsView 的工作总结/使用文档页。文档主体以条目列表呈现，
 /// 演示"有限高度父容器 + 组件公开 API"的实际用法；开关切换查看完整源码。
 final class ItemsViewDocumentationPage: RsUI.Page {
-    let context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
-
     var url: URL { URL(string: "rs://sample/items-view-doc")! }
     var title: String { tr("Items View Documentation") }
 

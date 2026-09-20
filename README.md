@@ -4,7 +4,7 @@ A native LOB (Line of Business) application framework built with **Swift on Wind
 
 <img width="2491" height="1619" alt="image" src="https://github.com/user-attachments/assets/beeb0529-88d6-40bf-bb7c-e82c8e0473a2" />
 
-> **Not SwiftUI.** All UI is constructed imperatively in Swift by calling WinUI 3 WinRT projection APIs (via [swift-winrt](https://github.com/thebrowsercompany/swift-winrt)). Static layout is expressed as XAML strings loaded with `XamlReader.load` and wired up in Swift; there is no Storyboard, no `{x:Bind}`, no XAML resource-dictionary scripting.
+> **Not SwiftUI.** All UI is constructed imperatively in Swift by calling WinUI 3 WinRT projection APIs (via [swift-winrt](https://github.com/rayman-zhao/swift-winrt) forks). Static layout is expressed as XAML strings loaded with `XamlReader.load` and wired up in Swift; there is no Storyboard, no `{x:Bind}`, no XAML resource-dictionary scripting.
 
 ---
 
@@ -61,8 +61,8 @@ App (entry point, lifecycle, single-instance, module init)
 The window content is composed bottom-up across four layers:
 
 1. **`Page`** — smallest navigable, renderable unit. Each page exposes `url`, `title`, `header` (`Any?`) and `content` (`UIElement`). The standard header+content layout is built from a small XAML snippet in `Page+View.swift` (`Page.view`).
-2. **`PageFrame`** (RsUI.Frame) — a single navigation stack (`PageModel` = backward / current / forward pages) on top of a `PageTransitionHost` that animates enter/exit (200ms, 40px slide+fade). `navigate` / `goBack` / `goForward` both mutate the model *and* render immediately, then fire `pageChanged`.
-3. **`PageTabView`** (RsUI.TabView) — a WinUI `TabView` (used only as the tab strip) on top of *one shared* `PageFrame`. Each `TabViewItem.tag` carries its own `PageModel`; switching tabs rebinds the shared frame to the new model. The strip auto-hides when there is ≤1 page, so a single-page tab looks like a plain `PageFrame`.
+2. **`PageFrame`** — a single navigation stack (`PageModel` = backward / current / forward pages) on top of a `PageTransitionHost` that animates enter/exit (200ms, 40px slide+fade). `navigate` / `goBack` / `goForward` both mutate the model *and* render immediately, then fire `pageChanged`.
+3. **`PageTabView`** — a WinUI `TabView` (used only as the tab strip) on top of *one shared* `PageFrame`. Each `TabViewItem.tag` carries its own `PageModel`; switching tabs rebinds the shared frame to the new model. The strip auto-hides when there is ≤1 page, so a single-page tab looks like a plain `PageFrame`.
 4. **`MainWindow`** — `class MainWindow: NavigationViewWindow, WindowContextHost`. It owns one `PageTabView` (via a `pageControl: PageControl`) and only translates shell events (nav-pane item invoked, Back/Forward, appearance change, fullscreen) into `PageControl` / `WindowContext` calls. It does **not** inline any tab/frame logic.
 
 Supporting types:
@@ -130,7 +130,7 @@ class SampleApp: App {
 }
 ```
 
-That's the whole entry point. `App.onLaunched` loads theme/language/route from preferences, instantiates the registered `Module` types, registers the JumpList "New Window" entry, and opens a `MainWindow` at the persisted last URL (or `--new-window` to start an empty window). Single-instance coordination (`AppInstance.redirectOrRegister`) is handled for you.
+That's the whole entry point. `App.onLaunched` loads theme/language/route from preferences, instantiates the registered `Module` types, registers the JumpList "New Window" entry, and opens a `MainWindow` at the persisted last URL. Single-instance coordination (`AppInstance.redirectOrRegister`) is handled for you: a `--new-window` launch (e.g. from the JumpList) is redirected to the primary instance, which activates a fresh `MainWindow`.
 
 ### 2. Implement the `Module` protocol
 
@@ -188,7 +188,9 @@ final class SampleModule: Module {
                 iconGlyph: "\u{E8B7}", label: tr("Folder Picker"),
                 url: "rs://\(id)/footer-picker",
                 actionGlyph: "\u{E8F4}", actionTooltip: tr("Pick a folder right from the nav"),
-                actionHandler: { _, _ in context.pickFolder { print($0) } }
+                actionHandler: { _, _ in
+                    context.pickFolder { path in log.info("picked: \(String(describing: path))") }
+                }
             ),
         ]
     }
@@ -239,8 +241,9 @@ final class FullscreenPage: RsUI.Page {
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
-        (statusCard.headerIcon as! FontIcon).glyph =
-            context.isInFullscreen ? "\u{E922}" : "\u{E93A}"
+        if let icon = statusCard.headerIcon as? FontIcon {
+            icon.glyph = context.isInFullscreen ? "\u{E922}" : "\u{E93A}"
+        }
     }
 
     var url: URL { URL(string: "rs://sample/fullscreen")! }
@@ -285,7 +288,11 @@ var content: UIElement {
         </Border>
     </Grid>
     """
-    return (try? XamlReader.load(xaml)) as! UIElement
+    guard let element = (try? XamlReader.load(xaml)) as? UIElement else {
+        log.warning("failed to load page content XAML")
+        return Grid()
+    }
+    return element
 }
 ```
 

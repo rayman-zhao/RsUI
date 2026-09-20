@@ -65,7 +65,7 @@ final class PageControlTestWindow: Window {
         control.pageChanged.addHandler { [weak self] _, page in
             if page == nil {
                 self?.control.navigate(
-                    to: makePage(name: "Home", headerKind: .string, effect: .fromBottom),
+                    to: makePage(name: "Home", headerKind: .string),
                     mode: .inplace, transitionInfoOverride: SuppressNavigationTransitionInfo())
             }
             self?.updateStatus()
@@ -78,7 +78,12 @@ final class PageControlTestWindow: Window {
     /// 绑定 click。control 因是项目内 Swift 类不在 XAML 词汇表内，加载后挂到 Row1。
     /// frame 模式下 NewTab 与 tabCountText 无意义，在 makeRoot 末尾折叠它们。
     private func makeRoot() -> FrameworkElement {
-        let root = (try? XamlReader.load(rootXAML)) as! Grid
+        guard let root = (try? XamlReader.load(rootXAML)) as? Grid else {
+            // XAML 解析失败时退化为仅含控件本体的简单容器，避免测试宿主崩溃。
+            let fallback = Grid()
+            fallback.children.append(control.rootView)
+            return fallback
+        }
 
         // 命名控件：findName 在 XamlReader.Load 返回的根上调用即可访问该 namescope。
         backButton = (try? root.findName("BackButton")) as? Button
@@ -87,8 +92,8 @@ final class PageControlTestWindow: Window {
         tabCountText = (try? root.findName("TabCountText")) as? TextBlock
 
         // 事件处理必须在代码里绑（XAML 不能写 XAML-defined 事件处理器）。
-        backButton.click.addHandler { [weak self] _, _ in self?.goBackTapped() }
-        forwardButton.click.addHandler { [weak self] _, _ in self?.goForwardTapped() }
+        backButton?.click.addHandler { [weak self] _, _ in self?.goBackTapped() }
+        forwardButton?.click.addHandler { [weak self] _, _ in self?.goForwardTapped() }
 
         for (name, kind) in [
             ("AddStringButton", HeaderKind.string),
@@ -183,7 +188,7 @@ final class PageControlTestWindow: Window {
         case 1: effect = .fromRight
         default: effect = .fromLeft
         }
-        let page = makePage(name: name, headerKind: headerKind, effect: effect)
+        let page = makePage(name: name, headerKind: headerKind)
         control.navigate(
             to: page, mode: .newTab,
             transitionInfoOverride: NavigationTransitionInfo.make(slideEffect: effect)

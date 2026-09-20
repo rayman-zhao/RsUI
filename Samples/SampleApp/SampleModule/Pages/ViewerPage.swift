@@ -1,4 +1,5 @@
 import Foundation
+import RsFoundation
 import RsUI
 import UWP
 import WinUI
@@ -30,9 +31,12 @@ final class ViewerPage: RsUI.Page {
         border.child = centerText
         viewer.centerContent = border
 
-        let loaded = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as! Grid
-        let fsbtn = (try? loaded.findName("FullscreenButton")) as! Button
-        fsbtn.click.addHandler { [weak self] _, _ in
+        guard let loaded = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as? Grid else {
+            log.warning("ViewerPage: failed to load viewer chrome XAML")
+            return viewer
+        }
+        let fsbtn = (try? loaded.findName("FullscreenButton")) as? Button
+        fsbtn?.click.addHandler { [weak self] _, _ in
             guard let self else { return }
             if self.context.isInFullscreen {
                 self.context.exitFullscreen()
