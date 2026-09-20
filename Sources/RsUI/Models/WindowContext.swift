@@ -39,9 +39,9 @@ public struct WindowContext {
     /// }
     /// ```
     public func pickFolder(_ handler: @escaping (String?) -> Void) {
-        guard let host else { return }
+        guard let host, let hwnd = host.hwnd else { return }
 
-        let picker = FolderPicker(host.hwnd)
+        let picker = FolderPicker(hwnd)
         Task { @MainActor in
             let result = try? await picker.pickSingleFolderAsync().get()
             await MainActor.run {
@@ -57,9 +57,9 @@ public struct WindowContext {
         defaultFileExtension: String? = nil,
         handler: @escaping (String?) -> Void
     ) {
-        guard let host else { return }
+        guard let host, let hwnd = host.hwnd else { return }
 
-        let picker = FileSavePicker(host.hwnd)
+        let picker = FileSavePicker(hwnd)
         picker.suggestedStartLocation = suggestedStartLocation
         for (fileTypeDescription, extensions) in fileTypeChoices {
             _ = picker.fileTypeChoices.insert(fileTypeDescription, extensions.toVector())
@@ -128,9 +128,11 @@ public struct WindowContext {
         }
 
         dialog.xamlRoot = host.xamlRoot
-        if let style = Application.current.resources["DefaultContentDialogStyle"] as? Style {
-            dialog.style = style
-        }
+        // ContentDialog is hosted in the XamlRoot popup layer, which does not follow
+        // theme propagation of the window content tree — after a system theme switch
+        // it still resolves the stale theme. Pin the dialog to the host window's
+        // current actual theme on every show.
+        dialog.requestedTheme = App.context.theme.elementTheme
 
         Task { @MainActor in
             guard let result = try? await dialog.showAsync().get() else { return }

@@ -107,9 +107,11 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
         }
     }
 
-    // MARK: WindowContextHost protocol
+    // MARK: - WindowContextHost protocol
 
-    var hwnd: WindowId { self.appWindow.id }
+    // appWindow 是 IUO：窗口 closed 之后为 nil，此时不再提供句柄，
+    // 让 WindowContext 的 picker/dialog 路径提前返回而不是 trap。
+    var hwnd: WindowId? { self.appWindow?.id }
     var xamlRoot: XamlRoot { ui.root.xamlRoot }
 
     var isInFullscreenPage: Bool {
@@ -132,7 +134,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     }
 
     @discardableResult
-    public func open(
+    func open(
         _ pages: [Page],
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo
