@@ -13,18 +13,16 @@ class PageModel {
     }
 
     func navigate(to page: Page) {
-        if currentPage === page {
-            currentPage = page
-        } else {
-            if let previousPage = currentPage {
-                backwardPages.append(previousPage)
-                if backwardPages.count > App.context.route.maxHistoryPages {
-                    backwardPages.removeFirst()
-                }
+        guard currentPage !== page else { return }
+
+        if let previousPage = currentPage {
+            backwardPages.append(previousPage)
+            if backwardPages.count > App.context.route.maxHistoryPages {
+                backwardPages.removeFirst()
             }
-            currentPage = page
-            forwardPages.removeAll()
         }
+        currentPage = page
+        forwardPages.removeAll()
     }
 
     func goBack() {

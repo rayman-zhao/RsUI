@@ -12,10 +12,7 @@ class PageFrame: PageTransitionHost, PageControl {
         self.model = model
         super.init()
 
-        transition(to: currentPage?.view)
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render()
     }
 
     /// 重绑 model 并即时渲染当前页（Suppress 转场）。用于单 `PageFrame` 在多 tab
@@ -23,11 +20,7 @@ class PageFrame: PageTransitionHost, PageControl {
     /// tab 的 `PageModel`，并立刻渲染其 currentPage。
     func rebind(to newModel: PageModel) {
         model = newModel
-
-        transition(to: currentPage?.view)
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render()
     }
 
     // MARK: - PageControl conformance
@@ -46,23 +39,13 @@ class PageFrame: PageTransitionHost, PageControl {
     func goBack() {
         model.goBack()
 
-        transition(
-            to: currentPage?.view,
-            transitionInfo: NavigationTransitionInfo.make(slideEffect: .fromLeft))
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render(transitionInfo: NavigationTransitionInfo.make(slideEffect: .fromLeft))
     }
 
     func goForward() {
         model.goForward()
 
-        transition(
-            to: currentPage?.view,
-            transitionInfo: NavigationTransitionInfo.make(slideEffect: .fromRight))
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render(transitionInfo: NavigationTransitionInfo.make(slideEffect: .fromRight))
     }
 
     func navigate(
@@ -72,10 +55,7 @@ class PageFrame: PageTransitionHost, PageControl {
     ) {
         model.navigate(to: page)
 
-        transition(to: currentPage?.view, transitionInfo: transitionInfoOverride)
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render(transitionInfo: transitionInfoOverride)
     }
 
     func navigate(
@@ -87,10 +67,7 @@ class PageFrame: PageTransitionHost, PageControl {
             model.navigate(to: page)
         }
 
-        transition(to: currentPage?.view, transitionInfo: transitionInfoOverride)
-        Task { @MainActor in
-            pageChanged.invoke(self, currentPage)
-        }
+        render(transitionInfo: transitionInfoOverride)
         return pages.count
     }
 
@@ -112,6 +89,14 @@ class PageFrame: PageTransitionHost, PageControl {
         model.currentPage?.windowContextDidChange(to: context)
         for page in model.backwardPages + model.forwardPages {
             page.windowContextDidChange(to: context)
+        }
+    }
+
+    /// mutate model 后的统一尾部：渲染当前页 + 异步触发 pageChanged。
+    private func render(transitionInfo: NavigationTransitionInfo = SuppressNavigationTransitionInfo()) {
+        transition(to: currentPage?.view, transitionInfo: transitionInfo)
+        Task { @MainActor in
+            pageChanged.invoke(self, currentPage)
         }
     }
 }
