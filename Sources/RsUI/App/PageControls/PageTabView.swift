@@ -60,8 +60,8 @@ class PageTabView: Grid, PageControl {
 
             self.pageFrame.rebind(to: model)
         }
-        tabView.tabCloseRequested.addHandler { sender, args in
-            guard let sender, let args else { return }
+        tabView.tabCloseRequested.addHandler { [weak self] sender, args in
+            guard let self, let sender, let args else { return }
             guard let closingTab = args.tab, let tabs = sender.tabItems else { return }
 
             var idx: UInt32 = 0
@@ -69,7 +69,14 @@ class PageTabView: Grid, PageControl {
                 tabs.removeAt(idx)
             }
 
-            sender.visibility = sender.tabItems.count > 1 ? .visible : .collapsed
+            // 关掉当前选中 tab 且 WinUI 未自动选中邻居（典型：关最后一个 tab）时，
+            // selectionChanged 不会触发 rebind —— 主动 rebind 到空 model，让共享
+            // frame 清掉残留内容并触发 pageChanged(nil)（宿主可借此 fallback 重开首页）。
+            if sender.selectedItem == nil {
+                self.pageFrame.rebind(to: PageModel())
+            }
+
+            self.updateStripVisibility()
         }
         tabView.addTabButtonClick.addHandler { [weak self] _, _ in
             guard let self else { return }
@@ -87,7 +94,7 @@ class PageTabView: Grid, PageControl {
                     self.tabView.tabItems.removeAt(UInt32(i))
                 }
             }
-            self.tabView.visibility = .collapsed
+            self.updateStripVisibility()
         }
         pageFrame.pageChanged.addHandler { [weak self] _, page in
             guard let self, let item = self.tabView.selectedItem as? TabViewItem else { return }
@@ -134,19 +141,20 @@ class PageTabView: Grid, PageControl {
         mode: NavigationOpenMode = .newTab,
         transitionInfoOverride: NavigationTransitionInfo = SuppressNavigationTransitionInfo()
     ) -> Int {
-        guard !pages.isEmpty else { return tabCount }
+        // 返回「实际打开的 pages 数」，与 PageFrame.navigate(to pages:) 语义一致。
+        guard !pages.isEmpty else { return 0 }
         if case .inplace = mode {
             if self.tabView.tabItems.count == 0 {
                 _ = addTabItems(with: [nil])
             }
-            _ = pageFrame.navigate(
+            return pageFrame.navigate(
                 to: pages, mode: mode, transitionInfoOverride: transitionInfoOverride)
         } else {
             if let item = addTabItems(with: pages), case .newTab = mode {
                 tabView.selectedItem = item
             }
+            return pages.count
         }
-        return tabCount
     }
 
     func selectPage(matchingURL url: URL) -> Bool {
@@ -163,6 +171,8 @@ class PageTabView: Grid, PageControl {
 
     func updateAppearance() {
         try? ToolTipService.setToolTip(closeOthersButton, App.context.tr("CloseOthers"))
+        // 图标按钮无可见文字，Tooltip 不等于 UIA 名称，需单独提供自动化名称。
+        try? AutomationProperties.setName(closeOthersButton, App.context.tr("CloseOthers"))
 
         for item in tabView.tabItems {
             if let tabViewItem = item as? TabViewItem, let tag = tabViewItem.tag,
@@ -204,12 +214,17 @@ class PageTabView: Grid, PageControl {
         }
 
         tabView.closeButtonOverlayMode = .onPointerOver  // Have to reset the mode, otherwise item become display close button.
-        tabView.visibility = tabView.tabItems.count > 1 ? .visible : .collapsed
+        updateStripVisibility()
         let lastItem = tabView.tabItems[tabView.tabItems.count - 1] as? TabViewItem
         if let lastItem, tabView.selectedItem == nil {
             tabView.selectedItem = lastItem
         }
         return lastItem
+    }
+
+    /// strip 仅在多于 1 个 tab 时可见；单一 tab 窗口看起来就是一个普通 PageFrame。
+    private func updateStripVisibility() {
+        tabView.visibility = tabView.tabItems.count > 1 ? .visible : .collapsed
     }
 }
 
