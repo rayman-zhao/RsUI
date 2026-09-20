@@ -2,6 +2,8 @@ import WinUI
 import WindowsFoundation
 
 open class SettingsPanel: WinUI.Grid {
+    public var isMainShown: Bool = true
+
     private let ui:
         (
             root: Grid,
@@ -42,6 +44,7 @@ open class SettingsPanel: WinUI.Grid {
 
         ui.backButton.click.addHandler { [weak self] _, _ in
             guard let self else { return }
+            self.isMainShown = true
 
             ui.backButton.visibility = .collapsed
             ui.headerPanel.visibility = .visible
@@ -84,6 +87,8 @@ open class SettingsPanel: WinUI.Grid {
     /// 二级页占满内容区；content 的显示与滚动由调用方决定——
     /// 自滚动控件（ItemsView/ScrollView 等）可直接传入，普通内容请自行包 ScrollView。
     public func navigateTo(label: UIElement, content: UIElement) {
+        isMainShown = false
+
         ui.backButton.visibility = .visible
         ui.headerPanel.visibility = .collapsed
         ui.secondHeaderPanel.visibility = .visible
