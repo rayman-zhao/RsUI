@@ -5,16 +5,20 @@ import WinUI
 
 final class PickerPage: RsUI.Page {
     var context: WindowContext
+    // 主导航项用默认 "/picker"；footer 导航项传 "/footer-picker"，
+    // 使其 URL 与导航项匹配（openOrFocus 去重、选中态高亮依赖该 URL）。
+    let path: String
 
-    init(context: WindowContext) {
+    init(context: WindowContext, path: String = "/picker") {
         self.context = context
+        self.path = path
     }
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/picker")! }
+    var url: URL { URL(string: "rs://sample\(path)")! }
     var title: String { tr("Picker") }
 
     var header: Any? {
@@ -25,14 +29,7 @@ final class PickerPage: RsUI.Page {
     }
 
     var content: WinUI.UIElement {
-        let resultBlock = TextBlock()
-        resultBlock.text = tr("No folder selected yet.")
-        resultBlock.fontSize = 12
-        resultBlock.textWrapping = .wrap
-        resultBlock.foreground = SolidColorBrush(
-            App.context.theme.isDark
-                ? UWP.Color(a: 255, r: 160, g: 160, b: 160)
-                : UWP.Color(a: 255, r: 120, g: 120, b: 120))
+        let resultBlock = makeCaption(tr("No folder selected yet."))
 
         let card = SettingsCard(
             headerIconGlyph: "\u{E8B7}",
@@ -51,14 +48,7 @@ final class PickerPage: RsUI.Page {
             }
         }
 
-        let resultBlock2 = TextBlock()
-        resultBlock2.text = tr("No save file selected yet.")
-        resultBlock2.fontSize = 12
-        resultBlock2.textWrapping = .wrap
-        resultBlock2.foreground = SolidColorBrush(
-            App.context.theme.isDark
-                ? UWP.Color(a: 255, r: 160, g: 160, b: 160)
-                : UWP.Color(a: 255, r: 120, g: 120, b: 120))
+        let resultBlock2 = makeCaption(tr("No save file selected yet."))
 
         let card2 = SettingsCard(
             headerIconGlyph: "\u{E8B7}",

@@ -77,16 +77,10 @@ final class OverviewPage: RsUI.Page {
         description: String,
         path: String
     ) -> SettingsCard {
-        let card = SettingsCard(
-            headerIconGlyph: glyph,
-            header: header,
-            description: description
-        )
-        card.isClickEnabled = true
         let targetURL = URL(string: "rs://sample\(path)")!
-        card.click.addHandler { [weak self] _, _ in
+        return makeClickableCard(glyph: glyph, header: header, description: description) {
+            [weak self] in
             _ = self?.context.open(targetURL, mode: .inplace)
         }
-        return card
     }
 }

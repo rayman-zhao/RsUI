@@ -27,67 +27,37 @@ final class NavigationModesPage: RsUI.Page {
     }
 
     var content: WinUI.UIElement {
+        let settingsURL = URL(string: "rs://ui/settings")!
         let cards: [UIElement] = [
-            makeCard(
+            makeClickableCard(
                 glyph: "\u{E72C}",
                 header: ".inplace",
-                description: tr("Replaces the current tab's page."),
-                mode: .inplace
-            ),
-            makeCard(
+                description: tr("Replaces the current tab's page.")
+            ) { [weak self] in
+                _ = self?.context.open(settingsURL, mode: .inplace)
+            },
+            makeClickableCard(
                 glyph: "\u{ECCD}",
                 header: ".newTab",
-                description: tr("Opens a new tab and switches to it."),
-                mode: .newTab
-            ),
-            makeCard(
+                description: tr("Opens a new tab and switches to it.")
+            ) { [weak self] in
+                _ = self?.context.open(settingsURL, mode: .newTab)
+            },
+            makeClickableCard(
                 glyph: "\u{F22C}",
                 header: ".newTabNoFocus",
-                description: tr("Opens a new tab without stealing focus (like Ctrl+Click)."),
-                mode: .newTabNoFocus
-            ),
-            makeCard(
+                description: tr("Opens a new tab without stealing focus (like Ctrl+Click).")
+            ) { [weak self] in
+                _ = self?.context.open(settingsURL, mode: .newTabNoFocus)
+            },
+            makeClickableCard(
                 glyph: "\u{E78B}",
                 header: ".newWindow",
                 description: tr("Opens this page in a fresh MainWindow.")
-            ),
+            ) {
+                App.context.openNewWindow(with: [settingsURL])
+            },
         ]
         return featurePageContent(cards)
-    }
-
-    private func makeCard(
-        glyph: String,
-        header: String,
-        description: String,
-        mode: NavigationOpenMode
-    ) -> SettingsCard {
-        let card = SettingsCard(
-            headerIconGlyph: glyph,
-            header: header,
-            description: description
-        )
-        card.isClickEnabled = true
-        card.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            _ = self.context.open(URL(string: "rs://ui/settings")!, mode: mode)
-        }
-        return card
-    }
-
-    private func makeCard(
-        glyph: String,
-        header: String,
-        description: String
-    ) -> SettingsCard {
-        let card = SettingsCard(
-            headerIconGlyph: glyph,
-            header: header,
-            description: description
-        )
-        card.isClickEnabled = true
-        card.click.addHandler { _, _ in
-            App.context.openNewWindow(with: [URL(string: "rs://ui/settings")!])
-        }
-        return card
     }
 }

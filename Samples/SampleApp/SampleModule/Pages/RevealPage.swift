@@ -85,16 +85,4 @@ final class RevealPage: RsUI.Page {
         }
         return demoFileURL
     }
-
-    private func makeCaption(_ text: String) -> TextBlock {
-        let block = TextBlock()
-        block.text = text
-        block.fontSize = 12
-        block.textWrapping = .wrap
-        block.foreground = SolidColorBrush(
-            App.context.theme.isDark
-                ? UWP.Color(a: 255, r: 160, g: 160, b: 160)
-                : UWP.Color(a: 255, r: 120, g: 120, b: 120))
-        return block
-    }
 }

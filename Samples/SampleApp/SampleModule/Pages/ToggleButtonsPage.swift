@@ -103,23 +103,4 @@ final class ToggleButtonsPage: RsUI.Page {
         panel.children.append(group)
         return panel
     }
-
-    private func makeSectionTitle(_ text: String) -> TextBlock {
-        let title = TextBlock()
-        title.text = text
-        title.fontSize = 14
-        return title
-    }
-
-    private func makeSectionSubtitle(_ text: String) -> TextBlock {
-        let subtitle = TextBlock()
-        subtitle.text = text
-        subtitle.fontSize = 12
-        subtitle.textWrapping = .wrap
-        subtitle.foreground = SolidColorBrush(
-            App.context.theme.isDark
-                ? Color(a: 255, r: 174, g: 178, b: 190)
-                : Color(a: 255, r: 96, g: 104, b: 112))
-        return subtitle
-    }
 }

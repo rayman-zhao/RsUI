@@ -68,16 +68,10 @@ final class RangeSliderPage: RsUI.Page {
         let huMin = -1024.0
         let huMax = 3071.0
 
-        let subtitle = TextBlock()
-        subtitle.text = tr(
-            "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
-        )
-        subtitle.fontSize = 12
-        subtitle.textWrapping = .wrap
-        subtitle.foreground = SolidColorBrush(
-            App.context.theme.isDark
-                ? Color(a: 255, r: 174, g: 178, b: 190)
-                : Color(a: 255, r: 96, g: 104, b: 112))
+        let subtitle = makeSectionSubtitle(
+            tr(
+                "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width."
+            ))
 
         let wwLabel = TextBlock()
         let wlLabel = TextBlock()
@@ -160,12 +154,5 @@ final class RangeSliderPage: RsUI.Page {
         panel.children.append(labelsRow)
         panel.children.append(huRow)
         return panel
-    }
-
-    private func makeSectionTitle(_ text: String) -> TextBlock {
-        let title = TextBlock()
-        title.text = text
-        title.fontSize = 14
-        return title
     }
 }

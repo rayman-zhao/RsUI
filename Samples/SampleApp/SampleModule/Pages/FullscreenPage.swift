@@ -10,9 +10,13 @@ final class FullscreenPage: RsUI.Page {
         self.context = context
     }
 
+    /// 当前挂载中的状态卡。每次 content 重建都新建一张（文案/画刷随之刷新），
+    /// 这里只持有「当前这一张」供全屏切换时原地翻转图标，不跨重建复用旧元素。
+    private var statusCard: SettingsCard?
+
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
-        if let icon = statusCard.headerIcon as? FontIcon {
+        if let icon = statusCard?.headerIcon as? FontIcon {
             icon.glyph = context.isInFullscreen ? "\u{E922}" : "\u{E93A}"
         }
     }
@@ -29,33 +33,30 @@ final class FullscreenPage: RsUI.Page {
         )
     }
 
-    var statusCard = SettingsCard(
-        headerIconGlyph: "\u{E93A}",
-        header: tr("Fullscreen status"),
-        description: tr("Updated when window context changed.")
-    )
-
     var content: WinUI.UIElement {
-        let enterCard = SettingsCard(
-            headerIconGlyph: "\u{E740}",
+        let status = SettingsCard(
+            headerIconGlyph: context.isInFullscreen ? "\u{E922}" : "\u{E93A}",
+            header: tr("Fullscreen status"),
+            description: tr("Updated when window context changed.")
+        )
+        statusCard = status
+
+        let enterCard = makeClickableCard(
+            glyph: "\u{E740}",
             header: tr("Enter tab fullscreen"),
             description: tr("Calls context.enterFullscreen().")
-        )
-        enterCard.isClickEnabled = true
-        enterCard.click.addHandler { [weak self] _, _ in
+        ) { [weak self] in
             self?.context.enterFullscreen()
         }
 
-        let exitCard = SettingsCard(
-            headerIconGlyph: "\u{E73F}",
+        let exitCard = makeClickableCard(
+            glyph: "\u{E73F}",
             header: tr("Exit tab fullscreen"),
             description: tr("Calls context.exitFullscreen(). No-op when not in fullscreen.")
-        )
-        exitCard.isClickEnabled = true
-        exitCard.click.addHandler { [weak self] _, _ in
+        ) { [weak self] in
             self?.context.exitFullscreen()
         }
 
-        return featurePageContent([statusCard, enterCard, exitCard])
+        return featurePageContent([status, enterCard, exitCard])
     }
 }

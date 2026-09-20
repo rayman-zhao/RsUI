@@ -63,16 +63,10 @@ final class BatchOpenPage: RsUI.Page {
         description: String,
         mode: NavigationOpenMode
     ) -> SettingsCard {
-        let card = SettingsCard(
-            headerIconGlyph: glyph,
-            header: header,
-            description: description
-        )
-        card.isClickEnabled = true
-        card.click.addHandler { [weak self] _, _ in
+        makeClickableCard(glyph: glyph, header: header, description: description) {
+            [weak self] in
             guard let self else { return }
             _ = self.context.open(self.routes, mode: mode)
         }
-        return card
     }
 }

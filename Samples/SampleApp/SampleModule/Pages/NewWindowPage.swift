@@ -27,24 +27,20 @@ final class NewWindowPage: RsUI.Page {
     }
 
     var content: WinUI.UIElement {
-        let plainCard = SettingsCard(
-            headerIconGlyph: "\u{E78B}",
+        let plainCard = makeClickableCard(
+            glyph: "\u{E78B}",
             header: tr("App.context.openNewWindow"),
             description: tr("Uses the persisted NavPane state.")
-        )
-        plainCard.isClickEnabled = true
-        plainCard.click.addHandler { [weak self] _, _ in
+        ) { [weak self] in
             guard let self else { return }
             App.context.openNewWindow(with: [self.url])
         }
 
-        let viewerCard = SettingsCard(
-            headerIconGlyph: "\u{E73F}",
+        let viewerCard = makeClickableCard(
+            glyph: "\u{E73F}",
             header: tr("App.context.openNewWindow(forceMinimalMode: true)"),
             description: tr("Starts with NavPane collapsed and skips writeback on close.")
-        )
-        viewerCard.isClickEnabled = true
-        viewerCard.click.addHandler { [weak self] _, _ in
+        ) { [weak self] in
             guard let self else { return }
             App.context.openNewWindow(with: [self.url], forceMinimalMode: true)
         }

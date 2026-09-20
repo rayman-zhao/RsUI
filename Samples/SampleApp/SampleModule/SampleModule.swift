@@ -212,7 +212,7 @@ final class SampleModule: Module {
         case "/toggle-buttons":
             return ToggleButtonsPage()
         case "/footer-picker":
-            return FolderPickerPage(context: context, path: url.path)
+            return PickerPage(context: context, path: url.path)
         default:
             return nil
         }

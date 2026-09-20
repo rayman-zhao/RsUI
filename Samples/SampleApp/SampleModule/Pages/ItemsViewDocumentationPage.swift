@@ -178,8 +178,12 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             ]),
     ]
 
+    /// `ItemsView` 源码节选 —— 手维护快照（非构建生成），随控件演进可能过期，
+    /// 以 `Sources/RsUI/Controls/ItemsView.swift` 为准；已略去 `ids` / `selectedIds`
+    /// 等简单转发属性。
     private static var fullSource: String {
         """
+        // 节选自 Sources/RsUI/Controls/ItemsView.swift —— 手维护快照，以源文件为准。
         open class ItemsView: WinUI.ItemsView {
 
             public var makeIdView: (String) -> UIElement

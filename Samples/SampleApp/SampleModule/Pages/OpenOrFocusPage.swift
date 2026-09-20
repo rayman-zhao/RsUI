@@ -30,17 +30,15 @@ final class OpenOrFocusPage: RsUI.Page {
     }
 
     var content: WinUI.UIElement {
-        let card = SettingsCard(
-            headerIconGlyph: "\u{E8A7}",
+        let targetURL = URL(string: "rs://ui/settings")!
+        let card = makeClickableCard(
+            glyph: "\u{E8A7}",
             header: tr("openOrFocus this page"),
             description: tr(
                 "Calls context.openOrFocus(url). If a duplicate tab exists, it gets focused instead of opening another one."
             )
-        )
-        card.isClickEnabled = true
-        card.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            _ = self.context.openOrFocus(URL(string: "rs://ui/settings")!)
+        ) { [weak self] in
+            _ = self?.context.openOrFocus(targetURL)
         }
         return featurePageContent([card])
     }
