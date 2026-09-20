@@ -21,20 +21,12 @@ extension Page {
 
     public func windowContextDidChange(to context: WindowContext) {}
 
+    /// 观察 ViewModel 状态并驱动 UI。返回观察 Task，需要提前终止观察时可 cancel。
+    @discardableResult
     public func startObserving<Element>(
         _ emit: @escaping @Sendable () -> Element,
         onChanged: @escaping @MainActor (Page, Element) -> Void
-    ) {
-        let obs = Observations(emit)
-
-        Task { [weak self] in
-            for await value in obs {
-                guard let self else { return }
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-                    onChanged(self, value)
-                }
-            }
-        }
+    ) -> Task<Void, Never> {
+        startObservingChanges(on: self, emitting: emit, onChanged: onChanged)
     }
 }

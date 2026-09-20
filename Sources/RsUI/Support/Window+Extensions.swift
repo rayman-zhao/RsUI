@@ -36,21 +36,12 @@ extension Window {
         self.systemBackdrop = micaBackdrop
     }
 
+    @discardableResult
     public func startObserving<Element>(
         _ emit: @escaping @Sendable () -> Element,
         onChanged: @escaping @MainActor (Window, Element) -> Void
     ) -> Task<Void, Never> {
-        let obs = Observations(emit)
-
-        return Task { [weak self] in
-            for await value in obs {
-                guard let self else { return }
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-                    onChanged(self, value)
-                }
-            }
-        }
+        startObservingChanges(on: self, emitting: emit, onChanged: onChanged)
     }
 
     public func useRestoration(_ restore: Bool = true) {
