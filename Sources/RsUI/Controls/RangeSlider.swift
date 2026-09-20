@@ -38,11 +38,12 @@ struct RangeSliderState {
         _ = setRange(lower: lowerValue, upper: upperValue)
     }
 
-    /// 吸附到最近的 step 并消除浮点尾差。
+    /// 吸附到最近的 step 并消除浮点尾差。以 `minimum` 为网格锚点，
+    /// 与 `settleToStep()` 保持同一网格（否则 minimum 非 0 时松手会跳变）。
     func snapped(_ value: Double) -> Double {
         guard stepFrequency > 0 else { return value }
-        let steps = (value / stepFrequency).rounded()
-        return clean(steps * stepFrequency)
+        let steps = ((value - minimum) / stepFrequency).rounded()
+        return minimum + clean(steps * stepFrequency)
     }
 
     private func clean(_ value: Double) -> Double {

@@ -34,6 +34,26 @@ import Testing
         #expect(continuous.lowerValue == 33.25)
     }
 
+    @Test func snappedAndSettleShareMinimumAnchoredGrid() {
+        // minimum 非 0 时，snapped 与 settleToStep 必须落在同一网格（以 minimum 为锚），
+        // 否则松手吸附会跳到另一个值、键盘步进与吸附结果不一致。
+        let state = RangeSliderState(minimum: 2, maximum: 52, stepFrequency: 5, lowerValue: 25, upperValue: 75)
+        #expect(state.snapped(2) == 2)
+        #expect(state.snapped(14) == 12)
+        #expect(state.snapped(14.6) == 17)
+        #expect(state.snapped(1.9) == 2)  // snapped 不负责钳制到域（setLower 才钳）
+
+        var settled = RangeSliderState(minimum: 2, maximum: 52, stepFrequency: 5, lowerValue: 12, upperValue: 32)
+        // 整体平移产生非网格值（模拟双滑块间拖拽，settleToStep 的真实入口）
+        let shifted = settled.shiftRaw(by: 1)
+        #expect(shifted)
+        #expect(settled.lowerValue == 13)
+        let changed = settled.settleToStep()
+        #expect(changed)
+        #expect(settled.lowerValue == 12)  // 2 + 2*5，与 snapped(13) 一致
+        #expect(settled.upperValue == 32)  // 窗宽 20 保持不变
+    }
+
     @Test func cleansFloatingPointNoise() {
         var state = RangeSliderState(stepFrequency: 0.1, lowerValue: 0, upperValue: 100)
         _ = state.setLower(0.30000000000000004)
