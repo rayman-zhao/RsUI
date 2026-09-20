@@ -18,6 +18,14 @@ public final class AppContext {
     }
     public var iconAppxUri: Uri? {
         guard let path = iconPath else { return nil }
+        // ms-appx:// URI 必须是包根（exe 目录）相对路径。icon 不在包根下时无法
+        // 推导，返回 nil 让调用方走无 logo 回退，而不是拼出畸形 URI 静默失败。
+        guard path.hasPrefix(Bundle.main.bundlePath) else {
+            log.warning(
+                "iconAppxUri: icon path \(path) is not under the package root \(Bundle.main.bundlePath)"
+            )
+            return nil
+        }
         let relativePath = path.trimmingPrefix(Bundle.main.bundlePath)
         return Uri("ms-appx://\(relativePath)")
     }
