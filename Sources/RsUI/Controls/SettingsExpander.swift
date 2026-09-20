@@ -45,8 +45,6 @@ public class SettingsExpander: StackPanel {
         return t
     }()
 
-    private var items: [SettingsCard] = []
-
     // MARK: - Init
 
     public init(
@@ -57,7 +55,7 @@ public class SettingsExpander: StackPanel {
         items: [SettingsCard] = []
     ) {
         super.init()
-        self.items = items
+        itemsSource = items
         setup(
             headerCard: SettingsCard(
                 headerIconGlyph: headerIconGlyph,
@@ -87,7 +85,7 @@ public class SettingsExpander: StackPanel {
         items: [SettingsCard] = []
     ) {
         super.init()
-        self.items = items
+        itemsSource = items
         setup(
             headerCard: SettingsCard(
                 headerIconPath: headerIconPath,
@@ -106,7 +104,7 @@ public class SettingsExpander: StackPanel {
         items: [SettingsCard] = []
     ) {
         super.init()
-        self.items = items
+        itemsSource = items
         setup(
             headerCard: SettingsCard(
                 header: header,
@@ -167,7 +165,7 @@ public class SettingsExpander: StackPanel {
         guard let outerCard else { return }
         outerCard.background = themeBrush("CardBackgroundFillColorDefaultBrush")
         outerCard.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
-        for item in itemsSource ?? items {
+        for item in itemsSource ?? [] {
             item.cardRoot.borderBrush = themeBrush("DividerStrokeColorDefaultBrush")
         }
     }
@@ -184,7 +182,7 @@ public class SettingsExpander: StackPanel {
         }
 
         // Items
-        let effectiveItems = itemsSource ?? items
+        let effectiveItems = itemsSource ?? []
         for item in effectiveItems {
             item.suppressCardStyling()
             item.applyExpanderItemPadding()
