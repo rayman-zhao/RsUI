@@ -10,11 +10,12 @@ This guide is for **consumers** of RsUI (apps built on the framework). For worki
 
 ## 1. Package setup
 
-Reference a tagged version (recommended over `branch: main` — breaking changes are announced in [`CHANGELOG.md`](./CHANGELOG.md) per tag):
+Reference RsUI by branch today (version-based references are blocked until the dependency chain is tagged — see the note below):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rayman-zhao/RsUI", from: "0.1.0"),
+    // ⚠️ branch-based on purpose; see "Version-based consumption" below
+    .package(url: "https://github.com/rayman-zhao/RsUI", branch: "main"),
 ],
 targets: [
     .executableTarget(
@@ -25,6 +26,16 @@ targets: [
     ),
 ]
 ```
+
+**Commit your own `Package.resolved`** so builds are reproducible between `swift package update` runs — with a `branch: main` requirement, every manual update silently absorbs everything on main, including breaking changes (announced per RsUI tag in [`CHANGELOG.md`](./CHANGELOG.md), but a branch reference does not stop at tags).
+
+### Version-based consumption (currently blocked)
+
+SPM rejects `from: "0.1.0"` on RsUI today:
+
+> package 'rsui' is required using a stable-version but 'rsui' depends on an unstable-version package 'swift-cwinrt'
+
+Stable-versioned packages may only depend on stable-versioned packages, and RsUI's seven dependencies (`swift-cwinrt`, `swift-windowsfoundation`, `swift-uwp`, `swift-windowsappsdk`, `swift-winui`, `swift-cppwinrt`, `RsFoundation`) are all `branch: main` references to the `rayman-zhao/*` forks. Enabling semver consumption requires tagging all forks and switching RsUI's manifest to version requirements — tracked as upstream work.
 
 ## 2. Executable linker settings (required)
 
