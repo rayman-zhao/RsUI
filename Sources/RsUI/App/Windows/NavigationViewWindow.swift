@@ -51,7 +51,7 @@ class NavigationViewWindow: AppearanceWindow {
     private var windowLayout = App.context.preferences.load(for: WindowLayout.self)
     private var saveWindowLayoutPreferences: Bool = true  // false → 关窗时不把本窗口的 NavPane 状态写回全局 windowLayout，避免一次性 viewer 窗口污染主窗口的下次启动状态
 
-    init(_ forceMinimalMode: Bool = false) {
+    init(forceMinimalMode: Bool = false) {
         super.init()
 
         setupUI()
@@ -178,7 +178,7 @@ class NavigationViewWindow: AppearanceWindow {
             // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
             hwnd.titleBar.preferredTheme = App.context.theme.titleBarTheme
 
-            let str = App.context.tr(App.context.productName)
+            let str = tr(App.context.productName)
             self.title = str
             self.ui.titleBar.title = str
             try? ToolTipService.setToolTip(self.ui.backButton, tr("Back"))
@@ -186,7 +186,7 @@ class NavigationViewWindow: AppearanceWindow {
             // 图标按钮无可见文字，Tooltip 不等于 UIA 名称，需单独提供自动化名称。
             try? AutomationProperties.setName(self.ui.backButton, tr("Back"))
             try? AutomationProperties.setName(self.ui.forwardButton, tr("Forward"))
-            self.ui.searchBox.placeholderText = App.context.tr("Search ...")
+            self.ui.searchBox.placeholderText = tr("Search ...")
         }
 
         self.closed.addHandler { [weak self] _, _ in
@@ -251,11 +251,19 @@ class NavigationViewWindow: AppearanceWindow {
     /// 退出 element 全屏，把 element reparent 回退出前的原 parent 原位置。
     /// 未在全屏时为 no-op。
     func exitFullscreen() {
-        guard
-            isInFullscreen,
-            let element = ui.fullscreenOverlay.child,
-            let parent = fullscreen.preParent
-        else { return }
+        guard isInFullscreen else { return }
+        // 状态分叉兜底（overlay 已空 / preParent 丢失但 isInFullscreen 仍为 true）：
+        // 强制复位本地状态，避免标题栏/导航被永久标记为全屏、Esc accelerator 悬挂。
+        guard let element = ui.fullscreenOverlay.child, let parent = fullscreen.preParent else {
+            log.warning("NavigationViewWindow.exitFullscreen: inconsistent fullscreen state, resetting")
+            isInFullscreen = false
+            fullscreen.preParent = nil
+            fullscreen.preIndex = nil
+            fullscreen.preWindowMaximized = false
+            fullscreen.preExtendsContentIntoTitleBar = true
+            fullscreenChanged.invoke(self, false)
+            return
+        }
 
         ui.fullscreenOverlay.child = nil
         element.attachToParent(parent, index: fullscreen.preIndex)
@@ -293,11 +301,6 @@ class NavigationViewWindow: AppearanceWindow {
             args?.handled = true
         }
         ui.root.keyboardAccelerators.append(esc)
-
-        // Can't see the problem. Keep for later check.
-        // WinUI auto-shows an "Esc" shortcut tooltip for elements owning a
-        // KeyboardAccelerator; suppress it since the accelerator is global.
-        // ui.root.keyboardAcceleratorPlacementMode = .hidden
 
         fullscreen.installedEscapeAccelerator = true
     }

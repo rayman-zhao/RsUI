@@ -15,7 +15,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
     // MARK: - Init
 
     init(urls: [URL] = [], forceMinimalMode: Bool = false) {
-        super.init(forceMinimalMode)
+        super.init(forceMinimalMode: forceMinimalMode)
         useMicaBackdrop()
         useRestoration()
 

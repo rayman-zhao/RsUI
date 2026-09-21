@@ -181,12 +181,10 @@ public class RangeSlider: ContentControl {
         }
     }
 
-    /// 官方 Slider 主题资源数值(SliderHorizontalHeight / SliderHorizontalThumb* /
-    /// SliderTrackThemeHeight),Canvas 定位换算用。
+    /// 官方 Slider 主题资源数值(SliderHorizontalThumb*),Canvas 定位换算用。
+    /// 控件高度(32)与轨道高度(4)以字面量写在 XAML 模板里(Thumb/TrackBackground)。
     private enum Metrics {
-        static let controlHeight: Double = 32
         static let thumbSize: Double = 18
-        static let trackHeight: Double = 4
         /// 选区窄于该宽度时禁用整体拖动命中面。
         static let fillDragMinWidth: Double = 8
     }

@@ -134,6 +134,7 @@ Sources/RsUI/
   Support/
     AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension (waits for activation redirect before `exit(0)`)
     AppBarButton+Extensions.swift       — `build(glyph:tooltip:)` factory on `AppBarButton` ({x:Glyph}/{x:Tr} XAML template)
+    Brush+Extensions.swift              — `fluentThemeBrush(_:)`: shared Fluent token brush lookup (theme-refresh reminder in doc comment)
     FrameworkElement+Extensions.swift   — `requireElement(_:)` / `requireResource(_:)` named-lookup crash-with-message helpers
     JumpList+Extensions.swift           — `JumpList.register(arguments:displayName:logo:)` taskbar jump-list extension
     NavigationTransitionInfo+Extensions.swift — `static func make(slideEffect:)` factory

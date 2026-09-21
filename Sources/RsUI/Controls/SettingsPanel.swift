@@ -81,7 +81,7 @@ open class SettingsPanel: WinUI.Grid {
 
     public func append(glyph: String?, title: String, cards: [UIElement]) {
         let group = SettingsGroup(title: title, cards: cards)
-        return append(glyph: glyph, group: group)
+        append(glyph: glyph, group: group)
     }
 
     /// 二级页占满内容区；content 的显示与滚动由调用方决定——

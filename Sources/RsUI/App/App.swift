@@ -34,11 +34,7 @@ open class App: SwiftApplication {
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
             logo: App.context.iconAppxUri)
 
-        if let url = App.context.route.lastPageURL {
-            try? MainWindow(urls: [url]).activate()
-        } else {
-            try? MainWindow().activate()
-        }
+        try? MainWindow(urls: App.context.route.lastPageURL.map { [$0] } ?? []).activate()
     }
 
     open func onActivated(_ args: AppActivationArguments?) {

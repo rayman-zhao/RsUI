@@ -30,7 +30,7 @@ extension AppInstance {
             exit(0)
         }
 
-        // Responese to activated event.
+        // Response to activated event.
         instance.activated.addHandler { sender, args in
             Task { @MainActor in
                 onActivated(sender, args)

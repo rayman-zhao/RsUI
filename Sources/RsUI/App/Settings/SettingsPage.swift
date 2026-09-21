@@ -68,6 +68,8 @@ class SettingsPage: Page {
         combo.padding = WinUI.Thickness(left: 12, top: 6, right: 12, bottom: 6)
         combo.itemsSource = single_threaded_vector_inspectable([tr("lightMode"), tr("darkMode")])
         combo.selectedIndex = App.context.theme.isDark ? Int32(1) : Int32(0)
+        // ComboBox 无可见文字标签，为 UIA 提供与卡片标题一致的自动化名称。
+        try? WinUI.AutomationProperties.setName(combo, tr("theme"))
         combo.selectionChanged.addHandler { sender, _ in
             guard let sender = sender as? ComboBox else { return }
             guard sender.selectedIndex >= 0 else { return }
@@ -92,6 +94,8 @@ class SettingsPage: Page {
             AppLanguage.availableCases.map { $0.displayName })
         combo.selectedIndex = Int32(
             AppLanguage.availableCases.firstIndex(of: App.context.language) ?? 0)
+        // ComboBox 无可见文字标签，为 UIA 提供与卡片标题一致的自动化名称。
+        try? WinUI.AutomationProperties.setName(combo, tr("language"))
         combo.selectionChanged.addHandler { sender, _ in
             guard let sender = sender as? WinUI.ComboBox else { return }
 
