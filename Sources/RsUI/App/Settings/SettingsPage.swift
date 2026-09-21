@@ -34,7 +34,7 @@ class SettingsPage: Page {
         // MARK: - 各个模块
         for module in App.context.modules {
             if let group = module.settingsGroup() {
-                mainStackPanel.children.append(SettingsGroup(title: group.title, cards: group.cards))
+                mainStackPanel.children.append(group)
             }
         }
 

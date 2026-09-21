@@ -8,7 +8,7 @@ public protocol Module: ExpressibleByEmptyLiteral {
     func titleBarRightHeaderItem(in context: WindowContext) -> UIElement?
     func navigationViewMenuItems(in context: WindowContext) -> [NavigationViewItemBase]
     func navigationViewFooterMenuItems(in context: WindowContext) -> [NavigationViewItemBase]
-    func settingsGroup() -> (title: String, cards: [UIElement])?
+    func settingsGroup() -> SettingsGroup?
 
     func navigationDidRequest(for url: URL, in context: WindowContext) -> Page?
 }
@@ -27,7 +27,7 @@ extension Module {
     {
         return []
     }
-    public func settingsGroup() -> (title: String, cards: [UIElement])? {
+    public func settingsGroup() -> SettingsGroup? {
         return nil
     }
 

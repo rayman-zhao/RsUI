@@ -2,6 +2,12 @@
 
 Notable changes to RsUI. Format follows [Keep a Changelog](https://keepachangelog.com/); versions are tagged on `main`.
 
+## [Unreleased]
+
+### Breaking
+
+- **`Module.settingsGroup()` now returns `SettingsGroup?`** instead of `(title: String, cards: [UIElement])?`. Modules construct the group themselves, so they control `isExpandable` and the initial `isExpanded` (previously `SettingsPage` always wrapped the tuple in an expandable group). `SettingsPage` appends the returned group as-is.
+
 ## [0.1.0] — 2026-09-21
 
 First tagged version. Changes below are summarized from the `main` history before this tag (the full-review refactor batches); "Breaking" entries are relative to earlier `main` commits that downstream projects may still target.

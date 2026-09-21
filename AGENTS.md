@@ -255,7 +255,7 @@ To create a new module:
 3. Use URL routing format `rs://{moduleId}/{path}`. Support the root (`rs://{moduleId}` / `""` / `/`) as the module landing page (see `SampleModule.navigationDidRequest`).
 4. Return `Page?` from `navigationDidRequest(for url: URL, in context: WindowContext)`. Match `url.host == self.id`, then switch on `url.path`.
 5. Provide navigation items via `navigationViewMenuItems(in context: WindowContext) -> [NavigationViewItemBase]` (use `NavigationViewItem.build(iconGlyph:label:url:)` and action variants; the URL is stored in `tag` as `HString` and read back via `NavigationViewItemBase.url`). Optionally add footer items via `navigationViewFooterMenuItems(in:)`.
-6. Contribute a settings group via `settingsGroup() -> (title: String, cards: [UIElement])?`. The built-in settings page (`SettingsPage`) collects all modules' groups automatically.
+6. Contribute a settings group via `settingsGroup() -> SettingsGroup?` — construct the `SettingsGroup` yourself (its `isExpandable:` / `isExpanded:` init parameters decide whether the group can be toggled and its initial state). The built-in settings page (`SettingsPage`) appends the returned group as-is.
 7. Optionally contribute a title-bar right header element via `titleBarRightHeaderItem(in:)` (e.g. a `ProgressRing` observing module state — see `SampleModule`).
 8. Use `WindowContext` (passed into every `titleBarRightHeaderItem(in:)` / `navigationViewMenuItems(in:)` / `navigationViewFooterMenuItems(in:)` / `navigationDidRequest(for:in:)` call, and delivered to pages) for navigation (`open(_:mode:)`, `openOrFocus(_:)`), folder picking (`pickFolder`), and fullscreen. If a page caches a `WindowContext`, update it in `windowContextDidChange(to:)`.
 

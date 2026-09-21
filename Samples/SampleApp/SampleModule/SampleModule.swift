@@ -136,7 +136,7 @@ final class SampleModule: Module {
         return [NavigationViewItemSeparator(), header, pickerItem]
     }
 
-    func settingsGroup() -> (title: String, cards: [UIElement])? {
+    func settingsGroup() -> SettingsGroup? {
         let toggle = ToggleSwitch()
         toggle.isOn = true
         toggle.onContent = tr("On")
@@ -178,7 +178,7 @@ final class SampleModule: Module {
         )
         expander.itemsSource = [childA, childB]
 
-        return (tr("Settings Controls Demo"), [basicCard, clickableCard, expander])
+        return SettingsGroup(title: tr("Settings Controls Demo"), cards: [basicCard, clickableCard, expander])
     }
 
     func navigationDidRequest(for url: URL, in context: WindowContext) -> RsUI.Page? {
