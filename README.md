@@ -13,8 +13,7 @@ A native LOB (Line of Business) application framework built with **Swift on Wind
 - [Project Structure](#project-structure)
 - [Architecture at a Glance](#architecture-at-a-glance)
 - [Getting Started](#getting-started)
-- [Building an App with RsUI](#building-an-app-with-rsui)
-  - [1. Create an `App` subclass and register modules](#1-create-an-app-subclass-and-register-modules)
+- [Building an App with RsUI](#building-an-app-with-rsui)  - [1. Create an `App` subclass and register modules](#1-create-an-app-subclass-and-register-modules)
   - [2. Implement the `Module` protocol](#2-implement-the-module-protocol)
   - [3. Implement `Page`s and return them from routing](#3-implement-pages-and-return-them-from-routing)
   - [4. Build page UI (XAML-first)](#4-build-page-ui-xaml-first)
@@ -24,6 +23,8 @@ A native LOB (Line of Business) application framework built with **Swift on Wind
 - [Threading, Lifecycle, and Pitfalls](#threading-lifecycle-and-pitfalls)
 - [Testing](#testing)
 - [Repository Layout](#repository-layout)
+
+> **Building an app on RsUI?** See [`INTEGRATION.md`](./INTEGRATION.md) (linker settings, JumpList icon contract, localization key contract, page-author rules) and [`CHANGELOG.md`](./CHANGELOG.md) for per-tag changes.
 
 ---
 
