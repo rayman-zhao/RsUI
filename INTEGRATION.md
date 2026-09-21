@@ -93,7 +93,7 @@ RsUI is a library: **its user-facing strings are looked up in *your app's* `.xcs
 | `Expand or collapse` | `SettingsGroup` expand toggle |
 | `OK` | `WindowContext.showDialog` fallback close button |
 
-**`SettingsPage.xcstrings` table** — the entire built-in settings page (theme/language/personalization, per-module group chrome, about/dependencies sections; ~60 keys). Copy `Samples/Assets/SettingsPage.xcstrings` from the RsUI repo as your starting point and translate. **If you don't ship this table, the settings page renders in English.**
+**`SettingsPage.xcstrings` table** — the entire built-in settings page (11 keys: personalization/theme/language/about/dependencies). Copy `Samples/Assets/SettingsPage.xcstrings` from the RsUI repo as your starting point and translate. **If you don't ship this table, the settings page renders in English.**
 
 ## 6. Module & page author rules (the short list)
 
