@@ -5,7 +5,7 @@ import WinUI
 import WindowsFoundation
 
 final class ToggleButtonsPage: RsUI.Page {
-    var url: URL { URL(string: "rs://sample/toggle-buttons")! }
+    let url = URL(string: "rs://\(sampleModuleID)/toggle-buttons")!
     var title: String { tr("Toggle Buttons") }
 
     var header: Any? {

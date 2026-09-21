@@ -21,7 +21,7 @@ final class FullscreenPage: RsUI.Page {
         }
     }
 
-    var url: URL { URL(string: "rs://sample/fullscreen")! }
+    let url = URL(string: "rs://\(sampleModuleID)/fullscreen")!
     var title: String { tr("Fullscreen") }
 
     var header: Any? {

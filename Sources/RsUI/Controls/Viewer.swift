@@ -247,7 +247,10 @@ open class Viewer: WinUI.Grid {
 
     /// 设置左右区域可拖拽调整的最小和最大宽度。
     public func setPaneLengthRange(minimum: Double, maximum: Double, for edge: ViewerEdge) {
-        guard edge == .left || edge == .right else { return }
+        guard edge == .left || edge == .right else {
+            log.warning("Viewer.setPaneLengthRange: only .left/.right panes are resizable, got \(edge)")
+            return
+        }
         updatePane(edge) { pane in
             pane.minimumLength = max(0, minimum)
             pane.maximumLength = max(pane.minimumLength, maximum)
@@ -507,9 +510,11 @@ open class Viewer: WinUI.Grid {
     }
 
     /// 为单个左右分隔条绑定按下、移动、释放和捕获丢失事件。
+    /// 注意用 handler 的 `sender` 而非捕获 `splitter` 参数——闭包存在 splitter
+    /// 自己的事件存储里，强捕获参数会形成 splitter→闭包→splitter 自引用循环。
     private func bindSplitter(_ splitter: WinUI.Border, edge: ViewerEdge) {
-        splitter.pointerPressed.addHandler { [weak self] _, args in
-            guard let self, let args else { return }
+        splitter.pointerPressed.addHandler { [weak self] sender, args in
+            guard let self, let args, let splitter = sender as? WinUI.Border else { return }
             self.resizingEdge = edge
             _ = try? splitter.capturePointer(args.pointer)
             args.handled = true
@@ -525,8 +530,8 @@ open class Viewer: WinUI.Grid {
             self.setPaneLength(length, for: edge)
             args.handled = true
         }
-        splitter.pointerReleased.addHandler { [weak self] _, args in
-            guard let self, let args else { return }
+        splitter.pointerReleased.addHandler { [weak self] sender, args in
+            guard let self, let args, let splitter = sender as? WinUI.Border else { return }
             self.resizingEdge = nil
             try? splitter.releasePointerCapture(args.pointer)
             self.saveStoredPreferences()

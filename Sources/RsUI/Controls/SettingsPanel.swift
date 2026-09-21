@@ -131,16 +131,17 @@ private var xamlUI: String {
         </Grid.Resources>
         <Grid x:Name="HeaderGrid" Grid.Row="0" RowDefinitions="Auto" ColumnDefinitions="Auto,*,Auto">
             <AppBarButton x:Name="BackButton" Grid.Row="0" Grid.Column="0"
-                Icon="Back" ToolTipService.ToolTip="{x:Tr Back}" Visibility="Collapsed">
+                Icon="Back" ToolTipService.ToolTip="{x:Tr Back}"
+                AutomationProperties.Name="{x:Tr Back}" Visibility="Collapsed">
                 <AppBarButton.Resources>
                 <!-- The style can make button without padding and corner. -->
-                <Style x:Key="ViewerChromeAppBarButtonStyle" TargetType="AppBarButton">
+                <Style x:Key="IconOnlyAppBarButtonStyle" TargetType="AppBarButton">
                     <Setter Property="Width" Value="48"/>
                     <Setter Property="LabelPosition" Value="Collapsed"/>
                 </Style>
                 </AppBarButton.Resources>
                 <AppBarButton.Style>
-                    <StaticResource ResourceKey="ViewerChromeAppBarButtonStyle"/>
+                    <StaticResource ResourceKey="IconOnlyAppBarButtonStyle"/>
                 </AppBarButton.Style>
             </AppBarButton>
             <StackPanel x:Name="HeaderPanel" Grid.Row="0" Grid.Column="1"

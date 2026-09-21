@@ -26,4 +26,5 @@ identifier_name:
 
 included:
   - Sources
-#  - Tests
+  - Samples
+  - Tests

@@ -14,16 +14,16 @@ final class BatchOpenPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/batch-open")! }
+    let url = URL(string: "rs://\(sampleModuleID)/batch-open")!
     var title: String { tr("Batch Open") }
 
     // The routes opened by the batch demo, in tab order.
     private var routes: [URL] {
         [
-            "rs://sample/navigation",
-            "rs://sample/openorfocus",
-            "rs://sample/appearance",
-            "rs://sample/fullscreen",
+            "rs://\(sampleModuleID)/navigation",
+            "rs://\(sampleModuleID)/openorfocus",
+            "rs://\(sampleModuleID)/appearance",
+            "rs://\(sampleModuleID)/fullscreen",
         ].compactMap { URL(string: $0) }
     }
 

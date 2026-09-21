@@ -48,27 +48,49 @@ public final class AppContext {
     internal private(set) var modules: [any Module] = []
 
     init() {
-        let group = "SwiftWorks"
-        let product = "RsUI"
-
-        groupName = group
-        productName = product
-        supportDirectory = URL.applicationSupportDirectory.ensuringChild(
-            named: "\(group)/\(product)/")!
-        preferences = JSONPreferences.makeStandard(group: group, product: product)
-        self.resourceBundle = .main
+        let defaults = Self.makeConfiguration(
+            group: "SwiftWorks", product: "RsUI", resourceBundle: .main, moduleTypes: [])
+        groupName = defaults.group
+        productName = defaults.product
+        supportDirectory = defaults.supportDirectory
+        preferences = defaults.preferences
+        resourceBundle = defaults.resourceBundle
+        moduleTypes = defaults.moduleTypes
     }
 
     func bootstrap(
         group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]
     ) {
-        groupName = group
-        productName = product
-        supportDirectory = URL.applicationSupportDirectory.ensuringChild(
-            named: "\(group)/\(product)/")!
-        preferences = JSONPreferences.makeStandard(group: group, product: product)
-        self.resourceBundle = resourceBundle
-        self.moduleTypes = moduleTypes
+        let config = Self.makeConfiguration(
+            group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes)
+        groupName = config.group
+        productName = config.product
+        supportDirectory = config.supportDirectory
+        preferences = config.preferences
+        self.resourceBundle = config.resourceBundle
+        self.moduleTypes = config.moduleTypes
+    }
+
+    /// init 默认配置与 bootstrap 覆盖共用的目录/偏好构建逻辑。
+    private static func makeConfiguration(
+        group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]
+    ) -> (
+        group: String, product: String, supportDirectory: URL, preferences: Preferences,
+        resourceBundle: Bundle, moduleTypes: [Module.Type]
+    ) {
+        guard let support = URL.applicationSupportDirectory.ensuringChild(
+            named: "\(group)/\(product)/")
+        else {
+            fatalError("AppContext: failed to ensure support directory for \(group)/\(product)")
+        }
+        return (
+            group: group,
+            product: product,
+            supportDirectory: support,
+            preferences: JSONPreferences.makeStandard(group: group, product: product),
+            resourceBundle: resourceBundle,
+            moduleTypes: moduleTypes
+        )
     }
 
     func bootstrapGUI() {
@@ -81,6 +103,7 @@ public final class AppContext {
             language = (ApplicationLanguages.languages.first == "zh-Hans-CN") ? .zh_CN : .en_US
         }
         route = preferences.load(for: AppRoute.self)
+        if route.maxHistoryPages < 1 { route.maxHistoryPages = 1 }
     }
 
     func initializeModules() {
@@ -153,7 +176,11 @@ public final class AppContext {
         with urls: [URL],
         forceMinimalMode: Bool = false
     ) {
-        try? MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
+        do {
+            try MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
+        } catch {
+            log.warning("openNewWindow: failed to activate new window: \(error)")
+        }
     }
 
     /// Reveals a file or directory in File Explorer with the item selected in its parent folder.

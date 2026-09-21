@@ -6,7 +6,7 @@ import WinUI
 import WindowsFoundation
 
 final class ItemsViewPage: RsUI.Page {
-    var url: URL { URL(string: "rs://sample/items-view")! }
+    let url = URL(string: "rs://\(sampleModuleID)/items-view")!
     var title: String { tr("Items View") }
 
     var header: Any? {

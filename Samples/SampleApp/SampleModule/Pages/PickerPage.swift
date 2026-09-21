@@ -18,7 +18,7 @@ final class PickerPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample\(path)")! }
+    var url: URL { URL(string: "rs://\(sampleModuleID)\(path)")! }
     var title: String { tr("Picker") }
 
     var header: Any? {

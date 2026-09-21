@@ -14,7 +14,7 @@ final class NavigationModesPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/navigation")! }
+    let url = URL(string: "rs://\(sampleModuleID)/navigation")!
     var title: String { tr("Navigation Modes") }
 
     var header: Any? {

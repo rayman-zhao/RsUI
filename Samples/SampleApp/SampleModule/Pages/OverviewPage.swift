@@ -14,7 +14,7 @@ final class OverviewPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample")! }
+    let url = URL(string: "rs://\(sampleModuleID)")!
     var title: String { tr("Overview") }
 
     var header: Any? {
@@ -77,7 +77,7 @@ final class OverviewPage: RsUI.Page {
         description: String,
         path: String
     ) -> SettingsCard {
-        let targetURL = URL(string: "rs://sample\(path)")!
+        let targetURL = URL(string: "rs://\(sampleModuleID)\(path)")!
         return makeClickableCard(glyph: glyph, header: header, description: description) {
             [weak self] in
             _ = self?.context.open(targetURL, mode: .inplace)

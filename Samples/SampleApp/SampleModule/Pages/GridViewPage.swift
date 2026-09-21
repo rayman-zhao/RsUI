@@ -5,7 +5,7 @@ import WinUI
 import WindowsFoundation
 
 final class GridViewPage: RsUI.Page {
-    var url: URL { URL(string: "rs://sample/grid-view")! }
+    let url = URL(string: "rs://\(sampleModuleID)/grid-view")!
     var title: String { tr("Grid View") }
 
     var header: Any? {

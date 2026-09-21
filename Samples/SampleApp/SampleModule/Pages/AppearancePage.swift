@@ -35,7 +35,7 @@ final class AppearancePage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/appearance")! }
+    let url = URL(string: "rs://\(sampleModuleID)/appearance")!
     var title: String { tr("Appearance") }
 
     var header: Any? {

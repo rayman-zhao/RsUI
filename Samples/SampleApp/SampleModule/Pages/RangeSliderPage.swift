@@ -5,7 +5,7 @@ import WinUI
 import WindowsFoundation
 
 final class RangeSliderPage: RsUI.Page {
-    var url: URL { URL(string: "rs://sample/range-slider")! }
+    let url = URL(string: "rs://\(sampleModuleID)/range-slider")!
     var title: String { tr("Range Slider") }
 
     var header: Any? {

@@ -14,7 +14,7 @@ final class NewWindowPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/new-window")! }
+    let url = URL(string: "rs://\(sampleModuleID)/new-window")!
     var title: String { tr("New Window") }
 
     var header: Any? {

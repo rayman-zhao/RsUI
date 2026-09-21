@@ -67,4 +67,13 @@ struct AppRouteTests {
         #expect(route.maxHistoryPages == 32)
         #expect(route.lastPageURL == nil)
     }
+
+    @Test
+    func clampsMaxHistoryPagesToOne() {
+        var route = AppRoute()
+        route.maxHistoryPages = 0
+        #expect(route.maxHistoryPages == 1)
+        route.maxHistoryPages = -5
+        #expect(route.maxHistoryPages == 1)
+    }
 }

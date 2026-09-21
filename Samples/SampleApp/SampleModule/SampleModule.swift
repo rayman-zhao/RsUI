@@ -11,9 +11,12 @@ func tr(_ keyAndValue: String) -> String {
     return (text == keyAndValue && App.context.language == .zh_CN) ? "待翻译（\(keyAndValue)）" : text
 }
 
+/// 模块 id 的唯一来源：页面 URL 与导航项统一用它拼 `rs://` 路由。
+let sampleModuleID = "sample"
+
 @Observable
 final class SampleModule: Module {
-    let id = "sample"
+    let id = sampleModuleID
     var state = "loading"
 
     init() {

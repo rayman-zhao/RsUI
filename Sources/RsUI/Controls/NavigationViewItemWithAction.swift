@@ -43,6 +43,8 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
         let textBlock = TextBlock()
         textBlock.text = label
         textBlock.verticalAlignment = .center
+        // 长标签截断显示省略号，避免把行尾的动作按钮挤出可视区。
+        textBlock.textTrimming = .characterEllipsis
         try? Grid.setColumn(textBlock, 0)
         grid.children.append(textBlock)
 

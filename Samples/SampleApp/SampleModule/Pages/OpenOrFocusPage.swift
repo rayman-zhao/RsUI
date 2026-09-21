@@ -14,7 +14,7 @@ final class OpenOrFocusPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/openorfocus")! }
+    let url = URL(string: "rs://\(sampleModuleID)/openorfocus")!
     var title: String { tr("Open or Focus") }
 
     var header: Any? {

@@ -15,7 +15,7 @@ final class ViewerPage: RsUI.Page {
         self.context = context
     }
 
-    var url: URL { URL(string: "rs://sample/viewer")! }
+    let url = URL(string: "rs://\(sampleModuleID)/viewer")!
     var title: String { tr("Viewer") }
 
     var content: WinUI.UIElement {

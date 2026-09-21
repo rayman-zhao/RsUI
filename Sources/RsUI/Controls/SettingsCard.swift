@@ -32,13 +32,7 @@ public class SettingsCard: ButtonBase {
         didSet { rebuildLayout() }
     }
 
-    public var actionIcon: FontIcon? = {
-        let icon = WinUI.FontIcon()
-        icon.glyph = "\u{E974}"  // ChevronRight
-        icon.mirroredWhenRightToLeft = true
-        return icon
-    }()
-    {
+    public var actionIcon: FontIcon? = SettingsCard.defaultActionIcon() {
         didSet { rebuildLayout() }
     }
 
@@ -102,38 +96,33 @@ public class SettingsCard: ButtonBase {
         let visualTarget = interactionVisualTarget ?? cardRoot
         switch state {
         case .normal:
-            visualTarget.background = themeBrush("CardBackgroundFillColorDefaultBrush")
-            visualTarget.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
-            self.foreground = themeBrush("TextFillColorPrimaryBrush")
+            visualTarget.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
+            self.foreground = fluentThemeBrush("TextFillColorPrimaryBrush")
         case .pointerOver:
-            visualTarget.background = themeBrush("ControlFillColorSecondaryBrush")
-            visualTarget.borderBrush = themeBrush("ControlElevationBorderBrush")
-            self.foreground = themeBrush("TextFillColorPrimaryBrush")
+            visualTarget.background = fluentThemeBrush("ControlFillColorSecondaryBrush")
+            visualTarget.borderBrush = fluentThemeBrush("ControlElevationBorderBrush")
+            self.foreground = fluentThemeBrush("TextFillColorPrimaryBrush")
         case .pressed:
-            visualTarget.background = themeBrush("ControlFillColorTertiaryBrush")
-            visualTarget.borderBrush = themeBrush("ControlStrokeColorDefaultBrush")
-            self.foreground = themeBrush("TextFillColorSecondaryBrush")
+            visualTarget.background = fluentThemeBrush("ControlFillColorTertiaryBrush")
+            visualTarget.borderBrush = fluentThemeBrush("ControlStrokeColorDefaultBrush")
+            self.foreground = fluentThemeBrush("TextFillColorSecondaryBrush")
         case .disabled:
             // Toolkit parity: disabling dims the foreground only, the card fill is unchanged.
-            visualTarget.background = themeBrush("CardBackgroundFillColorDefaultBrush")
-            visualTarget.borderBrush = themeBrush("CardStrokeColorDefaultBrush")
-            self.foreground = themeBrush("TextFillColorDisabledBrush")
+            visualTarget.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
+            self.foreground = fluentThemeBrush("TextFillColorDisabledBrush")
         }
 
         let disabled = !isEnabled
         if let descriptionText = descriptionElement as? WinUI.TextBlock {
-            descriptionText.foreground = themeBrush(
+            descriptionText.foreground = fluentThemeBrush(
                 disabled ? "TextFillColorDisabledBrush" : "TextFillColorSecondaryBrush")
         }
         // Bitmap icons cannot be dimmed through the foreground; reduce opacity instead.
         if headerIcon is ImageIcon {
             headerIconHolder?.opacity = disabled ? 0.4 : 1
         }
-    }
-
-    /// Fetches a system Fluent token brush, resolved against the current application theme.
-    private func themeBrush(_ key: String) -> WinUI.Brush? {
-        Application.current.resources?.lookup(key) as? WinUI.Brush
     }
 
     private func registerStateCallbacks() {
@@ -157,6 +146,15 @@ public class SettingsCard: ButtonBase {
     }
 
     // MARK: - Init
+
+    /// 默认动作图标：ChevronRight（RTL 下自动镜像）。仅 `isClickEnabled` 时可见
+    /// （见 `updateActionIconVisibility`）；`SettingsExpander` 等会替换为自己的实例。
+    private static func defaultActionIcon() -> FontIcon {
+        let icon = WinUI.FontIcon()
+        icon.glyph = "\u{E974}"  // ChevronRight
+        icon.mirroredWhenRightToLeft = true
+        return icon
+    }
 
     private override init() {
         super.init()
@@ -360,7 +358,7 @@ public class SettingsCard: ButtonBase {
     }
 
     private func buildLayout() -> WinUI.Grid {
-        let secondaryForeground = themeBrush("TextFillColorSecondaryBrush")
+        let secondaryForeground = fluentThemeBrush("TextFillColorSecondaryBrush")
 
         let container = WinUI.Grid()
 

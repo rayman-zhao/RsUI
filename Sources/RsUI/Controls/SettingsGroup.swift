@@ -14,7 +14,9 @@ public class SettingsGroup: StackPanel {
         }
     }
 
-    public let expand = EventWithArgumentHandler<SettingsGroup, Bool>()
+    /// 用户切换展开/收起后触发，参数为新的 `isExpanded` 值。
+    /// 命名与 `pageChanged` / `valueChanged` 一致：镜像属性 + `-ed`（已发生）。
+    public let isExpandedChanged = EventWithArgumentHandler<SettingsGroup, Bool>()
 
     // MARK: - Private state
 
@@ -104,7 +106,7 @@ public class SettingsGroup: StackPanel {
         guard !isAnimating else { return }
 
         isExpanded = !isExpanded
-        expand.invoke(self, isExpanded)
+        isExpandedChanged.invoke(self, isExpanded)
     }
 
     private func runExpandCollapseAnimation(expanding: Bool) {

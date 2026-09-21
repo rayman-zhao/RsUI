@@ -4,7 +4,7 @@ import UWP
 import WinUI
 
 final class RevealPage: RsUI.Page {
-    var url: URL { URL(string: "rs://sample/reveal")! }
+    let url = URL(string: "rs://\(sampleModuleID)/reveal")!
     var title: String { tr("Reveal in File Explorer") }
 
     private lazy var demoFileURL: URL = App.context.supportDirectory.appending(
