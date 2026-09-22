@@ -9,6 +9,10 @@ private func tr(_ keyAndValue: String) -> String {
     return App.context.tr(keyAndValue, table: "SettingsPage")
 }
 
+/// 构建所用 Swift 工具链版本（与随包分发的运行时 DLL 同源）。
+/// 手工维护：升级工具链后按 `swift --version` 核对更新。
+private let swiftToolchainVersion = "6.3.3"
+
 /// 设置页面类，管理主题和语言偏好设置
 class SettingsPage: Page {
     static let url = URL(string: "rs://ui/settings")!
@@ -127,7 +131,7 @@ class SettingsPage: Page {
         winrt.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
         let swift = HyperlinkButton()
-        swift.content = "Swift"
+        swift.content = "Swift \(swiftToolchainVersion)"
         swift.navigateUri = Uri("https://www.swift.org")
         swift.padding = WinUI.Thickness(left: 0, top: 4, right: 0, bottom: 4)
 
