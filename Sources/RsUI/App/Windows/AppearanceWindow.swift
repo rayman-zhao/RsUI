@@ -18,21 +18,22 @@ class AppearanceWindow: Window {
             (App.context.theme, App.context.language)
         } onChanged: { [weak self] _, _ in
             // 防止并发/重入（多窗口下 env Observation 接连触发可能引发 menuItems 的双 parent 错误）
-            guard let self else { return }
+            guard let self else { return true }
             // Really happend?
             guard self.appWindow != nil else {
                 log.warning("self.appWindow == nil")
-                return
+                return true
             }
             // Really happend?
             guard !self.isApplyingAppearance else {
                 log.warning("self.isApplyingAppearance == true")
-                return
+                return true
             }
             self.isApplyingAppearance = true
             defer { self.isApplyingAppearance = false }
 
             appearanceChanged.invoke(self)
+            return true
         }
 
         self.closed.addHandler { [weak self] _, _ in

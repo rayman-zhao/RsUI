@@ -32,6 +32,7 @@ final class SampleModule: Module {
             self?.state
         } onChanged: { ring, value in
             ring.isActive = value == "loading"
+            return true
         }
 
         Task { @MainActor [weak self] in

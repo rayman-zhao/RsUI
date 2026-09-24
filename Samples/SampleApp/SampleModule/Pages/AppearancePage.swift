@@ -62,6 +62,7 @@ final class AppearancePage: RsUI.Page {
         observingTasks.append(
             startObserving { [viewModel] in viewModel.isDarkTheme } onChanged: { _, isDark in
                 themeToggle.isOn = isDark
+                return true
             })
 
         let themeCard = SettingsCard(
@@ -82,6 +83,7 @@ final class AppearancePage: RsUI.Page {
         observingTasks.append(
             startObserving { [viewModel] in viewModel.isChinese } onChanged: { _, isChinese in
                 langToggle.isOn = isChinese
+                return true
             })
 
         let langCard = SettingsCard(

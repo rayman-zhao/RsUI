@@ -21,11 +21,12 @@ extension Page {
 
     public func windowContextDidChange(to context: WindowContext) {}
 
-    /// 观察 ViewModel 状态并驱动 UI。返回观察 Task，需要提前终止观察时可 cancel。
+    /// 观察 ViewModel 状态并驱动 UI。返回观察 Task，需要提前终止观察时可 cancel；
+    /// `onChanged` 返回 `false` 则停止观察（true = 继续）。
     @discardableResult
     public func startObserving<Element>(
         _ emit: @escaping @Sendable () -> Element,
-        onChanged: @escaping @MainActor (Page, Element) -> Void
+        onChanged: @escaping @MainActor (Page, Element) -> Bool
     ) -> Task<Void, Never> {
         startObservingChanges(on: self, emitting: emit, onChanged: onChanged)
     }

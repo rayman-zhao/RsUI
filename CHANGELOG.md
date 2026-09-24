@@ -6,6 +6,7 @@ Notable changes to RsUI. Format follows [Keep a Changelog](https://keepachangelo
 
 ### Breaking
 
+- **`startObserving(_:onChanged:)` — `onChanged` now returns `Bool`** (all five mirrors: `Page`, `NavigationViewItem`, `ProgressBar`, `ProgressRing`, `Window`, plus the shared `startObservingChanges`). Return `false` to stop the observation from inside the callback (`true` = keep observing, `takeWhile` polarity); the loop then finishes normally. Cancelling the returned `Task` remains the out-of-band stop (e.g. teardown). Existing closures must now return `true`.
 - **`Module.settingsGroup()` now returns `SettingsGroup?`** instead of `(title: String, cards: [UIElement])?`. Modules construct the group themselves, so they control `isExpandable` and the initial `isExpanded` (previously `SettingsPage` always wrapped the tuple in an expandable group). `SettingsPage` appends the returned group as-is.
 
 ## [0.1.0] — 2026-09-21
