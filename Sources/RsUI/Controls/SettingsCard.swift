@@ -563,8 +563,16 @@ public class SettingsCard: ButtonBase {
     // MARK: - Helpers
 
     private func makeDescriptionView(_ text: String) -> FrameworkElement {
-        // 直接构造而非 XamlReader：description 文本可能含 &、<、> 等字符，
-        // 插值进 XAML 会导致解析失败（requireXaml fatalError）。
+        // 先按 TextBlock 内联 XAML 内容加载，让 description 支持 <LineBreak/>、<Run> 等标记；
+        // 文本含 &、<、> 等字符时解析失败，回退纯文本。不能用 requireXaml——它解析失败会
+        // fatalError，而这里接收的是调用方传入的任意文本。
+        if let tb = (try? XamlReader.load(
+            """
+            <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\(text)</TextBlock>
+            """)) as? WinUI.TextBlock
+        {
+            return tb
+        }
         let tb = WinUI.TextBlock()
         tb.text = text
         return tb
