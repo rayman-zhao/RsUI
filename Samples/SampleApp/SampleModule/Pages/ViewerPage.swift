@@ -44,6 +44,21 @@ final class ViewerPage: RsUI.Page {
                 self.context.enterFullscreen()
             }
         }
+        let overlayPanel = (try? XamlReader.load(App.context.tr(xaml: overlayXAML))) as? Grid
+        if overlayPanel == nil {
+            log.warning("ViewerPage: failed to load viewer overlay XAML")
+        }
+        let initButton = (try? loaded.findName("SimulateInitButton")) as? Button
+        initButton?.click.addHandler { [weak viewer] _, _ in
+            guard let viewer, let overlayPanel else { return }
+            viewer.overlayContent = overlayPanel
+            Task { @MainActor [weak viewer] in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                // 连点保护：只清除仍是本次设置的覆盖层。
+                guard let viewer, viewer.overlayContent === overlayPanel else { return }
+                viewer.overlayContent = nil
+            }
+        }
         viewer.topContent = loaded
 
         let leftText = TextBlock()
@@ -99,6 +114,20 @@ final class ViewerPage: RsUI.Page {
         return viewer
     }
 
+    /// 模拟「初始化中」状态的全控件覆盖层：实心底色 + 居中 ProgressRing。
+    private var overlayXAML: String {
+        """
+        <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressRing Width="40" Height="40"/>
+                <TextBlock Text="{x:Tr Initializing…}" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+        """
+    }
+
     private var xamlUI: String {
         """
         <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -114,9 +143,12 @@ final class ViewerPage: RsUI.Page {
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="TopHost" Grid.Column="0" Text="{x:Tr The Viewer Toolbar}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <AppBarButton x:Name="FullscreenButton" Icon="Fullscreen" Grid.Column="1" Style="{StaticResource ViewerChromeAppBarButtonStyle}">
+            <AppBarButton x:Name="SimulateInitButton" Icon="Sync" Grid.Column="1" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr Simulate initialization}">
+            </AppBarButton>
+            <AppBarButton x:Name="FullscreenButton" Icon="Fullscreen" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}">
             </AppBarButton>
         </Grid>
         """

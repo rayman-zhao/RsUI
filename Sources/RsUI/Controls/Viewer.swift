@@ -97,7 +97,7 @@ open class Viewer: WinUI.Grid {
             shellRoot: Grid,
 
             centerContentHost: ContentControl,
-            centerOverlayHost: ContentControl,
+            overlayHost: ContentControl,
             topHost: ContentControl,
             bottomHost: ContentControl,
             overlayTopHost: ContentControl,
@@ -160,10 +160,15 @@ open class Viewer: WinUI.Grid {
         get { ui.centerContentHost.content as? WinUI.UIElement }
         set { ui.centerContentHost.content = newValue }
     }
-    /// 覆盖在中心主内容之上的非交互内容，例如加载状态或空状态。
-    public var centerOverlayContent: WinUI.UIElement? {
-        get { ui.centerOverlayHost.content as? WinUI.UIElement }
-        set { ui.centerOverlayHost.content = newValue }
+    /// 覆盖整个 Viewer（含顶部、底部、左侧、右侧与中心区域）的覆盖层。显示期间拦截对
+    /// Viewer 内全部 UI 的指针交互，适用于初始化、加载中等需要阻断输入的状态；内容为
+    /// `nil` 时不拦截任何输入。视觉表现（如居中 ProgressRing、底色）由调用方内容决定。
+    public var overlayContent: WinUI.UIElement? {
+        get { ui.overlayHost.content as? WinUI.UIElement }
+        set {
+            ui.overlayHost.content = newValue
+            ui.overlayHost.visibility = newValue == nil ? .collapsed : .visible
+        }
     }
     /// 顶部、底部、左侧和右侧区域内容。
     public var topContent: WinUI.UIElement? {
@@ -190,7 +195,7 @@ open class Viewer: WinUI.Grid {
         self.ui = (
             shellRoot: loaded,
             centerContentHost: loaded.requireElement("CenterContentHost"),
-            centerOverlayHost: loaded.requireElement("CenterOverlayHost"),
+            overlayHost: loaded.requireElement("OverlayHost"),
             topHost: loaded.requireElement("TopHost"),
             bottomHost: loaded.requireElement("BottomHost"),
             overlayTopHost: loaded.requireElement("OverlayTopHost"),
@@ -710,7 +715,6 @@ private var xamlUI: String {
         </Grid.ColumnDefinitions>
 
         <ContentControl x:Name="CenterContentHost" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-        <ContentControl x:Name="CenterOverlayHost" Grid.Row="1" Grid.Column="1" IsHitTestVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
 
         <Grid x:Name="TopChromeRoot" Grid.Row="0" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
@@ -809,6 +813,11 @@ private var xamlUI: String {
             <Border Width="50" Height="4" Margin="0,0,0,4"
                 Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="2"/>
         </Border>
+
+        <!-- 全控件覆盖层：置于悬浮栏(100)/热区(101)/分隔条(102)之上，显示期间阻断整个 Viewer 的指针交互。 -->
+        <ContentControl x:Name="OverlayHost" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="3"
+                        Background="Transparent" Visibility="Collapsed" Canvas.ZIndex="200"
+                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
     </Grid>
     """
 }
