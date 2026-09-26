@@ -14,11 +14,12 @@ class AppearanceWindow: Window {
     override init() {
         super.init()
 
-        observationTask = self.startObserving {
+        observationTask = startObserving {
             (App.context.theme, App.context.language)
-        } onChanged: { [weak self] _, _ in
+        } onChanged: { [weak self] _ in
             // 防止并发/重入（多窗口下 env Observation 接连触发可能引发 menuItems 的双 parent 错误）
-            guard let self else { return true }
+            // self 已亡 = 观察终点（无 owner 弱引用兜底，返回 true 会让 Task 无限期活着）
+            guard let self else { return false }
             // Really happend?
             guard self.appWindow != nil else {
                 log.warning("self.appWindow == nil")

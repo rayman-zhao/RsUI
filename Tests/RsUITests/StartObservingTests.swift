@@ -16,7 +16,7 @@ struct StartObservingTests {
     func returningFalseOnLaterEmissionStopsObservation() async {
         let model = ObservableViewModel()
         var received: [Int] = []
-        startObservingChanges(on: model, emitting: { model.value }) { _, value in
+        startObserving(emitting: { model.value }) { value in
             received.append(value)
             return value != 2
         }
@@ -35,7 +35,7 @@ struct StartObservingTests {
     func returningFalseOnInitialEmissionStopsObservation() async {
         let model = ObservableViewModel()
         var received: [Int] = []
-        startObservingChanges(on: model, emitting: { model.value }) { _, value in
+        startObserving(emitting: { model.value }) { value in
             received.append(value)
             return false
         }

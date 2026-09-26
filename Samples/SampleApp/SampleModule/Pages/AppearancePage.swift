@@ -31,6 +31,11 @@ final class AppearancePage: RsUI.Page {
         self.context = context
     }
 
+    deinit {
+        // 观察闭包强引用本页控件与 ViewModel（见 startObserving 的契约），页面释放时必须终止
+        observingTasks.forEach { $0.cancel() }
+    }
+
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
     }
@@ -60,7 +65,9 @@ final class AppearancePage: RsUI.Page {
             viewModel.isDarkTheme = toggle.isOn
         }
         observingTasks.append(
-            startObserving { [viewModel] in viewModel.isDarkTheme } onChanged: { _, isDark in
+            startObserving { [viewModel] in
+                viewModel.isDarkTheme
+            } onChanged: { isDark in
                 themeToggle.isOn = isDark
                 return true
             })
@@ -81,7 +88,9 @@ final class AppearancePage: RsUI.Page {
             viewModel.isChinese = toggle.isOn
         }
         observingTasks.append(
-            startObserving { [viewModel] in viewModel.isChinese } onChanged: { _, isChinese in
+            startObserving { [viewModel] in
+                viewModel.isChinese
+            } onChanged: { isChinese in
                 langToggle.isOn = isChinese
                 return true
             })

@@ -27,12 +27,19 @@ final class SampleModule: Module {
     }
 
     func titleBarRightHeaderItem(in context: WindowContext) -> UIElement? {
-        let ring = ProgressRingEx()
-        ring.startObserving { [weak self] in
+        let ring = ProgressRing()
+        startObserving { [weak self] in
             self?.state
-        } onChanged: { ring, value in
-            ring.isActive = value == "loading"
-            return true
+        } onChanged: { value in
+            if value == "loading" {
+                ring.isActive = true
+                return true
+            } else {
+                // state 是一次性 loading（结束后不会再回 "loading"），用 in-band false 停止观察；
+                // 若将来 state 会复用 loading，这里应改回 return true
+                ring.isActive = false
+                return false
+            }
         }
 
         Task { @MainActor [weak self] in

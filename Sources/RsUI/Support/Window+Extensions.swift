@@ -36,15 +36,6 @@ extension Window {
         self.systemBackdrop = micaBackdrop
     }
 
-    /// `onChanged` 返回 `false` 则停止观察（true = 继续）。
-    @discardableResult
-    public func startObserving<Element>(
-        _ emit: @escaping @Sendable () -> Element,
-        onChanged: @escaping @MainActor (Window, Element) -> Bool
-    ) -> Task<Void, Never> {
-        startObservingChanges(on: self, emitting: emit, onChanged: onChanged)
-    }
-
     public func useRestoration(_ restore: Bool = true) {
         let windowPosition = App.context.preferences.load(for: WindowPosition.self)
 
