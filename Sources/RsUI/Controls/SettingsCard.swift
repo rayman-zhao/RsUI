@@ -96,27 +96,27 @@ public class SettingsCard: ButtonBase {
         let visualTarget = interactionVisualTarget ?? cardRoot
         switch state {
         case .normal:
-            visualTarget.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
-            visualTarget.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
-            self.foreground = fluentThemeBrush("TextFillColorPrimaryBrush")
+            visualTarget.background = Brush.fluentTheme("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = Brush.fluentTheme("CardStrokeColorDefaultBrush")
+            self.foreground = Brush.fluentTheme("TextFillColorPrimaryBrush")
         case .pointerOver:
-            visualTarget.background = fluentThemeBrush("ControlFillColorSecondaryBrush")
-            visualTarget.borderBrush = fluentThemeBrush("ControlElevationBorderBrush")
-            self.foreground = fluentThemeBrush("TextFillColorPrimaryBrush")
+            visualTarget.background = Brush.fluentTheme("ControlFillColorSecondaryBrush")
+            visualTarget.borderBrush = Brush.fluentTheme("ControlElevationBorderBrush")
+            self.foreground = Brush.fluentTheme("TextFillColorPrimaryBrush")
         case .pressed:
-            visualTarget.background = fluentThemeBrush("ControlFillColorTertiaryBrush")
-            visualTarget.borderBrush = fluentThemeBrush("ControlStrokeColorDefaultBrush")
-            self.foreground = fluentThemeBrush("TextFillColorSecondaryBrush")
+            visualTarget.background = Brush.fluentTheme("ControlFillColorTertiaryBrush")
+            visualTarget.borderBrush = Brush.fluentTheme("ControlStrokeColorDefaultBrush")
+            self.foreground = Brush.fluentTheme("TextFillColorSecondaryBrush")
         case .disabled:
             // Toolkit parity: disabling dims the foreground only, the card fill is unchanged.
-            visualTarget.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
-            visualTarget.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
-            self.foreground = fluentThemeBrush("TextFillColorDisabledBrush")
+            visualTarget.background = Brush.fluentTheme("CardBackgroundFillColorDefaultBrush")
+            visualTarget.borderBrush = Brush.fluentTheme("CardStrokeColorDefaultBrush")
+            self.foreground = Brush.fluentTheme("TextFillColorDisabledBrush")
         }
 
         let disabled = !isEnabled
         if let descriptionText = descriptionElement as? WinUI.TextBlock {
-            descriptionText.foreground = fluentThemeBrush(
+            descriptionText.foreground = Brush.fluentTheme(
                 disabled ? "TextFillColorDisabledBrush" : "TextFillColorSecondaryBrush")
         }
         // Bitmap icons cannot be dimmed through the foreground; reduce opacity instead.
@@ -358,7 +358,7 @@ public class SettingsCard: ButtonBase {
     }
 
     private func buildLayout() -> WinUI.Grid {
-        let secondaryForeground = fluentThemeBrush("TextFillColorSecondaryBrush")
+        let secondaryForeground = Brush.fluentTheme("TextFillColorSecondaryBrush")
 
         let container = WinUI.Grid()
 
@@ -566,10 +566,11 @@ public class SettingsCard: ButtonBase {
         // 先按 TextBlock 内联 XAML 内容加载，让 description 支持 <LineBreak/>、<Run> 等标记；
         // 文本含 &、<、> 等字符时解析失败，回退纯文本。不能用 requireXaml——它解析失败会
         // fatalError，而这里接收的是调用方传入的任意文本。
-        if let tb = (try? XamlReader.load(
-            """
-            <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\(text)</TextBlock>
-            """)) as? WinUI.TextBlock
+        if let tb =
+            (try? XamlReader.load(
+                """
+                <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\(text)</TextBlock>
+                """)) as? WinUI.TextBlock
         {
             return tb
         }

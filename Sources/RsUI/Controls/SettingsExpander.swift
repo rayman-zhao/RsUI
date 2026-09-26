@@ -138,8 +138,8 @@ public class SettingsExpander: StackPanel {
         let outerCard = WinUI.Grid()
         outerCard.cornerRadius = WinUI.CornerRadius(
             topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        outerCard.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
-        outerCard.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
+        outerCard.background = Brush.fluentTheme("CardBackgroundFillColorDefaultBrush")
+        outerCard.borderBrush = Brush.fluentTheme("CardStrokeColorDefaultBrush")
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
         let backgroundTransition = WinUI.BrushTransition()
         backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
@@ -158,10 +158,10 @@ public class SettingsExpander: StackPanel {
 
     private func refreshThemeBrushes() {
         guard let outerCard else { return }
-        outerCard.background = fluentThemeBrush("CardBackgroundFillColorDefaultBrush")
-        outerCard.borderBrush = fluentThemeBrush("CardStrokeColorDefaultBrush")
+        outerCard.background = Brush.fluentTheme("CardBackgroundFillColorDefaultBrush")
+        outerCard.borderBrush = Brush.fluentTheme("CardStrokeColorDefaultBrush")
         for item in itemsSource ?? [] {
-            item.cardRoot.borderBrush = fluentThemeBrush("DividerStrokeColorDefaultBrush")
+            item.cardRoot.borderBrush = Brush.fluentTheme("DividerStrokeColorDefaultBrush")
         }
     }
 
@@ -183,7 +183,7 @@ public class SettingsExpander: StackPanel {
             item.applyExpanderItemPadding()
             // Top border only (0,1,0,0) to match WCTK item separator style
             item.cardRoot.borderThickness = WinUI.Thickness(left: 0, top: 1, right: 0, bottom: 0)
-            item.cardRoot.borderBrush = fluentThemeBrush("DividerStrokeColorDefaultBrush")
+            item.cardRoot.borderBrush = Brush.fluentTheme("DividerStrokeColorDefaultBrush")
             expandedHost.children.append(item)
         }
 
