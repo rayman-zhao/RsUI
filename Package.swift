@@ -51,9 +51,6 @@ let package = Package(
                 .product(name: "CppWinRT", package: "swift-cppwinrt"),
                 .product(name: "RsFoundation", package: "RsFoundation"),
             ],
-            swiftSettings: [
-                .unsafeFlags(["-enable-testing"], .when(configuration: .release))
-            ],
         ),
         .executableTarget(
             name: "SampleApp",

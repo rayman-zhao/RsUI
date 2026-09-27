@@ -1,7 +1,11 @@
 import RsFoundation
 import WinUI
 
-@testable import RsUI
+#if DEBUG
+    @testable import RsUI
+#else
+    import RsUI
+#endif
 
 @main
 final class App: SwiftApplication {
@@ -23,38 +27,42 @@ final class App: SwiftApplication {
     }
 
     private func testWindow() {
-        let window = NavigationViewWindow()
-        window.useMicaBackdrop()
-        window.useRestoration()
-        activate(window)
+        #if DEBUG
+            let window = NavigationViewWindow()
+            window.useMicaBackdrop()
+            window.useRestoration()
+            activate(window)
+        #endif
     }
 
     private func testFullScreen() {
-        let window = NavigationViewWindow()
-        window.title = "WindowTests — Element Fullscreen"
+        #if DEBUG
+            let window = NavigationViewWindow()
+            window.title = "WindowTests — Element Fullscreen"
 
-        let toggle = Button()
-        toggle.content = "Enter Fullscreen"
-        toggle.horizontalAlignment = .center
-        toggle.verticalAlignment = .center
+            let toggle = Button()
+            toggle.content = "Enter Fullscreen"
+            toggle.horizontalAlignment = .center
+            toggle.verticalAlignment = .center
 
-        toggle.click.addHandler { [weak window] _, _ in
-            guard let window else { return }
-            if window.isInFullscreen {
-                window.exitFullscreen()
-            } else {
-                window.enterFullscreen(for: toggle)
+            toggle.click.addHandler { [weak window] _, _ in
+                guard let window else { return }
+                if window.isInFullscreen {
+                    window.exitFullscreen()
+                } else {
+                    window.enterFullscreen(for: toggle)
+                }
             }
-        }
 
-        window.ui.navigationView.content = toggle
-        window.fullscreenChanged.addHandler { _, isInFullscreen in
-            if isInFullscreen {
-                toggle.content = "Exit Fullscreen (Esc)"
-            } else {
-                toggle.content = "Enter Fullscreen"
+            window.ui.navigationView.content = toggle
+            window.fullscreenChanged.addHandler { _, isInFullscreen in
+                if isInFullscreen {
+                    toggle.content = "Exit Fullscreen (Esc)"
+                } else {
+                    toggle.content = "Enter Fullscreen"
+                }
             }
-        }
-        activate(window)
+            activate(window)
+        #endif
     }
 }
