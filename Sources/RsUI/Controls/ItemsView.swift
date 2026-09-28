@@ -29,7 +29,7 @@ import WindowsFoundation
 /// - 条目内容在容器（含虚拟化回收复用）就绪时按 id 重建，闭包应返回全新视图、
 ///   不要缓存复用旧元素。
 /// - 容器卸载（滚动离开实现区被回收、或 `setIds` 重置丢弃旧容器）时回调
-///   `unloadView`（携带条目 id）：容器 child 已被清空、视图不再复用，
+///   `unloadView`（携带条目 id）：容器即将被丢弃、视图不再复用，
 ///   `makeIdView` 里启动的异步内容构建（如图片加载）应在此取消。
 /// - `itemsSource` 由内部一个可观察向量驱动（元素即 id 字符串；计数、按索引
 ///   取 id 与增删都直接走它，不维护 Swift 侧镜像），增删走 `appendIds` /
@@ -55,7 +55,7 @@ open class ItemsView: WinUI.ItemsView {
     /// 条目视图被卸载时回调，参数为条目 id；可空，默认无操作。
     ///
     /// `makeIdView` 的对应清理钩子：容器因滚动离开实现区被回收、或 `setIds`
-    /// 整体重置而被丢弃时触发，此时容器 child 已被清空、视图不再复用。
+    /// 整体重置而被丢弃时触发，此时容器即将被丢弃、视图不再复用。
     /// 闭包里启动的异步工作（如图片加载）应在此取消，避免继续更新已脱离
     /// 视觉树的视图。增量增删接口只移动容器不卸载它们，不触发本回调。
     public var unloadView: ((String) -> Void)?
@@ -239,8 +239,10 @@ open class ItemsView: WinUI.ItemsView {
 
     private func clearContainer(_ container: ItemContainer) {
         guard let id = Self.tagString(container.tag) else { return }
+        // 注意：不能置 container.child = nil —— ItemContainer.Child 拒绝 null
+        // （put 抛 E_INVALIDARG，经 try! 投影直接致命崩溃）。容器本身会被
+        // 工厂丢弃（无回收池），child 引用随容器一并释放。
         container.tag = nil
-        container.child = nil
         unloadView?(id)
     }
 

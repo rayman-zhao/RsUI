@@ -1,3 +1,4 @@
+import Foundation
 import RsFoundation
 import WinUI
 
@@ -14,6 +15,12 @@ final class App: SwiftApplication {
     }
 
     override func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
+        // IVLT=1 时运行 ItemsView 生命周期自驱动测试（跑完自动 exit()，
+        // 不与其他手测窗口共存），用于 crash 隔离与回归验证。
+        if ProcessInfo.processInfo.environment["IVLT"] == "1" {
+            activate(ItemsViewLifecycleTestWindow())
+            return
+        }
         testWindow()
         testFullScreen()
     }
