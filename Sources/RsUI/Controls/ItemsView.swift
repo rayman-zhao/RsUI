@@ -18,6 +18,9 @@ import WindowsFoundation
 /// list.layout = makeGridLayout()       // 默认单列 StackLayout，可换 UniformGridLayout 等
 /// list.setIds(model.keys)              // 整体重置（选择、滚动位置重置）
 /// list.appendIds(newIds)                // 增量追加：已实现条目与选择、滚动位置保留
+/// list.unloadView = { id in            // 条目卸载时清理（可空，按需设置）
+///     cancelPendingLoads(for: id)
+/// }
 /// ```
 ///
 /// 使用守则：
@@ -25,6 +28,9 @@ import WindowsFoundation
 ///   id 只做身份，插入/移除导致的索引顺移不会改变既有条目的内容。
 /// - 条目内容在容器（含虚拟化回收复用）就绪时按 id 重建，闭包应返回全新视图、
 ///   不要缓存复用旧元素。
+/// - 容器卸载（滚动离开实现区被回收、或 `setIds` 重置丢弃旧容器）时回调
+///   `unloadView`（携带条目 id）：容器 child 已被清空、视图不再复用，
+///   `makeIdView` 里启动的异步内容构建（如图片加载）应在此取消。
 /// - `itemsSource` 由内部一个可观察向量驱动（元素即 id 字符串；计数、按索引
 ///   取 id 与增删都直接走它，不维护 Swift 侧镜像），增删走 `appendIds` /
 ///   `insertIds` / `removeIds(_:)` 等增量接口，原生 `VectorChanged` 驱动
@@ -45,6 +51,14 @@ open class ItemsView: WinUI.ItemsView {
 
     /// 按 id 构建条目视图。容器因虚拟化被回收复用时会再次调用，需返回新实例。
     public var makeIdView: (String) -> UIElement
+
+    /// 条目视图被卸载时回调，参数为条目 id；可空，默认无操作。
+    ///
+    /// `makeIdView` 的对应清理钩子：容器因滚动离开实现区被回收、或 `setIds`
+    /// 整体重置而被丢弃时触发，此时容器 child 已被清空、视图不再复用。
+    /// 闭包里启动的异步工作（如图片加载）应在此取消，避免继续更新已脱离
+    /// 视觉树的视图。增量增删接口只移动容器不卸载它们，不触发本回调。
+    public var unloadView: ((String) -> Void)?
 
     private var isRepeaterWired = false
     /// 视觉树内部的 ItemsRepeater（elementPrepared 订阅与索引换算用）。
@@ -202,6 +216,11 @@ open class ItemsView: WinUI.ItemsView {
             else { return }
             self.fillContainer(container)
         }
+        found.elementClearing.addHandler { [weak self] _, args in
+            guard let self, let args, let container = args.element as? ItemContainer
+            else { return }
+            self.clearContainer(container)
+        }
         // 兜底：订阅前已实现的容器不会再触发 elementPrepared。
         for container in Self.descendants(ofType: ItemContainer.self, from: self) {
             fillContainer(container)
@@ -213,7 +232,23 @@ open class ItemsView: WinUI.ItemsView {
             let index = try? repeater.getElementIndex(container),
             index >= 0, let id = items.string(at: Int(index))
         else { return }
+        // id 记入 tag：elementClearing 时索引已失效，只能靠 tag 反查。
+        container.tag = id
         container.child = makeIdView(id)
+    }
+
+    private func clearContainer(_ container: ItemContainer) {
+        guard let id = Self.tagString(container.tag) else { return }
+        container.tag = nil
+        container.child = nil
+        unloadView?(id)
+    }
+
+    /// 从 `FrameworkElement.tag`（Any!）取出装箱字符串。投影的 Any 解包
+    /// 不直接产出 String，可能拿到 IInspectable 包装，需经 `boxedString`
+    /// 原生解箱兜底（同 `IVectorAny.string(at:)` 的处理）。
+    private static func tagString(_ tag: Any?) -> String? {
+        (tag as? String) ?? (tag as? WindowsFoundation.IInspectable)?.boxedString
     }
 
     /// 深度优先查找指定类型的后代元素（取内部 ItemsRepeater 用）。
