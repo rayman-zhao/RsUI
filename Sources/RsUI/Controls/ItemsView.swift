@@ -180,6 +180,21 @@ open class ItemsView: WinUI.ItemsView {
         }
     }
 
+    // MARK: - 条目视图重建
+
+    /// 丢弃并重建全部已实现条目的视图，条目集合本身不变。
+    ///
+    /// 通过换一个新的 ItemTemplate 工厂实现：ItemsRepeater 对模板变更做
+    /// 整体 Reset——已实现容器先卸载（回调 `unloadView`），下次布局经
+    /// 新工厂按 id 重新实现化（`makeIdView` 重建）。itemsSource 不动，
+    /// 选择与滚动位置全部保留，适合“id 不变、视图需要按新参数重造”的
+    /// 场景（如布局档位切换）；id 有变化时仍应走 `setIds`。
+    /// 注意模板变更不允许发生在 repeater 自身布局进行中（WinUI 会抛错），
+    /// 在 sizeChanged 等布局完成后的事件里调用是安全的。
+    public func rebuildViews() {
+        itemTemplate = ItemContainerFactory()
+    }
+
     // MARK: - 选择便捷读取
 
     /// 当前选中条目 id（按视图顺序）。桥接 ItemsView 原生 `selectedItems`
