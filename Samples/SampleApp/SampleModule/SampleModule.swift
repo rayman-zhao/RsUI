@@ -109,6 +109,9 @@ final class SampleModule: Module {
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
             NavigationViewItem.build(
                 iconGlyph: "\u{E71D}", label: tr("Grid View"), url: "rs://\(id)/grid-view"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E8CB}", label: tr("Annotated ScrollBar"),
+                url: "rs://\(id)/annotated-scroll-bar"),
             itemsViewNavItem(id: id),
             NavigationViewItem.build(
                 iconGlyph: "\u{E73E}", label: tr("Toggle Buttons"), url: "rs://\(id)/toggle-buttons"),
@@ -216,6 +219,8 @@ final class SampleModule: Module {
             return RangeSliderPage()
         case "/grid-view":
             return GridViewPage()
+        case "/annotated-scroll-bar":
+            return AnnotatedScrollBarPage()
         case "/items-view":
             return ItemsViewPage()
         case "/items-view-doc":

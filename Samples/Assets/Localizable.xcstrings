@@ -3179,6 +3179,227 @@
           }
         }
       }
+    },
+    "Annotated ScrollBar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotated ScrollBar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "注记滚动条"
+          }
+        }
+      }
+    },
+    "Arrow buttons step one whole group per click (SmallChange)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrow buttons step one whole group per click (SmallChange)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "箭头按钮一次滚动一整组（SmallChange）。"
+          }
+        }
+      }
+    },
+    "Cancel scrolling (args.cancel)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel scrolling (args.cancel)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消滚动（args.cancel）"
+          }
+        }
+      }
+    },
+    "Group %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分组 %@"
+          }
+        }
+      }
+    },
+    "Group %@ · rows %d–%d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group %@ · rows %d–%d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分组 %@ · 第 %d–%d 行"
+          }
+        }
+      }
+    },
+    "Interact with the scrollbar on the right; Scrolling events will show up here." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interact with the scrollbar on the right; Scrolling events will show up here."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与右侧滚动条交互；Scrolling 事件会回显在这里。"
+          }
+        }
+      }
+    },
+    "Scrolling #%d: %@ · offset %d%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrolling #%d: %@ · offset %d%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrolling #%d：%@ · 偏移 %d%@"
+          }
+        }
+      }
+    },
+    "The framework ItemsView exposes VerticalScrollController directly; labels mark quarters of the collection." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The framework ItemsView exposes VerticalScrollController directly; labels mark quarters of the collection."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "框架 ItemsView 直接暴露 VerticalScrollController；标签按集合四分位标记。"
+          }
+        }
+      }
+    },
+    "Verifies the AnnotatedScrollBar projection end to end: wiring to a ScrollView via ScrollPresenter.VerticalScrollController, wiring to the framework ItemsView via its VerticalScrollController property, Labels populated through the projected IVector, the DetailLabelRequested event, the Scrolling event with Cancel, and SmallChange." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifies the AnnotatedScrollBar projection end to end: wiring to a ScrollView via ScrollPresenter.VerticalScrollController, wiring to the framework ItemsView via its VerticalScrollController property, Labels populated through the projected IVector, the DetailLabelRequested event, the Scrolling event with Cancel, and SmallChange."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端到端验证 AnnotatedScrollBar 投影可用性：经 ScrollPresenter.VerticalScrollController 接到 ScrollView、经其 VerticalScrollController 属性接到框架 ItemsView，两条接线；经投影 IVector 填充 Labels；DetailLabelRequested 事件；带 Cancel 的 Scrolling 事件；以及 SmallChange。"
+          }
+        }
+      }
+    },
+    "Wired to ItemsView" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wired to ItemsView"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接线到 ItemsView"
+          }
+        }
+      }
+    },
+    "Wired to ScrollView" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wired to ScrollView"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接线到 ScrollView"
+          }
+        }
+      }
+    },
+    " (canceled)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (canceled)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（已取消）"
+          }
+        }
+      }
+    },
+    "≈ item %d of %d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "≈ item %d of %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "≈ 第 %d 项 / 共 %d 项"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

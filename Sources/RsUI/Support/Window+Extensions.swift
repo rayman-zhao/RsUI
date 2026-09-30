@@ -39,12 +39,17 @@ extension Window {
     public func useRestoration(_ restore: Bool = true) {
         let windowPosition = App.context.preferences.load(for: WindowPosition.self)
 
-        // Must strong capture the self. Otherwise it's nil in extension, not like in sub-class.
-        self.sizeChanged.addHandler { [self] _, _ in
+        // weak 捕获：强捕获会形成 原生 window → 事件表 → 闭包 → Swift 窗口实例
+        // 的自持环，多窗口会话里关掉的窗口整簇滞留内存（RLT 回归测试覆盖）。
+        // 子类实例上这两个事件触发时 weak 可正常解析（重构前的 RestorableWindow
+        // 即此写法；「extension 里必须 strong 捕获」的旧结论不成立）。
+        self.sizeChanged.addHandler { [weak self] _, _ in
+            guard let self else { return }
             // FIXME: appWindow.changed事件不工作，窗口单纯移动不会触发此事件。
             self.trackWindowRect(with: windowPosition)
         }
-        self.closed.addHandler { [self] _, _ in
+        self.closed.addHandler { [weak self] _, _ in
+            guard let self else { return }
             // FIXME: appWindow.changed事件不工作，窗口移动-最大化-关闭时，无法记录到此前的恢复位置。不过其实也可以不保存，恢复窗口在中间即可。
             self.trackWindowRect(with: windowPosition)
             App.context.preferences.save(windowPosition)

@@ -21,6 +21,14 @@ final class App: SwiftApplication {
             activate(ItemsViewLifecycleTestWindow())
             return
         }
+        // RLT=1 时运行 useRestoration 窗口生命周期自驱动测试（同上自动 exit()），
+        // 验证关窗后窗口可回收。
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["RLT"] == "1" {
+                RestorationLifecycleTestWindow.run()
+                return
+            }
+        #endif
         testWindow()
         testFullScreen()
     }

@@ -157,7 +157,7 @@ Samples/
   SampleApp/
     SampleApp.swift                     — `@main class SampleApp: App`; registration via `super.init(group:product:resourceBundle:moduleTypes:)`
     SampleModule/SampleModule.swift     — `@Observable final class SampleModule: Module`; demo of nav items / footer items / settingsGroup / navigationDidRequest
-    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance (MVVM pattern demo) / Picker (also serves the footer nav item via `path`) / Reveal / Viewer / GridView / ItemsView / ItemsViewDocumentation / RangeSlider (incl. a window-width/level CT demo) / ToggleButtons + FeaturePageHelpers with shared `makeClickableCard` / caption / section-title factories)
+    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance (MVVM pattern demo) / Picker (also serves the footer nav item via `path`) / Reveal / Viewer / GridView / ItemsView / ItemsViewDocumentation / RangeSlider (incl. a window-width/level CT demo) / AnnotatedScrollBar (WinUI AnnotatedScrollBar projection verification: ScrollView & ItemsView wiring, labels, detail label, Scrolling event) / ToggleButtons + FeaturePageHelpers with shared `makeClickableCard` / caption / section-title factories)
   Assets/                               — SampleApp.ico / .rc / .res / Localizable.xcstrings / SettingsPage.xcstrings
 Tests/
   RsUITests/PageModelTests.swift        — Swift Testing `@Suite struct PageModelTests`: PageModel navigate/goBack/goForward/history-limit/clears-forward history
