@@ -84,7 +84,7 @@ class SettingsPage: Page {
             }
         }
 
-        return SettingsCard("\u{E790}", tr("theme"), tr("themeDescription"), combo)
+        return SettingsCard(headerIconGlyph: "\u{E790}", header: tr("theme"), description: tr("themeDescription"), content: combo)
     }
 
     private var languageCard: SettingsCard {
@@ -111,7 +111,7 @@ class SettingsPage: Page {
             }
         }
 
-        return SettingsCard("\u{E775}", tr("language"), tr("languageDescription"), combo)
+        return SettingsCard(headerIconGlyph: "\u{E775}", header: tr("language"), description: tr("languageDescription"), content: combo)
     }
 
     private var dependenciesCard: SettingsCard {
@@ -141,6 +141,6 @@ class SettingsPage: Page {
         depends.children.append(winrt)
         depends.children.append(swift)
 
-        return SettingsCard(tr("Dependencies & references"), depends)
+        return SettingsCard(header: tr("Dependencies & references"), description: depends)
     }
 }

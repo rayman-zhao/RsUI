@@ -266,21 +266,6 @@ public class SettingsCard: ButtonBase {
         }
     }
 
-    /// Positional: glyph, header, description, content
-    public convenience init(
-        _ headerIconGlyph: String, _ header: String, _ description: String? = nil,
-        _ content: FrameworkElement? = nil, _ actionIcon: FontIcon? = nil
-    ) {
-        self.init(
-            headerIconGlyph: headerIconGlyph, header: header, description: description,
-            content: content, actionIcon: actionIcon)
-    }
-
-    /// Positional: header, description (FrameworkElement)
-    public convenience init(_ header: String, _ description: FrameworkElement? = nil) {
-        self.init(header: header, description: description, content: nil)
-    }
-
     // MARK: - Internal helpers for SettingsExpander
 
     /// Suppresses the card border/background for use as an inner item inside SettingsExpander.
