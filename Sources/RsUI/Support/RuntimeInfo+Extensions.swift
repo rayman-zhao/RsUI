@@ -16,6 +16,8 @@ extension RuntimeInfo {
             return "1.8.10"
         case PackageVersion(major: 8000, minor: 946, build: 1701, revision: 0):
             return "1.8.11"
+        case PackageVersion(major: 8000, minor: 994, build: 2142, revision: 0):
+            return "1.8.12"
         default:
             return RuntimeInfo.asString
         }
