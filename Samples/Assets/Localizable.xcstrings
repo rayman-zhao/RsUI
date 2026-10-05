@@ -103,23 +103,6 @@
         }
       }
     },
-    "SampleApp" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SampleApp"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "示例程序"
-          }
-        }
-      }
-    },
     "Search ..." : {
       "extractionState" : "manual",
       "localizations" : {

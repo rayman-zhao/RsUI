@@ -178,7 +178,8 @@ class NavigationViewWindow: AppearanceWindow {
             // For min/max/close buttons. 目前不支持材质效果，但比逐个设置按钮颜色简单，并且容易由框架修正。
             hwnd.titleBar.preferredTheme = App.context.theme.titleBarTheme
 
-            let str = tr(App.context.productName)
+            // 应用名走宿主 app 自备的 "App" 表（<productName> 键），Localizable/SettingsPage 因此可被下游整体复用。
+            let str = App.context.tr(App.context.productName, table: "App")
             self.title = str
             self.ui.titleBar.title = str
             try? ToolTipService.setToolTip(self.ui.backButton, tr("Back"))
