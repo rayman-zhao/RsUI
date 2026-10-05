@@ -57,7 +57,7 @@ RsUI 的窗口内容由四个层级组合而成，自下而上依次为 Page →
    - `init(model: PageModel = PageModel())`：默认空 model；构造即 `transition` 到当前页 + 触发 `pageChanged`。
    - `rebind(to newModel: PageModel)`：重设 model 并即时（`Suppress` 转场）渲染 + 触发 `pageChanged`。这是「单 `PageFrame` 在多 tab 间共享」的关键——`PageTabView` 切 tab 时把共享 frame 的 model 重设到目标 tab 的 `PageModel`，复用同一条渲染管线。
    - 可放入任意 WinUI 容器（`window.content`、`NavigationView.content`、任意 `Grid` 等），与具体外壳解耦。
-   - `updateAppearance()`（重新 `transition` 一遍当前页，用于主题/语言切换后强制重建视觉）与 `updateWindowContext(_:)`（把新 `WindowContext` 通知给当前页 + back/forward 栈上所有页，触发它们的 `windowContextDidChange(to:)`）。
+   - `updateAppearance()`（外观值未变时整体跳过——启动期 `AppearanceWindow` 初始发射会触发一次，无守卫会无谓释放刚构建的页面控件；真变化时重新 `transition` 一遍当前页，用于主题/语言切换后强制重建视觉）与 `updateWindowContext(_:)`（把新 `WindowContext` 通知给当前页 + back/forward 栈上所有页，触发它们的 `windowContextDidChange(to:)`）。
 
 4. **`PageTabView`（组合 WinUI.TabView + 共享 PageFrame）** — 见 [`Sources/RsUI/App/PageControls/PageTabView.swift`](./Sources/RsUI/App/PageControls/PageTabView.swift)。`class PageTabView: Grid, PageControl`，自身为 2 行 `Grid`（Row0 Auto = strip、Row1 star = 内容），把 `WinUI.TabView`（仅作 strip）和单一共享 `PageFrame` 装进来。
    - **结构**：`tabView`（XAML 字符串 `XamlReader.load` → `findName("closeOthersButton")` 回填；XAML 默认 `Visibility="Collapsed"`，`CanTearOutTabs="False"`——见下文 tear-out 禁用说明）+ 一个 `private let pageFrame = PageFrame()`。
@@ -128,6 +128,7 @@ Sources/RsUI/
     ItemsView.swift                     — `open class ItemsView: WinUI.ItemsView` id-driven list (observable vector + `ItemsRepeater`; `makeIdView` closure supplies element per id)
     GridView.swift                      — `GridView: Grid` multi-select grid built on `ItemsView` (marquee selection, checkbox selection, keyboard; note the name shadows `WinUI.GridView`)
     GridViewSelectionModel.swift        — Pure-logic selection state for GridView's marquee diffing (unit-tested)
+    AnnotatedScrollBar.swift            — `open class AnnotatedScrollBar: WinUI.Grid`（模块内遮蔽 `WinUI.AnnotatedScrollBar`；**组合**持有原生控件——投影原件的 Swift 子类化实测必崩：空子类启动重建 ~50% / 真主题切换重建 ~1/3 崩溃率，0xC0000005 于 COM 聚合释放路径，纯 wrapper 对照全存活；复现=空子类进树后被整页重建释放，无需定制）: ready-to-use wrapper attaching to `RsUI.ItemsView` / `WinUI.ScrollView` hosts (label `DataTemplateSelector` workaround + trailing/leading alignment, Photos-style custom hover-detail overlay vs native ToolTip, refresh timing, built-in bar hiding; see the `{Binding}` pitfall below)
     ToggleButtons.swift                 — Grouped toggle buttons control
     Viewer.swift                        — Multi-pane viewer shell (top/center/bottom/left/right panes + draggable splitters)
     FadeSlideItemTransitionProvider.swift — `ItemCollectionTransitionProvider` providing fade+slide item transitions for ItemsView/GridView
@@ -228,6 +229,12 @@ Besides, GUI callback and template-method naming follows four distinct rules —
 
 ### VisualStateManager on Loose XAML
 - `FrameworkElement.goToElementStateCore` (the projection route to `VisualStateManager.GoToElementState`) **always returns `false` on XamlReader-loaded loose XAML** — the state machine silently never runs (verified at runtime; the failure is silent, so double-check any "state applied" assumption). To drive `<VisualStateManager.VisualStateGroups>` defined on loose XAML, fetch the groups via `VisualStateManager.getVisualStateGroups(element)` and `begin()`/`stop()` each state's `storyboard` manually — see `RangeSlider.goToVisualState(_: )` in [`Controls/RangeSlider.swift`](./Sources/RsUI/Controls/RangeSlider.swift). Note the same closure rule that bit `commitStateChange`: never read `self.<property>` inside an `inout` mutation closure (Swift exclusivity crashes at runtime, e.g. "Simultaneous accesses").
+
+### Classic {Binding} with Property Paths Fails at Runtime
+
+- swift-winui apps ship **no `IXamlMetadataProvider`**, so classic path bindings (`{Binding SomeProperty}`) in XamlReader-loaded XAML cannot reflect WinRT class properties at runtime. This includes WinUI's **own default control templates**: e.g. `AnnotatedScrollBar`'s default `LabelTemplate` is `Text={Binding Content}` — its labels realize with **empty text (zero-size, invisible)** in any swift-winui app (verified via UIA). No-path `{Binding}` still works (it passes the DataContext object itself — fine when the content is a string set from code, which is how the control's detail-label tooltip keeps working).
+- Related: `{ThemeResource}` / `{StaticResource}` theme keys **silently fail to resolve** in loose XAML — resolve brushes at build time (`Brush.fluentTheme`) and inject the concrete color value into the XAML string. Theme switches are handled by whole-page rebuilds (`updateAppearance`).
+- Workaround pattern: bake the text into `DataTemplate`s and pick them from Swift with a `DataTemplateSelector` keyed on a value-type property (`AnnotatedScrollBarLabel.scrollOffset` reads back reliably; `content` comes back as a boxed `IInspectable` that `as? String` cannot bridge). See [`AnnotatedScrollBar`](./Sources/RsUI/Controls/AnnotatedScrollBar.swift) and the sample's `AnnotatedScrollBarPage`.
 
 ### UIElement Single-Parent Rule
 - A `UIElement` can only have one visual parent. Before reparenting, you MUST remove it from its current parent. The canonical helpers live in [`Support/UIElement+Extensions.swift`](./Sources/RsUI/Support/UIElement+Extensions.swift): `detachFromVisualParent() -> (parent: UIElement, index: UInt32?)?` (handles `Border` / `Panel` / `ContentControl` / `ContentPresenter`, logs for unsupported parents) and `attachToParent(_:index:)` (reverse — `Panel` branch uses `insertAt` with a clamped index).

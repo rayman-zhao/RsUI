@@ -2959,19 +2959,19 @@
         }
       }
     },
-    "Arrow buttons step one whole group per click (SmallChange)." : {
+    "Photos-style: hover detail label is a custom overlay that tracks the pointer without jitter; labels trail flush against the rail." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrow buttons step one whole group per click (SmallChange)."
+            "value" : "Photos-style: hover detail label is a custom overlay that tracks the pointer without jitter; labels trail flush against the rail."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "箭头按钮一次滚动一整组（SmallChange）。"
+            "value" : "照片应用风格：悬停详情为自绘覆盖层，跟随指针无抖动；标签右对齐紧贴滚动条。"
           }
         }
       }
@@ -3061,19 +3061,19 @@
         }
       }
     },
-    "The framework ItemsView exposes VerticalScrollController directly; labels mark quarters of the collection." : {
+    "For comparison: native detail-label ToolTip (slight jitter on move) and leading-aligned labels away from the rail." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The framework ItemsView exposes VerticalScrollController directly; labels mark quarters of the collection."
+            "value" : "For comparison: native detail-label ToolTip (slight jitter on move) and leading-aligned labels away from the rail."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "框架 ItemsView 直接暴露 VerticalScrollController；标签按集合四分位标记。"
+            "value" : "对照组：原生 ToolTip 悬停详情（移动时有轻微抖动），标签左对齐、远离滚动条。"
           }
         }
       }
