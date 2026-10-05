@@ -6,9 +6,16 @@ import UWP
 import WinUI
 import WindowsFoundation
 
+/// SampleApp 演示文案统一走专用表 `SampleApp.xcstrings`；框架字符串仍留在默认 Localizable 表。
+let sampleTrTable = "SampleApp"
+
 func tr(_ keyAndValue: String) -> String {
-    let text = App.context.tr(keyAndValue)
+    let text = App.context.tr(keyAndValue, table: sampleTrTable)
     return (text == keyAndValue && App.context.language == .zh_CN) ? "待翻译（\(keyAndValue)）" : text
+}
+
+func tr(xaml: String) -> String {
+    App.context.tr(xaml: xaml, table: sampleTrTable)
 }
 
 /// 模块 id 的唯一来源：页面 URL 与导航项统一用它拼 `rs://` 路由。

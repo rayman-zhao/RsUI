@@ -31,7 +31,7 @@ final class ViewerPage: RsUI.Page {
         border.child = centerText
         viewer.centerContent = border
 
-        guard let loaded = (try? XamlReader.load(App.context.tr(xaml: xamlUI))) as? Grid else {
+        guard let loaded = (try? XamlReader.load(tr(xaml: xamlUI))) as? Grid else {
             log.warning("ViewerPage: failed to load viewer chrome XAML")
             return viewer
         }
@@ -44,7 +44,7 @@ final class ViewerPage: RsUI.Page {
                 self.context.enterFullscreen()
             }
         }
-        let overlayPanel = (try? XamlReader.load(App.context.tr(xaml: overlayXAML))) as? Grid
+        let overlayPanel = (try? XamlReader.load(tr(xaml: overlayXAML))) as? Grid
         if overlayPanel == nil {
             log.warning("ViewerPage: failed to load viewer overlay XAML")
         }
