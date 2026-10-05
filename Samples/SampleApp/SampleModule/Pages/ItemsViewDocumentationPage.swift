@@ -170,7 +170,7 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             ]),
         Section(
             glyph: "\u{E713}",
-            title: tr("Layout switching demo"),
+            title: tr("Layout configuration"),
             points: [
                 tr(
                     "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."

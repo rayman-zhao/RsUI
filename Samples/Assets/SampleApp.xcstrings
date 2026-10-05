@@ -30,7 +30,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动两滑块之间的选区整体平移（保持窗宽）。Tab 聚焦滑块后可用键盘：←/→ 调整，PageUp/PageDown 大步进，Home/End 到边界。"
+            "value" : "双滑块范围选择控件：可拖动滑块、点击轨道跳转，或拖动两滑块之间的选区整体平移（保持宽度）。Tab 聚焦滑块后可用键盘：←/→ 调整，PageUp/PageDown 大步进，Home/End 到边界。"
           }
         }
       }
@@ -47,7 +47,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "基于 ItemsView 组合的网格视图。用 Ctrl/Shift 点击进行多选后，双击其中任意一项：选择保持不变，并通过 itemDoubleTapped 事件携带完整的选择集合。开启复选框选择后，可用资源管理器式的悬停复选框逐项勾选。"
+            "value" : "基于 ItemsView 组合的网格视图。用 Ctrl/Shift 点击进行多选后，双击其中任意一项：选择保持不变，并通过 itemDoubleTapped 事件携带完整的选择集合。开启复选框选择后，可用文件资源管理器式的悬停复选框逐项勾选。"
           }
         }
       }
@@ -812,7 +812,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "守卫场景：不可达路径仅记录警告日志，不弹出资源管理器窗口。"
+            "value" : "守卫场景：不可达路径仅记录警告日志，不弹出文件资源管理器窗口。"
           }
         }
       }
@@ -1333,7 +1333,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens File Explorer with LaunchFolderPathAsync + FolderLauncherOptions first, falling back to explorer.exe /select."
+            "value" : "Opens File Explorer with LaunchFolderPathAsync and selects the item via FolderLauncherOptions."
           }
         },
         "zh-Hans" : {
@@ -1628,7 +1628,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选中“月”"
+            "value" : "选择“月”"
           }
         }
       }
@@ -1951,7 +1951,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在亮色 / 暗色主题间切换"
+            "value" : "在浅色 / 深色主题间切换"
           }
         }
       }
@@ -2138,7 +2138,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "窗位 (WL)"
+            "value" : "窗位（WL）"
           }
         }
       }
@@ -2155,7 +2155,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "窗宽 (WW)"
+            "value" : "窗宽（WW）"
           }
         }
       }
@@ -2461,7 +2461,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用守则"
+            "value" : "使用规则"
           }
         }
       }
@@ -2563,24 +2563,24 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "控件不再依赖 XamlReader 与 App.context；已经 UI Automation 运行期验证——条目正常渲染、选择可正确读回。"
+            "value" : "控件不再依赖 XamlReader 与 App.context；已通过 UI Automation 在运行期验证——条目正常渲染、选择可正确读回。"
           }
         }
       }
     },
-    "Layout switching demo" : {
+    "Layout configuration" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Layout switching demo"
+            "value" : "Layout configuration"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "布局配置说明"
+            "value" : "布局配置"
           }
         }
       }
@@ -2682,7 +2682,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "内部 itemsSource 是经类型化工厂 single_threaded_observable_vector 创建的单个可观察向量（底层为 C++ shim，投影层没有这个工厂）；原地增删会发出原生 VectorChanged，驱动 repeater 增量实现化。"
+            "value" : "内部 itemsSource 是经类型化工厂 single_threaded_observable_vector 创建的单个可观察向量（底层为 C++ shim，投影层没有这个工厂）；原地增删会发出原生 VectorChanged，驱动 repeater 增量实例化。"
           }
         }
       }
@@ -3159,6 +3159,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "≈ 第 %d 项 / 共 %d 项"
+          }
+        }
+      }
+    },
+    "Second Item %d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second Item %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次级条目 %d"
+          }
+        }
+      }
+    },
+    "Snapshot %d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快照 %d"
           }
         }
       }
