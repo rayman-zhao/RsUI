@@ -75,7 +75,7 @@ final class AnnotatedScrollBarLabelTemplateSelector: WinUI.DataTemplateSelector 
 // MARK: - AnnotatedScrollBar
 
 /// 原生注记滚动条的即用封装（注意：本类在 RsUI 模块内遮蔽 `WinUI.AnnotatedScrollBar`，
-/// 引用投影原件需加 `WinUI.` 前缀——与 `RsUI.GridView` / `RsUI.ItemsView` 同一决策）。
+/// 引用投影原件需加 `WinUI.` 前缀——与 `RsUI.ItemsView` 同一决策）。
 /// 封装 swift-winui 下使用原生控件所需的全部变通，客户端只提供标签与悬停文案，
 /// 不必关心模板/接线/内置滚动条隐藏等 UI 细节。
 ///

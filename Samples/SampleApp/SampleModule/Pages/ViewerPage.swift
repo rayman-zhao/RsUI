@@ -78,13 +78,25 @@ final class ViewerPage: RsUI.Page {
                 l.text = title
 
                 // 二级页不提供滚动，显示与滚动方式由 client 决定：
-                // 首组演示自滚动控件（GridView 内部是 ItemsView）直接传入，
+                // 首组演示自滚动控件（ItemsView 自带内部 ScrollView）直接传入，
                 // 其余组演示普通内容自行包 ScrollView。
                 let content: UIElement
                 if i == 0 {
-                    let gridView = RsUI.GridView()
-                    gridView.setItems((0..<60).map { String(format: tr("Snapshot %d"), Int32($0)) })
-                    content = gridView
+                    let itemsView = RsUI.ItemsView { id in
+                        let tile = TextBlock()
+                        tile.text = id
+                        tile.textWrapping = .wrap
+                        tile.padding = Thickness(left: 12, top: 10, right: 12, bottom: 10)
+                        return tile
+                    }
+                    let gridLayout = UniformGridLayout()
+                    gridLayout.minItemWidth = 160
+                    gridLayout.minItemHeight = 56
+                    gridLayout.minRowSpacing = 4
+                    gridLayout.minColumnSpacing = 4
+                    itemsView.layout = gridLayout
+                    itemsView.setIds((0..<60).map { String(format: tr("Snapshot %d"), Int32($0)) })
+                    content = itemsView
                 } else {
                     let scroller = ScrollView()
                     let listPanel = StackPanel()

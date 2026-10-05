@@ -115,8 +115,6 @@ final class SampleModule: Module {
             NavigationViewItem.build(
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
             NavigationViewItem.build(
-                iconGlyph: "\u{E71D}", label: tr("Grid View"), url: "rs://\(id)/grid-view"),
-            NavigationViewItem.build(
                 iconGlyph: "\u{E8CB}", label: tr("Annotated ScrollBar"),
                 url: "rs://\(id)/annotated-scroll-bar"),
             itemsViewNavItem(id: id),
@@ -224,8 +222,6 @@ final class SampleModule: Module {
             return ViewerPage(context: context)
         case "/range-slider":
             return RangeSliderPage()
-        case "/grid-view":
-            return GridViewPage()
         case "/annotated-scroll-bar":
             return AnnotatedScrollBarPage()
         case "/items-view":

@@ -126,12 +126,10 @@ Sources/RsUI/
     ChevronIcon.swift                   — Chevron glyph rotation helper (interruptible: mid-animation requests stop the running storyboard and continue from the current angle)
     RangeSlider.swift                   — Dual-thumb range slider replicating the native Slider look (real `Thumb` controls + official `Slider*` theme resources; control-level visual states driven manually via `goToVisualState` — `goToElementStateCore` always returns false on XamlReader loose XAML); dragging between the thumbs slides both thumbs together width-kept via a transparent Thumb hit-surface (`RangeSliderState.shiftRaw`/`settleToStep`); keyboard is per-thumb only (←/→, PageUp/PageDown, Home/End); `isToolTipEnabled` gates the value tooltip; `valueChanged` event
     ItemsView.swift                     — `open class ItemsView: WinUI.ItemsView` id-driven list (observable vector + `ItemsRepeater`; `makeIdView` closure supplies element per id)
-    GridView.swift                      — `GridView: Grid` multi-select grid built on `ItemsView` (marquee selection, checkbox selection, keyboard; note the name shadows `WinUI.GridView`)
-    GridViewSelectionModel.swift        — Pure-logic selection state for GridView's marquee diffing (unit-tested)
     AnnotatedScrollBar.swift            — `open class AnnotatedScrollBar: WinUI.Grid`（模块内遮蔽 `WinUI.AnnotatedScrollBar`；**组合**持有原生控件——投影原件的 Swift 子类化实测必崩：空子类启动重建 ~50% / 真主题切换重建 ~1/3 崩溃率，0xC0000005 于 COM 聚合释放路径，纯 wrapper 对照全存活；复现=空子类进树后被整页重建释放，无需定制）: ready-to-use wrapper attaching to `RsUI.ItemsView` / `WinUI.ScrollView` hosts (label `DataTemplateSelector` workaround + trailing/leading alignment, Photos-style custom hover-detail overlay vs native ToolTip, refresh timing, built-in bar hiding; see the `{Binding}` pitfall below)
     ToggleButtons.swift                 — Grouped toggle buttons control
     Viewer.swift                        — Multi-pane viewer shell (top/center/bottom/left/right panes + draggable splitters)
-    FadeSlideItemTransitionProvider.swift — `ItemCollectionTransitionProvider` providing fade+slide item transitions for ItemsView/GridView
+    FadeSlideItemTransitionProvider.swift — `ItemCollectionTransitionProvider` providing fade+slide item transitions for ItemsView
   Support/
     AppInstance+Extensions.swift        — `AppInstance.redirectOrRegister(for:onActivated:)` single-instance extension (waits for activation redirect before `exit(0)`)
     AppBarButton+Extensions.swift       — `build(glyph:tooltip:)` factory on `AppBarButton` ({x:Glyph}/{x:Tr} XAML template)
@@ -158,12 +156,11 @@ Samples/
   SampleApp/
     SampleApp.swift                     — `@main class SampleApp: App`; registration via `super.init(group:product:resourceBundle:moduleTypes:)`
     SampleModule/SampleModule.swift     — `@Observable final class SampleModule: Module`; demo of nav items / footer items / settingsGroup / navigationDidRequest
-    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance (MVVM pattern demo) / Picker (also serves the footer nav item via `path`) / Reveal / Viewer / GridView / ItemsView / ItemsViewDocumentation / RangeSlider (incl. a window-width/level CT demo) / AnnotatedScrollBar (WinUI AnnotatedScrollBar projection verification: ScrollView & ItemsView wiring, labels, detail label, Scrolling event) / ToggleButtons + FeaturePageHelpers with shared `makeClickableCard` / caption / section-title factories)
+    SampleModule/Pages/*.swift          — demo pages (Overview / Fullscreen / NavigationModes / OpenOrFocus / BatchOpen / NewWindow / Appearance (MVVM pattern demo) / Picker (also serves the footer nav item via `path`) / Reveal / Viewer / ItemsView / ItemsViewDocumentation / RangeSlider (incl. a window-width/level CT demo) / AnnotatedScrollBar (WinUI AnnotatedScrollBar projection verification: ScrollView & ItemsView wiring, labels, detail label, Scrolling event) / ToggleButtons + FeaturePageHelpers with shared `makeClickableCard` / caption / section-title factories)
   Assets/                               — SampleApp.ico / .rc / .res / Localizable.xcstrings (framework default table, app-independent) / SettingsPage.xcstrings (framework settings table, app-independent) / App.xcstrings (hosting app's product name, table "App") / SampleApp.xcstrings (sample-only strings, table "SampleApp")
 Tests/
   RsUITests/PageModelTests.swift        — Swift Testing `@Suite struct PageModelTests`: PageModel navigate/goBack/goForward/history-limit/clears-forward history
   RsUITests/RangeSliderStateTests.swift — Swift Testing `@Suite struct RangeSliderStateTests`: RangeSliderState clamping/step-snap (minimum-anchored grid)/minGap/setRange/domain-revalidate/fraction math
-  RsUITests/GridViewSelectionModelTests.swift — marquee diff selection-model tests
   RsUITests/ModelsTests.swift           — AppTheme mapping / AppLanguage display+locale / AppRoute defaults
   RsUITests/StartObservingTests.swift   — returning `false` from `onChanged` stops the observation (initial & later emissions)
   PageControlTests/                     — GUI test host executable target
@@ -211,7 +208,7 @@ Besides, GUI callback and template-method naming follows four distinct rules —
 ### Swift on Windows Specifics
 - This is NOT Apple Swift. Some toolchain behaviors and available APIs differ.
 - All WinUI types are WinRT projections. `HString`, `AnyIVector<Any?>`, `Uri`, `Color`, etc. are projection types, not native Swift types.
-- **RsUI type names shadow WinUI projections**: `RsUI.GridView` (a `Grid` subclass) shadows `WinUI.GridView`, and `RsUI.ItemsView` (a `WinUI.ItemsView` subclass) shadows `WinUI.ItemsView`. Inside the RsUI module an unqualified `GridView` / `ItemsView` always means the RsUI wrapper — reference the projections with the `WinUI.` prefix. This is an accepted naming decision (kept deliberately); do not rename without weighing the public API break.
+- **RsUI type names shadow WinUI projections**: `RsUI.ItemsView` (a `WinUI.ItemsView` subclass) shadows `WinUI.ItemsView`. Inside the RsUI module an unqualified `ItemsView` always means the RsUI wrapper — reference the projections with the `WinUI.` prefix. This is an accepted naming decision (kept deliberately); do not rename without weighing the public API break.
 
 ### COM Callback Exceptions
 - Swift exceptions thrown inside COM callback paths do NOT propagate correctly to the main thread. The process won't terminate but UI operations will fail silently. Prefer `try?` / `do-catch`-to-log at WinRT call boundaries and surface failures through logging (`log.warning`), not through thrown errors.
