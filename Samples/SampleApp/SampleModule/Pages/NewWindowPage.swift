@@ -4,16 +4,6 @@ import UWP
 import WinUI
 
 final class NewWindowPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
-
-    func windowContextDidChange(to context: WindowContext) {
-        self.context = context
-    }
-
     let url = URL(string: "rs://\(sampleModuleID)/new-window")!
     var title: String { tr("New Window") }
 

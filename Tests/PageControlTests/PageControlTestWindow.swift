@@ -44,9 +44,9 @@ final class PageControlTestWindow: Window {
         // 在 super.init() 之后再挂。
         switch mode {
         case .frame:
-            self.control = PageFrame()
+            self.control = PageFrame(windowContext: WindowContext())
         case .tabView:
-            self.control = PageTabView()
+            self.control = PageTabView(windowContext: WindowContext())
         }
 
         super.init()

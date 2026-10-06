@@ -4,13 +4,12 @@ import UWP
 import WinUI
 
 final class PickerPage: RsUI.Page {
-    var context: WindowContext
+    var context: WindowContext?
     // 主导航项用默认 "/picker"；footer 导航项传 "/footer-picker"，
     // 使其 URL 与导航项匹配（openOrFocus 去重、选中态高亮依赖该 URL）。
     let path: String
 
-    init(context: WindowContext, path: String = "/picker") {
-        self.context = context
+    init(path: String = "/picker") {
         self.path = path
     }
 
@@ -41,7 +40,8 @@ final class PickerPage: RsUI.Page {
         card.contentAlignment = .vertical
         card.isClickEnabled = true
         card.click.addHandler { [weak self] _, _ in
-            self?.context.pickFolder { path in
+            guard let context = self?.context else { return }
+            context.pickFolder { path in
                 if let path {
                     resultBlock.text = path
                 }
@@ -60,7 +60,8 @@ final class PickerPage: RsUI.Page {
         card2.contentAlignment = .vertical
         card2.isClickEnabled = true
         card2.click.addHandler { [weak self] _, _ in
-            self?.context.pickSaveFile(
+            guard let context = self?.context else { return }
+            context.pickSaveFile(
                 suggestedStartLocation: .documentsLibrary,
                 fileTypeChoices: [
                     tr("Text files"): [".txt"], tr("Image files"): [".jpg", ".jpeg", ".png"],

@@ -5,11 +5,7 @@ import UWP
 import WinUI
 
 final class ViewerPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
+    var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
@@ -37,11 +33,11 @@ final class ViewerPage: RsUI.Page {
         }
         let fsbtn = (try? loaded.findName("FullscreenButton")) as? Button
         fsbtn?.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            if self.context.isInFullscreen {
-                self.context.exitFullscreen()
+            guard let context = self?.context else { return }
+            if context.isInFullscreen {
+                context.exitFullscreen()
             } else {
-                self.context.enterFullscreen()
+                context.enterFullscreen()
             }
         }
         let overlayPanel = (try? XamlReader.load(tr(xaml: overlayXAML))) as? Grid

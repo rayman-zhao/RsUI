@@ -28,13 +28,14 @@ class PageTabView: Grid, PageControl {
     private let tabView: TabView
     private let closeOthersButton: Button
     // 全部 tab 共享的单 PageFrame，strip 隐藏后内容仍由它显示。
-    private let pageFrame = PageFrame()
+    private let pageFrame: PageFrame
 
     // MARK: - Init
 
-    override init() {
+    init(windowContext: WindowContext) {
         tabView = App.context.requireXaml(withString: xamlUI)
         closeOthersButton = tabView.requireElement("closeOthersButton")
+        pageFrame = PageFrame(windowContext: windowContext)
 
         super.init()
         let autoRow = RowDefinition()
@@ -185,13 +186,13 @@ class PageTabView: Grid, PageControl {
         pageFrame.updateAppearance()
     }
 
-    func updateWindowContext(_ context: WindowContext) {
+    func updateWindowContext() {
+        let context = pageFrame.windowContext
         for item in tabView.tabItems {
             if let tabViewItem = item as? TabViewItem, let tag = tabViewItem.tag,
                 let model = tag as? PageModel
             {
-                model.currentPage?.windowContextDidChange(to: context)
-                for page in model.backwardPages + model.forwardPages {
+                for page in model.allPages {
                     page.windowContextDidChange(to: context)
                 }
             }
@@ -206,6 +207,7 @@ class PageTabView: Grid, PageControl {
             if let page {
                 item.header = page.title
                 item.tag = PageModel(page: page)
+                page.windowContextDidChange(to: pageFrame.windowContext)
             } else {
                 item.tag = PageModel()
             }

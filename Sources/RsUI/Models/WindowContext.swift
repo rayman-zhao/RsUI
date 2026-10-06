@@ -24,6 +24,11 @@ public struct WindowContext {
         self.host = host
     }
 
+    /// 无宿主退化实例，窗口服务全部早退；仅供无窗口宿主的装配 (GUI 测试宿主)。
+    init() {
+        host = nil
+    }
+
     /// Opens the system folder picker owned by this window.
     ///
     /// Use this when module UI needs a folder path selected by the user. The picker is

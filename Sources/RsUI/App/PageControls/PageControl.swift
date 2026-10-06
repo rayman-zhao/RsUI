@@ -26,5 +26,6 @@ protocol PageControl {
     func selectPage(matchingURL url: URL) -> Bool
 
     func updateAppearance()
-    func updateWindowContext(_ context: WindowContext)
+    /// 重发同一 window context，供页面重查窗口维度状态 (如 isInFullscreen)。
+    func updateWindowContext()
 }

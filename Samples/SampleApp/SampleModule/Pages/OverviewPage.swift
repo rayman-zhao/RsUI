@@ -4,11 +4,7 @@ import UWP
 import WinUI
 
 final class OverviewPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
+    var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
@@ -80,7 +76,8 @@ final class OverviewPage: RsUI.Page {
         let targetURL = URL(string: "rs://\(sampleModuleID)\(path)")!
         return makeClickableCard(glyph: glyph, header: header, description: description) {
             [weak self] in
-            _ = self?.context.open(targetURL, mode: .inplace)
+            guard let context = self?.context else { return }
+            _ = context.open(targetURL, mode: .inplace)
         }
     }
 }

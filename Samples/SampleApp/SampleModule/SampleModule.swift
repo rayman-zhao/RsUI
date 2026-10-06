@@ -197,29 +197,30 @@ final class SampleModule: Module {
         return SettingsGroup(title: tr("Settings Controls Demo"), cards: [basicCard, clickableCard, expander])
     }
 
+    /// 页面经 `Page.windowContextDidChange` 获得 window context，不从工厂参数注入。
     func navigationDidRequest(for url: URL, in context: WindowContext) -> RsUI.Page? {
         guard url.host == self.id else { return nil }
         switch url.path {
         case "", "/":
-            return OverviewPage(context: context)
+            return OverviewPage()
         case "/fullscreen":
-            return FullscreenPage(context: context)
+            return FullscreenPage()
         case "/navigation":
-            return NavigationModesPage(context: context)
+            return NavigationModesPage()
         case "/openorfocus":
-            return OpenOrFocusPage(context: context)
+            return OpenOrFocusPage()
         case "/batch-open":
-            return BatchOpenPage(context: context)
+            return BatchOpenPage()
         case "/new-window":
-            return NewWindowPage(context: context)
+            return NewWindowPage()
         case "/appearance":
-            return AppearancePage(context: context)
+            return AppearancePage()
         case "/picker":
-            return PickerPage(context: context)
+            return PickerPage()
         case "/reveal":
             return RevealPage()
         case "/viewer":
-            return ViewerPage(context: context)
+            return ViewerPage()
         case "/range-slider":
             return RangeSliderPage()
         case "/annotated-scroll-bar":
@@ -231,7 +232,7 @@ final class SampleModule: Module {
         case "/toggle-buttons":
             return ToggleButtonsPage()
         case "/footer-picker":
-            return PickerPage(context: context, path: url.path)
+            return PickerPage(path: url.path)
         default:
             return nil
         }

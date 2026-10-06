@@ -159,7 +159,23 @@ struct PageModelTests {
     }
 
     @Test
-    func allPagesIncludesHistoryAndCurrent() {
+    func allPagesEmptyModel() {
+        let tab = PageModel()
+
+        #expect(tab.allPages.isEmpty)
+    }
+
+    @Test
+    func allPagesCurrentOnly() {
+        let view = MockView()
+        let tab = PageModel(page: view)
+
+        #expect(tab.allPages.count == 1)
+        #expect(tab.allPages[0] === view)
+    }
+
+    @Test
+    func allPagesCurrentFirstThenBothStacks() {
         let view1 = MockView()
         let view2 = MockView()
         let view3 = MockView()
@@ -168,11 +184,10 @@ struct PageModelTests {
         tab.navigate(to: view3)
         tab.goBack()
 
-        #expect(tab.currentPage === view2)
-        #expect(tab.backwardPages.count == 1 && tab.backwardPages[0] === view1)
-        #expect(tab.forwardPages.count == 1 && tab.forwardPages[0] === view3)
-        #expect(
-            tab.backwardPages.count + tab.forwardPages.count + (tab.currentPage != nil ? 1 : 0) == 3
-        )
+        // current(view2) 优先，随后 backward([view1])、forward([view3])。
+        #expect(tab.allPages.count == 3)
+        #expect(tab.allPages[0] === view2)
+        #expect(tab.allPages[1] === view1)
+        #expect(tab.allPages[2] === view3)
     }
 }

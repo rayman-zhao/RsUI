@@ -21,23 +21,14 @@ final class AppearanceViewModel {
 }
 
 final class AppearancePage: RsUI.Page {
-    var context: WindowContext
     private let viewModel = AppearanceViewModel()
     // content 每次重建（主题/语言切换）都会换一批控件：先取消上一批观察 Task，
     // 再为新一批控件挂观察，避免旧 Task 持续更新已卸载的控件。
     private var observingTasks: [Task<Void, Never>] = []
 
-    init(context: WindowContext) {
-        self.context = context
-    }
-
     deinit {
         // 观察闭包强引用本页控件与 ViewModel（见 startObserving 的契约），页面释放时必须终止
         observingTasks.forEach { $0.cancel() }
-    }
-
-    func windowContextDidChange(to context: WindowContext) {
-        self.context = context
     }
 
     let url = URL(string: "rs://\(sampleModuleID)/appearance")!

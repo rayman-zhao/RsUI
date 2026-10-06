@@ -12,6 +12,10 @@ class PageModel {
         currentPage = page
     }
 
+    var allPages: [Page] {
+        [currentPage].compactMap { $0 } + backwardPages + forwardPages
+    }
+
     func navigate(to page: Page) {
         guard currentPage !== page else { return }
 

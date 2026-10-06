@@ -4,11 +4,7 @@ import UWP
 import WinUI
 
 final class OpenOrFocusPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
+    var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
@@ -38,7 +34,8 @@ final class OpenOrFocusPage: RsUI.Page {
                 "Calls context.openOrFocus(url). If a duplicate tab exists, it gets focused instead of opening another one."
             )
         ) { [weak self] in
-            _ = self?.context.openOrFocus(targetURL)
+            guard let context = self?.context else { return }
+            _ = context.openOrFocus(targetURL)
         }
         return featurePageContent([card])
     }

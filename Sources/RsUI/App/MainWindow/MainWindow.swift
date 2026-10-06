@@ -10,7 +10,7 @@ import WinUI
 /// 提供context接口用于隔离窗口具体类型。
 class MainWindow: NavigationViewWindow, WindowContextHost {
     private lazy var context = WindowContext(host: self)
-    private lazy var pageControl: PageControl = PageTabView()
+    private lazy var pageControl: PageControl = PageTabView(windowContext: context)
 
     // MARK: - Init
 
@@ -60,7 +60,7 @@ class MainWindow: NavigationViewWindow, WindowContextHost {
         fullscreenChanged.addHandler { [weak self] _, _ in
             guard let self else { return }
 
-            self.pageControl.updateWindowContext(self.context)
+            self.pageControl.updateWindowContext()
         }
 
         ui.navigationView.itemInvoked.addHandler { [weak self] _, arg in

@@ -8,11 +8,15 @@ public protocol Page: AnyObject {
     var title: String { get }
     var content: UIElement { get }
 
-    /// Callback when the page is moved to another window (tab tear-out or
-    /// merge), or the window enter/exit fullscreen state.
+    /// Callback when the page is attached to a window (before its content is
+    /// first rendered), when the page is moved to another window (tab tear-out
+    /// or merge), or when the window enter/exit fullscreen state.
     ///
-    /// A page that caches WindowContext should update it here, and change button
-    /// text or icon for fullscreen state.
+    /// This is the single entry point for obtaining the WindowContext: a page
+    /// that needs it should store it here — do not take it from the module
+    /// factory / init. A page that changes fullscreen-derived UI (button text
+    /// or icon) should also refresh it here; note the callback may fire before
+    /// the page's content is first built.
     func windowContextDidChange(to context: WindowContext)
 }
 

@@ -4,11 +4,7 @@ import UWP
 import WinUI
 
 final class BatchOpenPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
+    var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
@@ -65,8 +61,8 @@ final class BatchOpenPage: RsUI.Page {
     ) -> SettingsCard {
         makeClickableCard(glyph: glyph, header: header, description: description) {
             [weak self] in
-            guard let self else { return }
-            _ = self.context.open(self.routes, mode: mode)
+            guard let self, let context = self.context else { return }
+            _ = context.open(self.routes, mode: mode)
         }
     }
 }

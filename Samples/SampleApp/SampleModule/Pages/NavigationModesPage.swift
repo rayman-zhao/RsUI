@@ -4,11 +4,7 @@ import UWP
 import WinUI
 
 final class NavigationModesPage: RsUI.Page {
-    var context: WindowContext
-
-    init(context: WindowContext) {
-        self.context = context
-    }
+    var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
         self.context = context
@@ -34,21 +30,24 @@ final class NavigationModesPage: RsUI.Page {
                 header: ".inplace",
                 description: tr("Replaces the current tab's page.")
             ) { [weak self] in
-                _ = self?.context.open(settingsURL, mode: .inplace)
+                guard let context = self?.context else { return }
+                _ = context.open(settingsURL, mode: .inplace)
             },
             makeClickableCard(
                 glyph: "\u{ECCD}",
                 header: ".newTab",
                 description: tr("Opens a new tab and switches to it.")
             ) { [weak self] in
-                _ = self?.context.open(settingsURL, mode: .newTab)
+                guard let context = self?.context else { return }
+                _ = context.open(settingsURL, mode: .newTab)
             },
             makeClickableCard(
                 glyph: "\u{F22C}",
                 header: ".newTabNoFocus",
                 description: tr("Opens a new tab without stealing focus (like Ctrl+Click).")
             ) { [weak self] in
-                _ = self?.context.open(settingsURL, mode: .newTabNoFocus)
+                guard let context = self?.context else { return }
+                _ = context.open(settingsURL, mode: .newTabNoFocus)
             },
             makeClickableCard(
                 glyph: "\u{E78B}",

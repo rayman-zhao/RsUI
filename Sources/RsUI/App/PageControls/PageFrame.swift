@@ -7,16 +7,18 @@ import WinUI
 /// 转场宿主。
 class PageFrame: PageTransitionHost, PageControl {
     private var model: PageModel
+    let windowContext: WindowContext
     /// 上次渲染时的外观值。`updateAppearance` 在值未变时整体跳过：启动期
     /// `AppearanceWindow` 的初始发射会对每个窗口触发一次 updateAppearance
-    ///（其消费端还承担导航菜单与窗口 chrome 的首次构建，不能跳过发射本身），
+    /// (其消费端还承担导航菜单与窗口 chrome 的首次构建，不能跳过发射本身)，
     /// 若外观未变仍整页重建，会无谓释放刚构建的页面控件——对带有挂起原生
     /// 回调（防抖定时器等）的 COM 聚合子类控件是实测崩溃源（0xC0000005）。
     private var renderedTheme: AppTheme?
     private var renderedLanguage: AppLanguage?
 
-    init(model: PageModel = PageModel()) {
+    init(model: PageModel = PageModel(), windowContext: WindowContext) {
         self.model = model
+        self.windowContext = windowContext
         super.init()
 
         render()
@@ -61,6 +63,7 @@ class PageFrame: PageTransitionHost, PageControl {
         transitionInfoOverride: NavigationTransitionInfo
     ) {
         model.navigate(to: page)
+        page.windowContextDidChange(to: windowContext)
 
         render(transitionInfo: transitionInfoOverride)
     }
@@ -72,6 +75,7 @@ class PageFrame: PageTransitionHost, PageControl {
     ) -> Int {
         for page in pages {
             model.navigate(to: page)
+            page.windowContextDidChange(to: windowContext)
         }
 
         render(transitionInfo: transitionInfoOverride)
@@ -83,8 +87,10 @@ class PageFrame: PageTransitionHost, PageControl {
     }
 
     func updateAppearance() {
-        guard App.context.theme != renderedTheme
-            || App.context.language != renderedLanguage else { return }
+        guard
+            App.context.theme != renderedTheme
+                || App.context.language != renderedLanguage
+        else { return }
         /// NOTE: A page inplace transition will have problem if some UI Elements been referenced in the Page object.
         /// So that, must remove the page view from visual tree first, then release COM references in event loop,
         /// then add to new visual tree node.
@@ -94,10 +100,9 @@ class PageFrame: PageTransitionHost, PageControl {
         }
     }
 
-    func updateWindowContext(_ context: WindowContext) {
-        model.currentPage?.windowContextDidChange(to: context)
-        for page in model.backwardPages + model.forwardPages {
-            page.windowContextDidChange(to: context)
+    func updateWindowContext() {
+        for page in model.allPages {
+            page.windowContextDidChange(to: windowContext)
         }
     }
 

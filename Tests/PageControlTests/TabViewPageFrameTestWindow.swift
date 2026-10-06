@@ -87,7 +87,7 @@ final class TabViewPageFrameTestWindow: Window {
     @discardableResult
     private func addTab(page: RsUI.Page, tabHeader: String) -> TabViewItem? {
         let model = PageModel(page: page)
-        let frame = PageFrame(model: model)
+        let frame = PageFrame(model: model, windowContext: WindowContext())
 
         let item = TabViewItem()
         item.name = UUID().uuidString
