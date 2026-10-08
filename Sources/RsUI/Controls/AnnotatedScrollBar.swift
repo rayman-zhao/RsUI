@@ -130,9 +130,11 @@ open class AnnotatedScrollBar: WinUI.Grid {
     private var overlayAdopted = false
     private var nativeTooltipSuppressed = false
     /// attach 时记录的宿主（强引用：ScrollView 是纯投影 wrapper 不能 weak；
-    /// 生命周期与页面视图一致）。
+    /// 生命周期与页面视图一致）。ItemsView 是 RsUI 类，可 weak 且必须 weak——
+    /// 宿主 itemsView 经 verticalScrollController 反向持有本控件内部滚动条，
+    /// 强引用即成环，列表换代会泄漏整棵已实现视图（含位图）。
     private var attachedScrollView: WinUI.ScrollView?
-    private var attachedList: RsUI.ItemsView?
+    private weak var attachedList: RsUI.ItemsView?
 
     /// - Parameters:
     ///   - smallChange: 上下箭头按钮的单次滚动步进（内容坐标）。
@@ -172,18 +174,19 @@ open class AnnotatedScrollBar: WinUI.Grid {
         list.verticalScrollController = nativeBar.scrollController
 
         var hidBuiltInScrollbar = false
-        func hideBuiltInScrollbarIfNeeded() {
+        func hideBuiltInScrollbarIfNeeded(_ list: RsUI.ItemsView) {
             guard !hidBuiltInScrollbar, let inner = list.scrollView else { return }
             inner.verticalScrollBarVisibility = .hidden
             hidBuiltInScrollbar = true
         }
-        list.loaded.addHandler { [weak self] _, _ in
-            hideBuiltInScrollbarIfNeeded()
+        // 处理器挂在 list 自身的事件上，强捕获 list 即成环，必须 weak
+        list.loaded.addHandler { [weak self, weak list] _, _ in
+            if let list { hideBuiltInScrollbarIfNeeded(list) }
             self?.repopulate()
             self?.adoptDetailOverlayIfNeeded()
         }
-        list.sizeChanged.addHandler { [weak self] _, _ in
-            hideBuiltInScrollbarIfNeeded()
+        list.sizeChanged.addHandler { [weak self, weak list] _, _ in
+            if let list { hideBuiltInScrollbarIfNeeded(list) }
             self?.repopulate()
             self?.syncDetailOverlayMargin()
         }
