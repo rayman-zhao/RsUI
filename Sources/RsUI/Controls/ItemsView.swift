@@ -182,6 +182,23 @@ open class ItemsView: WinUI.ItemsView {
 
     // MARK: - 条目视图重建
 
+    /// 内部 ItemsRepeater 的垂直实现缓存长度(视口倍数,视口上下各按此倍数
+    /// 预实现条目;WinUI 默认 2)。repeater 接线前赋值会先暂存,接线时落上。
+    ///
+    /// 用途:UniformGridLayout 恒以 index 0 校准条目尺寸——0 离开实现窗口后
+    /// 布局每趟走 ForceCreate(0)→测量→Recycle 的昂贵路径,其记账进出使
+    /// 未实现区估高翻转一行(视口被锚点补偿拨动、贴底时滚动条 thumb 停不到
+    /// 底的根源)。把缓存加宽到盖住整个内容即可让 0 恒在实现窗口内。
+    public var verticalCacheLength: Double {
+        get { repeater?.verticalCacheLength ?? pendingVerticalCacheLength ?? 2.0 }
+        set {
+            pendingVerticalCacheLength = newValue
+            repeater?.verticalCacheLength = newValue
+        }
+    }
+
+    private var pendingVerticalCacheLength: Double?
+
     /// 丢弃并重建全部已实现条目的视图，条目集合本身不变。
     ///
     /// 通过换一个新的 ItemTemplate 工厂实现：ItemsRepeater 对模板变更做
@@ -226,6 +243,9 @@ open class ItemsView: WinUI.ItemsView {
         else { return }
         isRepeaterWired = true
         repeater = found
+        if let pending = pendingVerticalCacheLength {
+            found.verticalCacheLength = pending
+        }
         found.elementPrepared.addHandler { [weak self] _, args in
             guard let self, let args, let container = args.element as? ItemContainer
             else { return }
