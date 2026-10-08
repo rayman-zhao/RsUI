@@ -72,6 +72,71 @@ final class AnnotatedScrollBarLabelTemplateSelector: WinUI.DataTemplateSelector 
     }
 }
 
+// MARK: - Thumb 全幅桥接
+
+/// 原生 AnnotatedScrollBar 的 thumb 位置公式把 ViewportSize 计入映射因子:
+/// thumb 全程只能行进到 (extent−viewport)/extent 比例,贴底时悬停在
+/// 1−viewport/extent 处(FolderViewer 841/2848 ≈ 悬在 70%,滚到底指示器
+/// 到不了轨道底端;标签同样被压缩进该子区间)。本桥接实现 IScrollController
+/// 包住原生控制器的对外面,拦截 ScrollPresenter → setValues,把 viewportLength
+/// 改写为 0:thumb 与标签都按 [0, maxOffset] 全幅展开(与本封装文档约定的
+/// labels scrollOffset 取 [0, maxOffset] 一致)。事件对象直接透传原生实例,
+/// 输入路径(拖拽/点击轨道)由原生按同一因子反算,无需二次校正。
+private final class FullSpanScrollControllerBridge: WinUI.IScrollController {
+    private let inner: WinUI.AnyIScrollController
+
+    init(inner: WinUI.AnyIScrollController) {
+        self.inner = inner
+    }
+
+    func setIsScrollable(_ isScrollable: Bool) throws {
+        try inner.setIsScrollable(isScrollable)
+    }
+
+    func setValues(
+        _ minOffset: Double, _ maxOffset: Double, _ offset: Double, _ viewportLength: Double
+    ) throws {
+        try inner.setValues(minOffset, maxOffset, offset, 0)
+    }
+
+    func getScrollAnimation(
+        _ correlationId: Int32,
+        _ startPosition: WindowsFoundation.Vector2,
+        _ endPosition: WindowsFoundation.Vector2,
+        _ defaultAnimation: WinAppSDK.CompositionAnimation!
+    ) throws -> WinAppSDK.CompositionAnimation! {
+        try inner.getScrollAnimation(correlationId, startPosition, endPosition, defaultAnimation)
+    }
+
+    func notifyRequestedScrollCompleted(_ correlationId: Int32) throws {
+        try inner.notifyRequestedScrollCompleted(correlationId)
+    }
+
+    var canScroll: Bool { inner.canScroll }
+    var isScrollingWithMouse: Bool { inner.isScrollingWithMouse }
+    var panningInfo: WinUI.AnyIScrollControllerPanningInfo! { inner.panningInfo }
+
+    var addScrollVelocityRequested: WindowsFoundation.Event<
+        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerAddScrollVelocityRequestedEventArgs?>
+    > { inner.addScrollVelocityRequested }
+
+    var canScrollChanged: WindowsFoundation.Event<
+        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, Any?>
+    > { inner.canScrollChanged }
+
+    var isScrollingWithMouseChanged: WindowsFoundation.Event<
+        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, Any?>
+    > { inner.isScrollingWithMouseChanged }
+
+    var scrollByRequested: WindowsFoundation.Event<
+        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollByRequestedEventArgs?>
+    > { inner.scrollByRequested }
+
+    var scrollToRequested: WindowsFoundation.Event<
+        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollToRequestedEventArgs?>
+    > { inner.scrollToRequested }
+}
+
 // MARK: - AnnotatedScrollBar
 
 /// 原生注记滚动条的即用封装（注意：本类在 RsUI 模块内遮蔽 `WinUI.AnnotatedScrollBar`，
@@ -168,10 +233,10 @@ open class AnnotatedScrollBar: WinUI.Grid {
 
     /// 接到框架 ItemsView（依赖属性直通内部 ScrollPresenter，随时可调）。
     /// 本控件可直接放进宿主布局的 auto 列（overlay 详情会自动收养进同一父容器
-    /// 并跨满列）。
+    /// 并跨满列）。经 FullSpanScrollControllerBridge 桥接(见该类型注释)。
     public func attach(to list: RsUI.ItemsView) {
         attachedList = list
-        list.verticalScrollController = nativeBar.scrollController
+        list.verticalScrollController = FullSpanScrollControllerBridge(inner: nativeBar.scrollController)
 
         var hidBuiltInScrollbar = false
         func hideBuiltInScrollbarIfNeeded(_ list: RsUI.ItemsView) {
@@ -204,7 +269,8 @@ open class AnnotatedScrollBar: WinUI.Grid {
         scrollView.loaded.addHandler { [weak self] _, _ in
             guard let self, !wired, let presenter = scrollView.scrollPresenter else { return }
             wired = true
-            presenter.verticalScrollController = self.nativeBar.scrollController
+            presenter.verticalScrollController = FullSpanScrollControllerBridge(
+                inner: nativeBar.scrollController)
             self.repopulate()
             self.adoptDetailOverlayIfNeeded()
         }
