@@ -15,14 +15,17 @@ import WinUI
 ///    unloadView，含 tag 反查解箱），此为布局过程中最敏感的路径；
 /// 3. `setIds([])`：所有实现化过的条目都应收到卸载回调。
 ///
-/// 索引味阶段（零装箱路径 + 顺移对账）：
+/// 索引味阶段（零装箱路径 + 顺移对账 + 回收池回归）：
 /// 4. `setCount(5000)`：虚拟化同上；条目内容按索引构建，全程不读回向量元素值；
-/// 5. `insert(200, at: 0)` 与中部 `removeIndexes`：索引顺移后已实现行的编号必须
-///    严格连续递增（顺移容器无论由原生 elementPrepared 重发还是 reconcile 对账
-///    重填，结果都应一致；出现断裂/重复即内容停留在旧索引）。另记录顺移后
-///    重复构建的条目数，作为原生是否重发 elementPrepared 的实证信号；
+/// 5. `insert(200, at: 0)`、中部 `removeIndexes`、滚动中部再滚回顶部、二轮
+///    插入+移除：索引顺移/视口移动后映射容器内容必须精确等于其索引（原生
+///    elementPrepared 重发与 reconcile 对账幂等共存）。首个带过渡动画的换窗
+///    可能一次性新建补池（旧窗口容器在动画器手里未归池），以换窗后数量为
+///    封顶值，其后一切操作不得再增长——回收池生效的判据（无池工厂的旧行为
+///    是停放的已清除容器单调累积）；
 /// 6. `setCount(0)`：所有实现化过的索引都应收到卸载回调（displayedIndex
-///    Swift 属性反查路径，无 tag 装箱解箱）。
+///    Swift 属性反查路径，无 tag 装箱解箱）。字符串味重置（阶段3）同样校验
+///    容器数不增长。
 ///
 /// 每阶段校验计数并输出 `IVLT:` 前缀日志，全部通过 exit(0)，断言失败或
 /// 中途 crash（进程非零退出）即为 RsUI 侧问题。
@@ -155,13 +158,21 @@ final class ItemsViewLifecycleTestWindow: Window {
                     "阶段2: 滚动后无新条目实现化（滚动未生效）")
             }
 
-            // 阶段3：整体重置，所有实现化过的条目都应收到卸载回调
+            // 阶段3：整体重置，所有实现化过的条目都应收到卸载回调；
+            // 回收池生效后容器总数不应随重置增长（清除即入池、再装填取池）
+            let stringCountBeforeReset = ItemsViewBase.descendants(
+                ofType: ItemContainer.self, from: self.testItemsView).count
             self.testItemsView.setIds([])
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             let neverUnloaded = self.realizedIds.subtracting(self.unloadedIds)
             self.check(
                 neverUnloaded.isEmpty,
                 "阶段3: \(neverUnloaded.count) 个条目重置后未收到 unloadView（如 \(neverUnloaded.sorted().first ?? "?")）")
+            let stringCountAfterReset = ItemsViewBase.descendants(
+                ofType: ItemContainer.self, from: self.testItemsView).count
+            self.checkContainerCount(
+                stringCountAfterReset, highWater: stringCountBeforeReset,
+                "阶段3: 字符串味重置后容器未复用（回收池未生效）")
 
             // 阶段4：切到索引味，装填并检查虚拟化（零装箱路径）
             self.testItemsView.visibility = .collapsed
@@ -175,13 +186,22 @@ final class ItemsViewLifecycleTestWindow: Window {
                 self.realizedIndexes.count < self.totalIndexes,
                 "阶段4: 索引味虚拟化失效，实现化了全部 \(self.realizedIndexes.count) 条")
             self.checkMappedRows("阶段4: 初始装填")
+            let indexHighWater = ItemsViewBase.descendants(
+                ofType: ItemContainer.self, from: self.testIndexView).count
 
-            // 阶段5：顶部插入 + 中部移除，顺移后已实现行编号必须连续
+            // 阶段5：顶部插入 + 中部移除，顺移后映射容器内容必须与索引一致；
+            // 容器复用经回收池消化。首个带过渡动画的换窗可能一次性新建补池
+            // （旧窗口容器在动画器手里未归池），以换窗后的数量为封顶值，
+            // 其后一切操作（移除/滚动/二轮插入移除）都不得再增长。
             let callsBeforeInsert = self.makeViewCalls
             let realizedBeforeInsert = self.realizedIndexes
             self.testIndexView.insert(200, at: 0)
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             self.checkMappedRows("阶段5: 顶部插入后")
+            let stabilizedContainers = ItemsViewBase.descendants(
+                ofType: ItemContainer.self, from: self.testIndexView).count
+            log.info(
+                "IVLT: 换窗后容器封顶 \(stabilizedContainers)（装填 \(indexHighWater) + 动画换窗期新建）")
             let rebuildsAfterInsert = self.makeViewCalls - callsBeforeInsert
                 - (self.realizedIndexes.subtracting(realizedBeforeInsert).count)
             log.info(
@@ -190,6 +210,36 @@ final class ItemsViewLifecycleTestWindow: Window {
             self.testIndexView.removeIndexes(Array(1500..<1600))
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             self.checkMappedRows("阶段5: 中部移除后")
+            self.checkContainerCount(
+                nil, highWater: stabilizedContainers, "阶段5: 中部移除后容器增长（回收池未生效）")
+
+            // 阶段5.5：滚动到中部再滚回顶部，跨视口移动容器全部取池
+            if let indexScrollView = Self.findDescendantScrollView(from: self.testIndexView),
+                indexScrollView.scrollableHeight > 0
+            {
+                _ = try? indexScrollView.scrollTo(0, indexScrollView.scrollableHeight / 2)
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                self.checkMappedRows("阶段5: 滚动到中部后")
+                self.checkContainerCount(
+                    nil, highWater: stabilizedContainers, "阶段5: 滚动后容器增长（回收池未生效）")
+                _ = try? indexScrollView.scrollTo(0, 0)
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                self.checkMappedRows("阶段5: 滚回顶部后")
+                self.checkContainerCount(
+                    nil, highWater: stabilizedContainers, "阶段5: 滚回后容器增长（回收池未生效）")
+            }
+
+            // 阶段5.6：二轮插入+移除——池已覆盖全部工作集，任何增长即泄漏
+            self.testIndexView.insert(50, at: 0)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self.checkMappedRows("阶段5(二轮): 顶部插入后")
+            self.checkContainerCount(
+                nil, highWater: stabilizedContainers, "阶段5(二轮): 插入后容器增长（回收池未生效）")
+            self.testIndexView.removeIndexes(Array(2000..<2100))
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self.checkMappedRows("阶段5(二轮): 中部移除后")
+            self.checkContainerCount(
+                nil, highWater: stabilizedContainers, "阶段5(二轮): 移除后容器增长（回收池未生效）")
 
             // 阶段6：整体清空，所有实现化过的索引都应收到卸载回调
             self.testIndexView.setCount(0)
@@ -203,11 +253,21 @@ final class ItemsViewLifecycleTestWindow: Window {
         }
     }
 
+    /// 回收池回归断言：容器总数不应超过给定高水位（清除即入池、再实现化取池；
+    /// 无池工厂的旧行为是每次实现化新建、停放的已清除容器单调累积）。
+    /// count 传 nil 时统计索引味当前容器数。
+    private func checkContainerCount(_ count: Int?, highWater: Int, _ message: String) {
+        let actual = count ?? ItemsViewBase.descendants(
+            ofType: ItemContainer.self, from: testIndexView).count
+        log.info("IVLT: 容器数 \(actual)（高水位 \(highWater)）")
+        check(actual <= highWater, "\(message)：容器 \(actual) 超过高水位 \(highWater)")
+    }
+
     /// 索引味顺移一致性断言：被 repeater 映射的容器（`getElementIndex >= 0`）
     /// 内容必须精确等于其索引——比连续性更强，直接覆盖"顺移后内容停留旧索引"
     /// 的失败形态（原生未重发 elementPrepared 且 reconcile 未对上）。
     /// repeater 停放的已清除容器（映射为 -1，两味共有行为）不参与断言，
-    /// 只记数观察是否无界累积。
+    /// 只经 `checkContainerCount` 约束不无界累积。
     private func checkMappedRows(_ stage: String) {
         let containers = ItemsViewBase.descendants(
             ofType: ItemContainer.self, from: testIndexView)

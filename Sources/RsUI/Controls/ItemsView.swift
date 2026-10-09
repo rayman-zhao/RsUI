@@ -24,6 +24,9 @@ open class ItemsViewBase: WinUI.ItemsView {
     /// 条目过渡动画的载体（内置 `FadeSlideItemTransitionProvider`，
     /// 见 `animatesItemChanges`）。
     private let transitionProvider: FadeSlideItemTransitionProvider
+    /// 当前挂在 itemTemplate 上的工厂（`rebuildViews()` 换代际时移交回收池用，
+    /// 见 `RecyclableItemContainerFactory`）。
+    private var activeFactory: RecyclableItemContainerFactory?
 
     override internal init() {
         guard let vector = single_threaded_observable_vector([]) else {
@@ -35,7 +38,9 @@ open class ItemsViewBase: WinUI.ItemsView {
 
         // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
         // 经 elementPrepared 在代码里填 child，见 makeContainerFactory 与文件尾工厂。
-        itemTemplate = makeContainerFactory()
+        let factory = makeContainerFactory()
+        activeFactory = factory
+        itemTemplate = factory
         itemsSource = vector
         // StackLayout / UniformGridLayout 都不带默认 transition provider
         // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
@@ -54,8 +59,8 @@ open class ItemsViewBase: WinUI.ItemsView {
     /// 产出 itemTemplate 的代码工厂。`rebuildViews()` 依赖换入新实例触发
     /// ItemsRepeater 的整体 Reset；叶类可覆写以产出自己的容器子类
     /// （见 `ItemsIndexView` 的 `IndexedItemContainer`）。
-    func makeContainerFactory() -> IElementFactory {
-        ItemContainerFactory()
+    func makeContainerFactory() -> RecyclableItemContainerFactory {
+        RecyclableItemContainerFactory { ItemContainer() }
     }
 
     /// 条目增删/顺移是否播放过渡动画（默认 `true`）。
@@ -121,7 +126,13 @@ open class ItemsViewBase: WinUI.ItemsView {
     /// 注意模板变更不允许发生在 repeater 自身布局进行中（WinUI 会抛错），
     /// 在 sizeChanged 等布局完成后的事件里调用是安全的。
     public func rebuildViews() {
-        itemTemplate = makeContainerFactory()
+        let fresh = makeContainerFactory()
+        // 旧池移交：换工厂实例触发 Reset 后，清除的容器经 recycleElement 进的是
+        // 新代际（清除走当前 shim），旧代际池里的停放容器若不移交即成孤儿
+        // （repeater 的 Children 非公开 API，无法事后摘离）。
+        activeFactory?.transferPool(to: fresh)
+        activeFactory = fresh
+        itemTemplate = fresh
     }
 
     /// 当前选中条目索引（升序）。ItemsView 不暴露选中索引集（`selectedItems`
@@ -355,22 +366,41 @@ open class ItemsView: ItemsViewBase {
     }
 }
 
-/// `itemTemplate` 的代码工厂：每次产出新的 `ItemContainer`。`DataTemplate` 的内容
-/// 无法纯代码定义（WinUI 没有 WPF 的 `FrameworkElementFactory`），而 ItemsView 的
-/// `itemTemplate` 收的是 `IElementFactory` —— 投影允许 Swift 类型直接实现该接口，
-/// 借此免去为这么个空模板走 `XamlReader`。
+/// `itemTemplate` 的代码工厂：按需新建 `ItemContainer`，经 `recycleElement`
+/// 入池、`getElement` 取池复用（对齐 WinUI `ItemTemplateWrapper` + `RecyclePool`
+/// 官方模式）。`DataTemplate` 的内容无法纯代码定义（WinUI 没有 WPF 的
+/// `FrameworkElementFactory`），而 ItemsView 的 `itemTemplate` 收的是
+/// `IElementFactory` —— 投影允许 Swift 类型直接实现该接口，借此免去为这么个
+/// 空模板走 `XamlReader`。
 ///
-/// 已知行为留档（IVLT 实测，两味共有）：repeater 清除容器后会将其停放在自身
-/// 子集合里（`getElementIndex` 返回 -1、不可复用），本工厂每次 get 新建 →
-/// 停放容器随实现化窗口更替单调累积（unloadView 会照常回调，功能无碍，
-/// 内存缓慢增长）。若要修复，方向是让 recycleElement 真正取回并复用容器。
-private final class ItemContainerFactory: IElementFactory {
+/// 回收契约（microsoft-ui-xaml ViewManager/RecyclePool 源码核实）：清除容器时
+/// repeater 不将其摘离子集合，而是经 `recycleElement` 交还工厂；`getElement`
+/// 返回仍挂树的池元素是官方支持的快路径（ViewManager 对 parent 已是自身子的
+/// 元素跳过重复 Append）。无池工厂会导致停放的容器单调累积（IVLT 实测只增
+/// 不减）。`rebuildViews()` 换新工厂代际时由基座把旧池移交新工厂——repeater 的
+/// Children 非公开 API，工厂侧无法主动摘离，弃池即孤儿。
+internal final class RecyclableItemContainerFactory: IElementFactory {
+
+    private let makeContainer: () -> ItemContainer
+    private var pool: [ItemContainer] = []
+
+    init(makeContainer: @escaping () -> ItemContainer) {
+        self.makeContainer = makeContainer
+    }
 
     func getElement(_ args: ElementFactoryGetArgs!) throws -> UIElement! {
-        ItemContainer()
+        pool.popLast() ?? makeContainer()
     }
 
     func recycleElement(_ args: ElementFactoryRecycleArgs!) throws {
-        // 无回收池：容器交给 repeater 丢弃，下次 get 新实例。
+        guard let container = args.element as? ItemContainer else { return }
+        pool.append(container)
+    }
+
+    /// 把旧代际的池移交继任工厂（`rebuildViews()` 换代际时调用）。容器外壳
+    /// 无参数、跨代际复用安全，条目内容经 elementPrepared 重建。
+    func transferPool(to successor: RecyclableItemContainerFactory) {
+        successor.pool.append(contentsOf: pool)
+        pool.removeAll()
     }
 }

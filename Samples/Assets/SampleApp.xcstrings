@@ -2092,19 +2092,19 @@
         }
       }
     },
-    "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template." : {
+    "The projection lets Swift types implement WinRT interfaces: the container factory pools cleared containers in recycleElement and reuses them in getElement (mirroring WinUI's ItemTemplateWrapper + RecyclePool), replacing the former XAML string template." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template."
+            "value" : "The projection lets Swift types implement WinRT interfaces: the container factory pools cleared containers in recycleElement and reuses them in getElement (mirroring WinUI's ItemTemplateWrapper + RecyclePool), replacing the former XAML string template."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "投影允许 Swift 类型实现 WinRT 接口：容器工厂的 getElement 每次产出新 ItemContainer()（或其子类）、recycleElement 空实现，取代了此前的 XAML 字符串模板。"
+            "value" : "投影允许 Swift 类型实现 WinRT 接口：容器工厂在 recycleElement 里把清除的容器入池、在 getElement 里取池复用（对齐 WinUI 的 ItemTemplateWrapper + RecyclePool 模式），取代了此前的 XAML 字符串模板。"
           }
         }
       }

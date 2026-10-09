@@ -149,8 +149,8 @@ open class ItemsIndexView: ItemsViewBase {
         unloadView?(index)
     }
 
-    override func makeContainerFactory() -> IElementFactory {
-        IndexedItemContainerFactory()
+    override func makeContainerFactory() -> RecyclableItemContainerFactory {
+        RecyclableItemContainerFactory { IndexedItemContainer() }
     }
 }
 
@@ -159,15 +159,4 @@ open class ItemsIndexView: ItemsViewBase {
 /// IInspectable，`as? Int` 恒失败，见类头"差异与边界"）。
 private final class IndexedItemContainer: ItemContainer {
     var displayedIndex: Int?
-}
-
-private final class IndexedItemContainerFactory: IElementFactory {
-
-    func getElement(_ args: ElementFactoryGetArgs!) throws -> UIElement! {
-        IndexedItemContainer()
-    }
-
-    func recycleElement(_ args: ElementFactoryRecycleArgs!) throws {
-        // 无回收池：容器交给 repeater 丢弃，下次 get 新实例。
-    }
 }

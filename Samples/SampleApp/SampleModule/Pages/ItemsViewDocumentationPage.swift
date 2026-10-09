@@ -181,7 +181,7 @@ final class ItemsViewDocumentationPage: RsUI.Page {
                     "DataTemplate content cannot be defined in pure code (WinUI has no FrameworkElementFactory), but ItemsView.itemTemplate actually accepts any IElementFactory."
                 ),
                 tr(
-                    "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template."
+                    "The projection lets Swift types implement WinRT interfaces: the container factory pools cleared containers in recycleElement and reuses them in getElement (mirroring WinUI's ItemTemplateWrapper + RecyclePool), replacing the former XAML string template."
                 ),
                 tr(
                     "The internal itemsSource is a single observable vector created by the typed factory single_threaded_observable_vector (C++ shim underneath; the projection has no such factory); in-place mutations fire native VectorChanged, which drives the repeater's incremental realization."
@@ -214,7 +214,9 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             // elementPrepared/elementClearing 分发到下方两个挂钩。
             func fillContainer(_ container: ItemContainer) {}   // 叶类覆写
             func clearContainer(_ container: ItemContainer) {}  // 叶类覆写
-            func makeContainerFactory() -> IElementFactory { ItemContainerFactory() }
+            // 池复用工厂：recycleElement 入池、getElement 取池（repeater 清除
+            // 容器时不摘离子集合，靠工厂复用消化，见 RecyclableItemContainerFactory）。
+            func makeContainerFactory() -> RecyclableItemContainerFactory { /* ... */ }
 
             public var animatesItemChanges = true { /* 接入/摘除过渡 provider */ }
             public var count: Int { Int((try? items.get_Size()) ?? 0) }
