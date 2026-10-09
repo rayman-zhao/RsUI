@@ -195,11 +195,13 @@ open class AnnotatedScrollBar: WinUI.Grid {
     private var overlayAdopted = false
     private var nativeTooltipSuppressed = false
     /// attach 时记录的宿主（强引用：ScrollView 是纯投影 wrapper 不能 weak；
-    /// 生命周期与页面视图一致）。ItemsView 是 RsUI 类，可 weak 且必须 weak——
-    /// 宿主 itemsView 经 verticalScrollController 反向持有本控件内部滚动条，
-    /// 强引用即成环，列表换代会泄漏整棵已实现视图（含位图）。
+    /// 生命周期与页面视图一致）。列表宿主按 WinUI.ItemsView 静态类型记录，
+    /// 可 weak 且必须 weak——宿主 itemsView 经 verticalScrollController 反向
+    /// 持有本控件内部滚动条，强引用即成环，列表换代会泄漏整棵已实现视图
+    /// （含位图）。weak 生效依赖传入的是 RsUI 叶类（ItemsView / ItemsIndexView，
+    /// Swift 子类、树保活）实例；纯 WinUI.ItemsView wrapper 无身份保活。
     private var attachedScrollView: WinUI.ScrollView?
-    private weak var attachedList: RsUI.ItemsView?
+    private weak var attachedList: WinUI.ItemsView?
 
     /// - Parameters:
     ///   - smallChange: 上下箭头按钮的单次滚动步进（内容坐标）。
@@ -231,15 +233,17 @@ open class AnnotatedScrollBar: WinUI.Grid {
         children.append(nativeBar)
     }
 
-    /// 接到框架 ItemsView（依赖属性直通内部 ScrollPresenter，随时可调）。
-    /// 本控件可直接放进宿主布局的 auto 列（overlay 详情会自动收养进同一父容器
-    /// 并跨满列）。经 FullSpanScrollControllerBridge 桥接(见该类型注释)。
-    public func attach(to list: RsUI.ItemsView) {
+    /// 接到框架 ItemsView / ItemsIndexView（依赖属性直通内部 ScrollPresenter，
+    /// 随时可调）。宿主须为 RsUI 叶类实例（Swift 子类、树保活，见
+    /// `attachedList` 注释）。本控件可直接放进宿主布局的 auto 列（overlay 详情
+    /// 会自动收养进同一父容器并跨满列）。经 FullSpanScrollControllerBridge
+    /// 桥接(见该类型注释)。
+    public func attach(to list: WinUI.ItemsView) {
         attachedList = list
         list.verticalScrollController = FullSpanScrollControllerBridge(inner: nativeBar.scrollController)
 
         var hidBuiltInScrollbar = false
-        func hideBuiltInScrollbarIfNeeded(_ list: RsUI.ItemsView) {
+        func hideBuiltInScrollbarIfNeeded(_ list: WinUI.ItemsView) {
             guard !hidBuiltInScrollbar, let inner = list.scrollView else { return }
             inner.verticalScrollBarVisibility = .hidden
             hidBuiltInScrollbar = true

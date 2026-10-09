@@ -3,23 +3,23 @@ import RsUI
 import UWP
 import WinUI
 
-/// ItemsView 的工作总结/使用文档页。文档主体以条目列表呈现，
+/// ItemsView / ItemsIndexView 的工作总结/使用文档页。文档主体以条目列表呈现，
 /// 演示"有限高度父容器 + 组件公开 API"的实际用法；开关切换查看完整源码。
 final class ItemsViewDocumentationPage: RsUI.Page {
     let url = URL(string: "rs://\(sampleModuleID)/items-view-doc")!
     var title: String { tr("Items View Documentation") }
 
     var content: WinUI.UIElement {
-        // 文档小节以序号字符串为 id（内容本就静态，id 仅保持接口一致）。
-        let list = RsUI.ItemsView { id in
-            Self.makeDocumentRow(section: Self.sections[Int(id) ?? 0])
+        // 文档小节按索引取（内容静态、位置即身份）——索引味的典型场景。
+        let list = RsUI.ItemsIndexView { index in
+            Self.makeDocumentRow(section: Self.sections[index])
         }
 
         // 布局是 ItemsView 原生属性，默认样式即单列 StackLayout；这里仅加 4px 间距。
         let listLayout = StackLayout()
         listLayout.spacing = 4
         list.layout = listLayout
-        list.setIds(Self.sections.indices.map(String.init))
+        list.setCount(Self.sections.count)
 
         let sourceText = TextBlock()
         sourceText.text = Self.fullSource
@@ -110,7 +110,10 @@ final class ItemsViewDocumentationPage: RsUI.Page {
                     "ItemsView has no Items collection; it only accepts itemsSource. Loose XAML templates cannot {Binding} named properties of Swift objects, so rich items must subscribe to the inner ItemsRepeater's elementPrepared event and fill ItemContainer.child in code."
                 ),
                 tr(
-                    "ItemsView wraps that pattern: callers provide a string id list and a build closure; item content is derived from the id, so it stays stable while indexes shift on insert/remove."
+                    "The components wrap that pattern in two flavors sharing one base (ItemsViewBase): ItemsView keys items by string id (content stable across index shifts), ItemsIndexView feeds the repeater index straight into makeView (position is the identity)."
+                ),
+                tr(
+                    "The index flavor never reads itemsSource element values back — the internal vector is only a count-and-change-notification carrier — so it needs no unboxing primitives at all."
                 ),
             ]),
         Section(
@@ -118,20 +121,39 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             title: tr("Public API"),
             points: [
                 tr(
-                    "init(makeIdView:) — the only initializer parameter (view build closure, keyed by string id)."
-                ),
-                tr("setIds(_:) — full reset with a new id list (selection and scroll position reset)."),
-                tr(
-                    "appendIds(_:) / insertIds(_:at:) / removeIds(_:) / removeIndexes(_:) — incremental updates over the internal observable vector; realized items, selection and scroll position are preserved. Positions are expressed by index, identity by id (ids must be unique)."
+                    "init(makeIdView:) / init(makeView:) — the only initializer parameter of each flavor: the view build closure, keyed by string id or by index."
                 ),
                 tr(
-                    "selectedIds — id-based selection readout built on selectedIndexes + string(at:), the same reading primitive as ids (ItemsView exposes no native selection set; its selectionChanged args are an empty shell)."
+                    "setIds(_:) / setCount(_:) — full reset of the id list / item count (selection and scroll position reset)."
+                ),
+                tr(
+                    "appendIds(_:) / insertIds(_:at:) / removeIds(_:) — incremental updates of the id flavor; the index flavor does the same with append(_:), insert(_:at:) and the inherited removeIndexes(_:). Realized items, selection and scroll position are preserved."
+                ),
+                tr(
+                    "selectedIds / selectedIndexes — selection readouts. The index flavor has no id dimension (identity is the index), so selectedIndexes is its native readout; ItemsView exposes no native selection set and its selectionChanged args are an empty shell."
                 ),
                 tr(
                     "animatesItemChanges — item add/remove/move transition animations, on by default. Built on the code subclass FadeSlideItemTransitionProvider (fade+slide in, fade out, smooth reflows); other styles — e.g. the native LinedFlowLayoutItemCollectionTransitionProvider (scale in/out) — can be assigned via the inherited itemTransitionProvider."
                 ),
                 tr(
-                    "Everything else (layout, selectionMode, select/deselect, events) is inherited from ItemsView unchanged."
+                    "Everything else (layout, selectionMode, select/deselect, events, rebuildViews, verticalCacheLength) lives on ItemsViewBase and is inherited by both flavors unchanged."
+                ),
+            ]),
+        Section(
+            glyph: "\u{E71B}",
+            title: tr("String id or index"),
+            points: [
+                tr(
+                    "Pick the id flavor when items have an identity that must survive insert/remove (model keys, URLs): content derives from the id and stays put while indexes shift."
+                ),
+                tr(
+                    "Pick the index flavor when data is naturally positional (array rows, snapshot pages): no id bookkeeping, no stringify/parse round-trips, zero unboxing dependencies."
+                ),
+                tr(
+                    "After insert/remove the index flavor re-numbers content by position; realized containers not re-prepared by the repeater are reconciled on the next layout pass (displayedIndex vs getElementIndex)."
+                ),
+                tr(
+                    "A stable-integer-id flavor (database primary keys) is deliberately not provided: reading a boxed integer back returns an opaque IInspectable (as? Int always fails), so it would need an unboxing shim in the projection fork first."
                 ),
             ]),
         Section(
@@ -139,10 +161,10 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             title: tr("Usage rules"),
             points: [
                 tr(
-                    "Item views are rebuilt by id when containers are realized (virtualization included); return fresh views and never cache old elements."
+                    "Item views are rebuilt when containers are realized (virtualization included); return fresh views and never cache old elements."
                 ),
                 tr(
-                    "itemsSource is driven by one internal observable vector whose elements are the id strings (count, order and virtualization only); callers never touch it."
+                    "itemsSource is one internal observable vector callers never touch: its elements are the id strings in the id flavor, or write-only index numbers in the index flavor (count, order and change notification only)."
                 ),
                 tr(
                     "Layout stays the native ItemsView property; the default style is already a single-column StackLayout — set your own for spacing or grids."
@@ -159,10 +181,7 @@ final class ItemsViewDocumentationPage: RsUI.Page {
                     "DataTemplate content cannot be defined in pure code (WinUI has no FrameworkElementFactory), but ItemsView.itemTemplate actually accepts any IElementFactory."
                 ),
                 tr(
-                    "The projection lets Swift types implement WinRT interfaces: ItemContainerFactory returns a new ItemContainer() per getElement and no-ops recycleElement, replacing the former XAML string template."
-                ),
-                tr(
-                    "The control no longer depends on XamlReader or App.context; verified at runtime via UI Automation — items render and selection reads back correctly."
+                    "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template."
                 ),
                 tr(
                     "The internal itemsSource is a single observable vector created by the typed factory single_threaded_observable_vector (C++ shim underneath; the projection has no such factory); in-place mutations fire native VectorChanged, which drives the repeater's incremental realization."
@@ -173,160 +192,93 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             title: tr("Layout configuration"),
             points: [
                 tr(
-                    "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."
+                    "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (both flavors, selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."
                 ),
             ]),
     ]
 
-    /// `ItemsView` 源码节选 —— 手维护快照（非构建生成），随控件演进可能过期，
-    /// 以 `Sources/RsUI/Controls/ItemsView.swift` 为准；已略去 `ids` / `selectedIds`
-    /// 等简单转发属性。
+    /// `ItemsView` / `ItemsIndexView` 源码节选 —— 手维护快照（非构建生成），随控件
+    /// 演进可能过期，以 `Sources/RsUI/Controls/ItemsView.swift` 与
+    /// `Sources/RsUI/Controls/ItemsIndexView.swift` 为准；已略去 doc 注释与
+    /// 视觉树遍历辅助。
     private static var fullSource: String {
         """
-        // 节选自 Sources/RsUI/Controls/ItemsView.swift —— 手维护快照，以源文件为准。
-        open class ItemsView: WinUI.ItemsView {
+        // 节选自 Sources/RsUI/Controls —— 手维护快照，以源文件为准。
+        // 共享基座：向量载体 + repeater 接线 + 过渡动画 + 按索引增删与选择读取。
+        open class ItemsViewBase: WinUI.ItemsView {
+            internal private(set) var repeater: ItemsRepeater?
+            internal let items: WinUI.IVectorAny
 
-            public var makeIdView: (String) -> UIElement
+            // init：创建可观察向量，itemTemplate = makeContainerFactory()，
+            // itemsSource = 向量；loaded/layoutUpdated 重试 wireRepeater()，
+            // elementPrepared/elementClearing 分发到下方两个挂钩。
+            func fillContainer(_ container: ItemContainer) {}   // 叶类覆写
+            func clearContainer(_ container: ItemContainer) {}  // 叶类覆写
+            func makeContainerFactory() -> IElementFactory { ItemContainerFactory() }
 
-            private var isRepeaterWired = false
-            private var repeater: ItemsRepeater?
-            /// itemsSource 载体：单一可观察向量；计数、按索引取 id 与增删都
-            /// 直接走它，不维护 Swift 侧镜像。
-            private let items: WinUI.IVectorAny
-            /// 条目过渡动画载体（内置 FadeSlide，见 animatesItemChanges）。
-            private let transitionProvider: FadeSlideItemTransitionProvider
+            public var animatesItemChanges = true { /* 接入/摘除过渡 provider */ }
+            public var count: Int { Int((try? items.get_Size()) ?? 0) }
 
-            public init(makeIdView: @escaping (String) -> UIElement) {
-                self.makeIdView = makeIdView
-                guard let vector = single_threaded_observable_vector([]) else {
-                    fatalError("ItemsView: failed to create the observable items vector")
-                }
-                items = vector
-                transitionProvider = FadeSlideItemTransitionProvider()
-                super.init()
-                itemTemplate = ItemContainerFactory()
-                itemsSource = vector
-                // StackLayout / UniformGridLayout 都不带默认 transition provider
-                // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
-                itemTransitionProvider = transitionProvider
+            /// 按索引移除（增量）：越界告警跳过，倒序删除。
+            public func removeIndexes(_ indexes: [Int]) { /* ... */ }
 
-                loaded.addHandler { [weak self] _, _ in
-                    self?.wireRepeater()
-                }
-                layoutUpdated.addHandler { [weak self] _, _ in
-                    self?.wireRepeater()
-                }
-            }
-
-            /// 条目增删/顺移过渡动画开关（默认 true；自定义风格可改赋
-            /// itemTransitionProvider，置 nil 完全关闭）。
-            public var animatesItemChanges = true {
-                didSet {
-                    guard animatesItemChanges != oldValue else { return }
-                    itemTransitionProvider = animatesItemChanges ? transitionProvider : nil
-                }
-            }
-
-            public var count: Int {
-                Int((try? items.get_Size()) ?? 0)
-            }
-
-            /// 显示顺序下的 id 快照（ids 逐项读取同理，略）。
-            /// 向量元素是装箱字符串，string(at:)（cppwinrt 扩展）在原生侧
-            /// 一次往返完成 GetAt + 解箱。
-
-            /// 整体重置（选择与滚动位置重置）；增删走增量接口。
-            /// 注：不使用 ReplaceAll —— 投影对 [Any?] 数组的封送（AnyBridge）会崩溃。
-            public func setIds(_ newIds: [String]) {
-                try? items.Clear()
-                for id in newIds {
-                    try? items.Append(id)
-                }
-                wireRepeater()
-            }
-
-            /// 增量追加：已实现条目与选择、滚动位置保留。
-            public func appendIds(_ newIds: [String]) {
-                for id in newIds {
-                    try? items.Append(id)
-                }
-            }
-
-            /// 增量插入：其后条目索引顺移，内容按 id 保持不变。
-            public func insertIds(_ newIds: [String], at index: Int) {
-                guard !newIds.isEmpty else { return }
-                let at = min(max(0, index), count)
-                for id in newIds {
-                    try? items.InsertAt(UInt32(at), id)
-                }
-            }
-
-            /// 按 id 增量移除（顺序无关）：在 ids 快照上做纯 Swift 匹配，
-            /// 换算成索引后委托 removeIndexes；未匹配的 id 告警并跳过。
-            public func removeIds(_ idsToRemove: [String]) {
-                let removeSet = Set(idsToRemove)
-                let matched = ids.enumerated()
-                    .filter { removeSet.contains($0.element) }
-                removeIndexes(matched.map { $0.offset })
-            }
-
-            /// 按索引移除（对称 removeIds）：越界告警跳过，倒序删除。
-            public func removeIndexes(_ indexes: [Int]) {
-                let valid = Set(indexes.filter { $0 >= 0 && $0 < count })
-                for index in valid.sorted(by: >) {
-                    try? items.RemoveAt(UInt32(index))
-                }
-            }
-
-            /// id 维度的选择读取：桥接原生 selectedItems 只读视图，
-            /// 经 string(at:)（与 ids 同一读取 API 家族）逐项解箱。
-            public var selectedIds: [String] {
-                guard let selected = selectedItems else { return [] }
-                return (0..<selected.count).compactMap { selected.string(at: $0) }
-            }
-
-            public var selectedIndexes: [Int] {
-                var indexes: [Int] = []
-                var index: Int32 = 0
-                let total = Int32(count)
-                while index < total {
-                    if (try? isSelected(index)) == true { indexes.append(Int(index)) }
-                    index += 1
-                }
-                return indexes
-            }
-
-            private func wireRepeater() {
-                guard !isRepeaterWired,
-                    let found = Self.findDescendant(ItemsRepeater.self, from: self)
-                else { return }
-                isRepeaterWired = true
-                repeater = found
-                found.elementPrepared.addHandler { [weak self] _, args in
-                    guard let self, let args,
-                        let container = args.element as? ItemContainer
-                    else { return }
-                    self.fillContainer(container)
-                }
-                for container in Self.descendants(ofType: ItemContainer.self, from: self) {
-                    fillContainer(container)
-                }
-            }
-
-            private func fillContainer(_ container: ItemContainer) {
-                guard let repeater,
-                    let index = try? repeater.getElementIndex(container),
-                    index >= 0, let id = items.string(at: Int(index))
-                else { return }
-                container.child = makeIdView(id)
-            }
+            public var verticalCacheLength: Double { /* 接线前暂存 */ get { 2.0 } set {} }
+            public func rebuildViews() { itemTemplate = makeContainerFactory() }
+            public var selectedIndexes: [Int] { /* 按 isSelected 全量扫描 */ [] }
         }
 
-        private final class ItemContainerFactory: IElementFactory {
-            func getElement(_ args: ElementFactoryGetArgs!) throws -> UIElement! {
-                ItemContainer()
+        // —— 字符串 id 味：向量元素即 id，身份稳定 ——
+        open class ItemsView: ItemsViewBase {
+            public var makeIdView: (String) -> UIElement
+            public var unloadView: ((String) -> Void)?
+
+            public init(makeIdView: @escaping (String) -> UIElement) { /* ... */ }
+            public var ids: [String] { /* string(at:) 逐项解箱快照 */ [] }
+            public func setIds(_ newIds: [String]) { /* Clear + Append + wireRepeater */ }
+            public func appendIds(_ newIds: [String]) { /* 逐项 Append */ }
+            public func insertIds(_ newIds: [String], at index: Int) { /* 逐项 InsertAt */ }
+            public func removeIds(_ idsToRemove: [String]) { /* id 匹配换算索引 → removeIndexes */ }
+            public var selectedIds: [String] { /* 桥接原生 selectedItems，逐项解箱 */ [] }
+
+            override func fillContainer(_ container: ItemContainer) {
+                // getElementIndex → items.string(at:) 取 id → tag 记 id（clearing
+                // 时索引失效靠 tag 反查）→ makeIdView(id) 填 child。
             }
-            func recycleElement(_ args: ElementFactoryRecycleArgs!) throws {}
+            override func clearContainer(_ container: ItemContainer) { /* tag 解箱 → unloadView */ }
+        }
+
+        // —— 索引味：makeView 直收 repeater 索引，位置即身份，全程不读回元素值 ——
+        open class ItemsIndexView: ItemsViewBase {
+            public var makeView: (Int) -> UIElement
+            public var unloadView: ((Int) -> Void)?   // 容器最后展示的索引
+
+            public init(makeView: @escaping (Int) -> UIElement) { /* ... */ }
+            public func setCount(_ count: Int) { /* Clear + Append(索引数字) + wireRepeater */ }
+            public func append(_ count: Int) { /* 逐项 Append */ }
+            public func insert(_ count: Int, at index: Int) { /* 逐项 InsertAt + scheduleReconcile() */ }
+            public override func removeIndexes(_ indexes: [Int]) {
+                super.removeIndexes(indexes)
+                scheduleReconcile()
+            }
+
+            // 顺移对账：repeater 在下一次布局才消化向量变更，挂在 layoutUpdated
+            // 上差量重填 displayedIndex ≠ getElementIndex 的容器（幂等，与原生
+            // elementPrepared 重发共存）。
+            private func scheduleReconcile() { reconcilePending = true }
+            private func reconcileIfNeeded() { /* 差量重填 */ }
+
+            override func fillContainer(_ container: ItemContainer) {
+                // getElementIndex → 容器子类的 displayedIndex 属性记索引（免 tag
+                // 装箱解箱）→ makeView(index) 填 child。
+            }
+            override func clearContainer(_ container: ItemContainer) { /* displayedIndex → unloadView */ }
+            override func makeContainerFactory() -> IElementFactory { IndexedItemContainerFactory() }
+        }
+
+        // 索引味的条目容器：Swift 属性携带"最后展示的索引"（读回装箱 Int 是
+        // 不透明 IInspectable，as? Int 恒失败，故不走 tag）。
+        private final class IndexedItemContainer: ItemContainer {
+            var displayedIndex: Int?
         }
         """
     }

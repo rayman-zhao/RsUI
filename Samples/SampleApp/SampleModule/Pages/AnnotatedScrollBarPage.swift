@@ -87,11 +87,11 @@ final class AnnotatedScrollBarPage: RsUI.Page {
         // 固定高度：页面在 ScrollViewer 内布局（见下），不能依赖 star 行分配空间。
         demo1.height = 320
 
-        // —— 演示二：框架 ItemsView 直连 ——
-        let list = RsUI.ItemsView { id in
-            Self.makeRow(String(format: tr("Item %02d"), Int32(id) ?? 0))
+        // —— 演示二：框架 ItemsIndexView 直连 ——
+        let list = RsUI.ItemsIndexView { index in
+            Self.makeRow(String(format: tr("Item %02d"), Int32(index)))
         }
-        list.setIds((0..<Self.itemsViewCount).map(String.init))
+        list.setCount(Self.itemsViewCount)
 
         let scrollBar2 = RsUI.AnnotatedScrollBar(
             smallChange: Self.rowHeight * 3,

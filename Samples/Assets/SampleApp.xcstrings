@@ -18,6 +18,23 @@
         }
       }
     },
+    "A code-filled list over ItemsView in two flavors: string ids (identity stays stable while indexes shift) and pure indexes (content follows position). Toggle the item identity and drive the same incremental actions — inserting at the top keeps row content in the id flavor but renumbers it in the index flavor; Reset rebuilds the whole list." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A code-filled list over ItemsView in two flavors: string ids (identity stays stable while indexes shift) and pure indexes (content follows position). Toggle the item identity and drive the same incremental actions — inserting at the top keeps row content in the id flavor but renumbers it in the index flavor; Reset rebuilds the whole list."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基于 ItemsView 的代码填充列表，提供两种味：字符串 id（顺移后身份保持稳定）与纯索引（内容跟随位置）。切换条目身份、驱动同一组增量操作——在顶部插入时，id 味的行内容不动、索引味整段重新编号；Reset 整体重建列表。"
+          }
+        }
+      }
+    },
     "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -48,6 +65,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "由 AppBarToggleButton 组成、VariableSizedWrapGrid 自动布局的单选按钮组，行为类似 RadioButtons：同一时刻仅一项选中，点击已选中项不会反选。项目以 tag 字符串标识。"
+          }
+        }
+      }
+    },
+    "A stable-integer-id flavor (database primary keys) is deliberately not provided: reading a boxed integer back returns an opaque IInspectable (as? Int always fails), so it would need an unboxing shim in the projection fork first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A stable-integer-id flavor (database primary keys) is deliberately not provided: reading a boxed integer back returns an opaque IInspectable (as? Int always fails), so it would need an unboxing shim in the projection fork first."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稳定整数 id 味（数据库主键）目前刻意未提供：读回的装箱整数是不透明 IInspectable（as? Int 恒失败），需先在投影 fork 补解箱 shim。"
+          }
+        }
+      }
+    },
+    "After insert/remove the index flavor re-numbers content by position; realized containers not re-prepared by the repeater are reconciled on the next layout pass (displayedIndex vs getElementIndex)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After insert/remove the index flavor re-numbers content by position; realized containers not re-prepared by the repeater are reconciled on the next layout pass (displayedIndex vs getElementIndex)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "插入/移除后，索引味按位置重新编号内容；repeater 未重发 elementPrepared 的已实现容器，会在下一轮布局对账（displayedIndex 对比 getElementIndex）。"
           }
         }
       }
@@ -201,6 +252,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "外观"
+          }
+        }
+      }
+    },
+    "appendIds(_:) / insertIds(_:at:) / removeIds(_:) — incremental updates of the id flavor; the index flavor does the same with append(_:), insert(_:at:) and the inherited removeIndexes(_:). Realized items, selection and scroll position are preserved." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "appendIds(_:) / insertIds(_:at:) / removeIds(_:) — incremental updates of the id flavor; the index flavor does the same with append(_:), insert(_:at:) and the inherited removeIndexes(_:). Realized items, selection and scroll position are preserved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "appendIds(_:) / insertIds(_:at:) / removeIds(_:) —— id 味的增量更新；索引味对应 append(_:)、insert(_:at:) 与继承的 removeIndexes(_:)。已实现条目、选择与滚动位置都保留。"
           }
         }
       }
@@ -579,6 +647,23 @@
         }
       }
     },
+    "Everything else (layout, selectionMode, select/deselect, events, rebuildViews, verticalCacheLength) lives on ItemsViewBase and is inherited by both flavors unchanged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything else (layout, selectionMode, select/deselect, events, rebuildViews, verticalCacheLength) lives on ItemsViewBase and is inherited by both flavors unchanged."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其余（layout、selectionMode、select/deselect、事件、rebuildViews、verticalCacheLength）都在 ItemsViewBase 上，由两种味原样继承。"
+          }
+        }
+      }
+    },
     "Exit tab fullscreen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -817,6 +902,40 @@
         }
       }
     },
+    "Index" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Index"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "索引"
+          }
+        }
+      }
+    },
+    "init(makeIdView:) / init(makeView:) — the only initializer parameter of each flavor: the view build closure, keyed by string id or by index." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "init(makeIdView:) / init(makeView:) — the only initializer parameter of each flavor: the view build closure, keyed by string id or by index."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "init(makeIdView:) / init(makeView:) —— 两种味各自唯一的构造参数：条目视图构建闭包，按字符串 id 或按索引。"
+          }
+        }
+      }
+    },
     "Item %02d" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -830,6 +949,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "项目 %02d"
+          }
+        }
+      }
+    },
+    "Item identity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item identity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条目身份"
+          }
+        }
+      }
+    },
+    "Item views are rebuilt when containers are realized (virtualization included); return fresh views and never cache old elements." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item views are rebuilt when containers are realized (virtualization included); return fresh views and never cache old elements."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条目视图在容器就绪时重建（含虚拟化回收复用）；闭包应返回新视图、不要缓存旧元素。"
+          }
+        }
+      }
+    },
+    "itemsSource is one internal observable vector callers never touch: its elements are the id strings in the id flavor, or write-only index numbers in the index flavor (count, order and change notification only)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "itemsSource is one internal observable vector callers never touch: its elements are the id strings in the id flavor, or write-only index numbers in the index flavor (count, order and change notification only)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "itemsSource 是内部单一可观察向量、调用方不触碰：id 味的元素即 id 字符串，索引味的元素是只写不读的索引数字（仅承载计数、顺序与变更通知）。"
           }
         }
       }
@@ -1378,6 +1548,40 @@
         }
       }
     },
+    "Pick the id flavor when items have an identity that must survive insert/remove (model keys, URLs): content derives from the id and stays put while indexes shift." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick the id flavor when items have an identity that must survive insert/remove (model keys, URLs): content derives from the id and stays put while indexes shift."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条目有必须扛过插入/移除的身份（模型主键、URL）时选 id 味：内容由 id 派生，顺移后原地不动。"
+          }
+        }
+      }
+    },
+    "Pick the index flavor when data is naturally positional (array rows, snapshot pages): no id bookkeeping, no stringify/parse round-trips, zero unboxing dependencies." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick the index flavor when data is naturally positional (array rows, snapshot pages): no id bookkeeping, no stringify/parse round-trips, zero unboxing dependencies."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据天然按位置组织（数组行、快照页）时选索引味：没有 id 簿记、没有字符串与整数间的转换往返、零解箱依赖。"
+          }
+        }
+      }
+    },
     "Picker" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1599,6 +1803,23 @@
         }
       }
     },
+    "selectedIds / selectedIndexes — selection readouts. The index flavor has no id dimension (identity is the index), so selectedIndexes is its native readout; ItemsView exposes no native selection set and its selectionChanged args are an empty shell." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "selectedIds / selectedIndexes — selection readouts. The index flavor has no id dimension (identity is the index), so selectedIndexes is its native readout; ItemsView exposes no native selection set and its selectionChanged args are an empty shell."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "selectedIds / selectedIndexes —— 选择读取。索引味没有 id 维度（身份即索引），selectedIndexes 就是它的原生读出；ItemsView 不暴露原生选中集，selectionChanged 事件参数是空壳。"
+          }
+        }
+      }
+    },
     "selectionChanged reports the tag of the newly checked item. The button sets selectedTag programmatically — same commit path, same event." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1629,6 +1850,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "设置 isClickEnabled = true 可把整行变成按钮，点击时会记录日志。"
+          }
+        }
+      }
+    },
+    "setIds(_:) / setCount(_:) — full reset of the id list / item count (selection and scroll position reset)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "setIds(_:) / setCount(_:) — full reset of the id list / item count (selection and scroll position reset)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "setIds(_:) / setCount(_:) —— 重设 id 列表 / 条目数的整体重置（选择与滚动位置随之重置）。"
           }
         }
       }
@@ -1735,6 +1973,40 @@
         }
       }
     },
+    "String id" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "String id"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字符串 id"
+          }
+        }
+      }
+    },
+    "String id or index" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "String id or index"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字符串 id 还是索引"
+          }
+        }
+      }
+    },
     "System folder picker parented to the owning MainWindow." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1782,6 +2054,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文本文件"
+          }
+        }
+      }
+    },
+    "The components wrap that pattern in two flavors sharing one base (ItemsViewBase): ItemsView keys items by string id (content stable across index shifts), ItemsIndexView feeds the repeater index straight into makeView (position is the identity)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The components wrap that pattern in two flavors sharing one base (ItemsViewBase): ItemsView keys items by string id (content stable across index shifts), ItemsIndexView feeds the repeater index straight into makeView (position is the identity)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组件将该模式封装为共享同一基座（ItemsViewBase）的两种味：ItemsView 以字符串 id 标识条目（顺移后内容稳定），ItemsIndexView 把 repeater 索引直接喂给 makeView（位置即身份）。"
+          }
+        }
+      }
+    },
+    "The index flavor never reads itemsSource element values back — the internal vector is only a count-and-change-notification carrier — so it needs no unboxing primitives at all." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The index flavor never reads itemsSource element values back — the internal vector is only a count-and-change-notification carrier — so it needs no unboxing primitives at all."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "索引味从不读回 itemsSource 的元素值——内部向量只是计数与变更通知的载体——因此完全不依赖任何解箱原语。"
+          }
+        }
+      }
+    },
+    "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The projection lets Swift types implement WinRT interfaces: the container factory returns a new ItemContainer() (or a subclass) per getElement and no-ops recycleElement, replacing the former XAML string template."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投影允许 Swift 类型实现 WinRT 接口：容器工厂的 getElement 每次产出新 ItemContainer()（或其子类）、recycleElement 空实现，取代了此前的 XAML 字符串模板。"
           }
         }
       }
@@ -1850,6 +2173,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "主题与语言"
+          }
+        }
+      }
+    },
+    "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (both flavors, selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (both flavors, selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本页经 list.layout 设置自己的 StackLayout(spacing: 4) —— 客户端配置布局的标准方式；交互演示（两种味、选择模式、增删条目、UniformGridLayout 切换）在 Item List View 页。"
           }
         }
       }
@@ -2364,23 +2704,6 @@
         }
       }
     },
-    "Everything else (layout, selectionMode, select/deselect, events) is inherited from ItemsView unchanged." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Everything else (layout, selectionMode, select/deselect, events) is inherited from ItemsView unchanged."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "其余（layout、selectionMode、select/deselect、事件等）全部原样继承自 ItemsView。"
-          }
-        }
-      }
-    },
     "Usage rules" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2466,40 +2789,6 @@
         }
       }
     },
-    "The projection lets Swift types implement WinRT interfaces: ItemContainerFactory returns a new ItemContainer() per getElement and no-ops recycleElement, replacing the former XAML string template." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The projection lets Swift types implement WinRT interfaces: ItemContainerFactory returns a new ItemContainer() per getElement and no-ops recycleElement, replacing the former XAML string template."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "投影允许 Swift 类型实现 WinRT 接口：ItemContainerFactory 每次 getElement 返回新的 ItemContainer()、recycleElement 空实现，取代了原先的 XAML 字符串模板。"
-          }
-        }
-      }
-    },
-    "The control no longer depends on XamlReader or App.context; verified at runtime via UI Automation — items render and selection reads back correctly." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The control no longer depends on XamlReader or App.context; verified at runtime via UI Automation — items render and selection reads back correctly."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "控件不再依赖 XamlReader 与 App.context；已通过 UI Automation 在运行期验证——条目正常渲染、选择可正确读回。"
-          }
-        }
-      }
-    },
     "Layout configuration" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2513,23 +2802,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "布局配置"
-          }
-        }
-      }
-    },
-    "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本页通过 list.layout 自行配置 StackLayout(spacing: 4)——client 配置布局的标准方式；交互演示（选择模式、增删条目、UniformGridLayout 切换）见“列表视图”页。"
           }
         }
       }
@@ -2564,40 +2836,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重置"
-          }
-        }
-      }
-    },
-    "Item views are rebuilt by id when containers are realized (virtualization included); return fresh views and never cache old elements." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Item views are rebuilt by id when containers are realized (virtualization included); return fresh views and never cache old elements."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "条目视图在容器就绪（含虚拟化回收复用）时按 id 重建；闭包应返回全新视图、不要缓存复用旧元素。"
-          }
-        }
-      }
-    },
-    "itemsSource is driven by one internal observable vector whose elements are the id strings (count, order and virtualization only); callers never touch it." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "itemsSource is driven by one internal observable vector whose elements are the id strings (count, order and virtualization only); callers never touch it."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "itemsSource 由内部单个可观察向量驱动（元素即 id 字符串，仅决定数量、顺序与虚拟化），调用方无需接触。"
           }
         }
       }
@@ -2666,108 +2904,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "为什么需要 ItemsView"
-          }
-        }
-      }
-    },
-    "ItemsView wraps that pattern: callers provide a string id list and a build closure; item content is derived from the id, so it stays stable while indexes shift on insert/remove." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ItemsView wraps that pattern: callers provide a string id list and a build closure; item content is derived from the id, so it stays stable while indexes shift on insert/remove."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ItemsView 封装了这一模式：调用方提供字符串 id 列表与构建闭包；条目内容从 id 派生，插入/移除导致索引顺移时内容保持稳定。"
-          }
-        }
-      }
-    },
-    "init(makeIdView:) — the only initializer parameter (view build closure, keyed by string id)." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "init(makeIdView:) — the only initializer parameter (view build closure, keyed by string id)."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "init(makeIdView:) — 唯一的初始化参数（视图构建闭包，以字符串 id 为键）。"
-          }
-        }
-      }
-    },
-    "setIds(_:) — full reset with a new id list (selection and scroll position reset)." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "setIds(_:) — full reset with a new id list (selection and scroll position reset)."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "setIds(_:) — 用新 id 列表整体重置（选择与滚动位置重置）。"
-          }
-        }
-      }
-    },
-    "A reusable list built over ItemsView, driven by string item ids. Item views are built by a Swift closure from the id, so content stays stable while indexes shift. Add, insert and remove items incrementally — realized items, selection and scroll position are preserved; Reset goes through setIds and rebuilds the whole list." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A reusable list built over ItemsView, driven by string item ids. Item views are built by a Swift closure from the id, so content stays stable while indexes shift. Add, insert and remove items incrementally — realized items, selection and scroll position are preserved; Reset goes through setIds and rebuilds the whole list."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "基于 ItemsView 的可复用列表组件，以字符串 id 驱动。条目视图由 Swift 闭包按 id 构建，索引顺移时内容保持稳定。增删条目均为增量更新——已实现条目、选择与滚动位置保留；“重置”走 setIds 整体重建列表。"
-          }
-        }
-      }
-    },
-    "appendIds(_:) / insertIds(_:at:) / removeIds(_:) / removeIndexes(_:) — incremental updates over the internal observable vector; realized items, selection and scroll position are preserved. Positions are expressed by index, identity by id (ids must be unique)." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "appendIds(_:) / insertIds(_:at:) / removeIds(_:) / removeIndexes(_:) — incremental updates over the internal observable vector; realized items, selection and scroll position are preserved. Positions are expressed by index, identity by id (ids must be unique)."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "appendIds(_:) / insertIds(_:at:) / removeIds(_:) / removeIndexes(_:) —— 基于内部可观察向量的增量更新，已实现条目、选择与滚动位置均保留。位置以索引表达、身份以 id 表达（id 需唯一）。"
-          }
-        }
-      }
-    },
-    "selectedIds — id-based selection readout built on selectedIndexes + string(at:), the same reading primitive as ids (ItemsView exposes no native selection set; its selectionChanged args are an empty shell)." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "selectedIds — id-based selection readout built on selectedIndexes + string(at:), the same reading primitive as ids (ItemsView exposes no native selection set; its selectionChanged args are an empty shell)."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "selectedIds —— 基于 selectedIndexes + string(at:) 的 id 维度选择读取，与 ids 同一读取原语（ItemsView 无原生选中集入口，selectionChanged 事件参数是空壳）。"
           }
         }
       }

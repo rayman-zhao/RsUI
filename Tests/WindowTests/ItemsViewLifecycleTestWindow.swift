@@ -6,14 +6,23 @@ import WinUI
 
 @testable import RsUI
 
-/// ItemsView 生命周期自驱动测试窗口（无人值守，跑完自动结束进程）。
+/// ItemsView / ItemsIndexView 生命周期自驱动测试窗口（无人值守，跑完自动结束进程）。
 ///
-/// 针对 unloadView 改动的 crash 隔离测试，覆盖三个阶段：
+/// 字符串味阶段（unloadView crash 隔离）：
 /// 1. `setIds(5000)`：有限高度窗口应只实现化少量条目（虚拟化生效），
 ///    每次实现化都会走 fillContainer → `container.tag = id` 装箱路径；
 /// 2. 滚动内部 ScrollView 到中部：触发滚动回收（elementClearing →
 ///    unloadView，含 tag 反查解箱），此为布局过程中最敏感的路径；
 /// 3. `setIds([])`：所有实现化过的条目都应收到卸载回调。
+///
+/// 索引味阶段（零装箱路径 + 顺移对账）：
+/// 4. `setCount(5000)`：虚拟化同上；条目内容按索引构建，全程不读回向量元素值；
+/// 5. `insert(200, at: 0)` 与中部 `removeIndexes`：索引顺移后已实现行的编号必须
+///    严格连续递增（顺移容器无论由原生 elementPrepared 重发还是 reconcile 对账
+///    重填，结果都应一致；出现断裂/重复即内容停留在旧索引）。另记录顺移后
+///    重复构建的条目数，作为原生是否重发 elementPrepared 的实证信号；
+/// 6. `setCount(0)`：所有实现化过的索引都应收到卸载回调（displayedIndex
+///    Swift 属性反查路径，无 tag 装箱解箱）。
 ///
 /// 每阶段校验计数并输出 `IVLT:` 前缀日志，全部通过 exit(0)，断言失败或
 /// 中途 crash（进程非零退出）即为 RsUI 侧问题。
@@ -26,11 +35,22 @@ final class ItemsViewLifecycleTestWindow: Window {
         return block
     }
 
+    private let testIndexView = ItemsIndexView { _ in
+        let block = TextBlock()
+        block.text = "item"
+        block.padding = Thickness(left: 8, top: 6, right: 8, bottom: 6)
+        return block
+    }
+
     private var realizedIds: Set<String> = []
     private var unloadedIds: Set<String> = []
+    private var realizedIndexes: Set<Int> = []
+    private var unloadedIndexes: Set<Int> = []
+    private var makeViewCalls = 0
     private var failures: [String] = []
 
     private let totalIds = 5000
+    private let totalIndexes = 5000
 
     override init() {
         super.init()
@@ -40,7 +60,7 @@ final class ItemsViewLifecycleTestWindow: Window {
     }
 
     private func makeRoot() -> FrameworkElement {
-        // 主线程计数闭包在 super.init 之后挂（构造期 testItemsView 已创建，此处只挂回调）
+        // 主线程计数闭包在 super.init 之后挂（构造期两个列表已创建，此处只挂回调）
         testItemsView.makeIdView = { [weak self] id in
             guard let self else { return TextBlock() }
             self.realizedIds.insert(id)
@@ -52,10 +72,30 @@ final class ItemsViewLifecycleTestWindow: Window {
         testItemsView.unloadView = { [weak self] id in
             self?.unloadedIds.insert(id)
         }
+        testIndexView.makeView = { [weak self] index in
+            guard let self else { return TextBlock() }
+            self.realizedIndexes.insert(index)
+            self.makeViewCalls += 1
+            let block = TextBlock()
+            block.text = "item \(index)"
+            block.padding = Thickness(left: 8, top: 6, right: 8, bottom: 6)
+            return block
+        }
+        testIndexView.unloadView = { [weak self] index in
+            self?.unloadedIndexes.insert(index)
+        }
+
         let stackLayout = StackLayout()
         stackLayout.spacing = 4
         testItemsView.layout = stackLayout
         testItemsView.selectionMode = .single
+        testIndexView.layout = stackLayout
+        // 两个列表同占 star 行互斥显示：字符串味先跑，阶段4切换到索引味。
+        testIndexView.visibility = .collapsed
+
+        let listsHost = Grid()
+        listsHost.children.append(testItemsView)
+        listsHost.children.append(testIndexView)
 
         let status = TextBlock()
         status.text = "running…"
@@ -68,8 +108,8 @@ final class ItemsViewLifecycleTestWindow: Window {
         let root = Grid()
         root.rowDefinitions.append(statusRow)
         root.rowDefinitions.append(listRow)
-        root.children.append(testItemsView)
-        _ = try? Grid.setRow(testItemsView, 1)
+        root.children.append(listsHost)
+        _ = try? Grid.setRow(listsHost, 1)
         root.children.append(status)
         _ = try? Grid.setRow(status, 0)
         return root
@@ -90,6 +130,10 @@ final class ItemsViewLifecycleTestWindow: Window {
             self.check(
                 initialRealized < self.totalIds,
                 "阶段1: 虚拟化失效，实现化了全部 \(initialRealized) 条")
+            let stringContainers = ItemsViewBase.descendants(
+                ofType: ItemContainer.self, from: self.testItemsView).count
+            log.info(
+                "IVLT: 阶段1 字符串味容器共 \(stringContainers)（含 repeater 停放的已清除容器，两味共有行为）")
 
             // 阶段2：滚动到中部触发回收
             let scrollView = Self.findDescendantScrollView(from: self.testItemsView)
@@ -119,8 +163,83 @@ final class ItemsViewLifecycleTestWindow: Window {
                 neverUnloaded.isEmpty,
                 "阶段3: \(neverUnloaded.count) 个条目重置后未收到 unloadView（如 \(neverUnloaded.sorted().first ?? "?")）")
 
+            // 阶段4：切到索引味，装填并检查虚拟化（零装箱路径）
+            self.testItemsView.visibility = .collapsed
+            self.testIndexView.visibility = .visible
+            self.testIndexView.setCount(self.totalIndexes)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self.check(
+                self.realizedIndexes.count > 0,
+                "阶段4: 索引味无条目实现化（makeView 从未调用）")
+            self.check(
+                self.realizedIndexes.count < self.totalIndexes,
+                "阶段4: 索引味虚拟化失效，实现化了全部 \(self.realizedIndexes.count) 条")
+            self.checkMappedRows("阶段4: 初始装填")
+
+            // 阶段5：顶部插入 + 中部移除，顺移后已实现行编号必须连续
+            let callsBeforeInsert = self.makeViewCalls
+            let realizedBeforeInsert = self.realizedIndexes
+            self.testIndexView.insert(200, at: 0)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self.checkMappedRows("阶段5: 顶部插入后")
+            let rebuildsAfterInsert = self.makeViewCalls - callsBeforeInsert
+                - (self.realizedIndexes.subtracting(realizedBeforeInsert).count)
+            log.info(
+                "IVLT: insert 后重复构建 \(rebuildsAfterInsert) 条（>0 = 原生对顺移容器重发了 elementPrepared；=0 = 全靠 reconcile 对账重填）")
+
+            self.testIndexView.removeIndexes(Array(1500..<1600))
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self.checkMappedRows("阶段5: 中部移除后")
+
+            // 阶段6：整体清空，所有实现化过的索引都应收到卸载回调
+            self.testIndexView.setCount(0)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            let neverUnloadedIndexes = self.realizedIndexes.subtracting(self.unloadedIndexes)
+            self.check(
+                neverUnloadedIndexes.isEmpty,
+                "阶段6: \(neverUnloadedIndexes.count) 个索引重置后未收到 unloadView（如 \(neverUnloadedIndexes.sorted().first.map(String.init) ?? "?")）")
+
             self.report()
         }
+    }
+
+    /// 索引味顺移一致性断言：被 repeater 映射的容器（`getElementIndex >= 0`）
+    /// 内容必须精确等于其索引——比连续性更强，直接覆盖"顺移后内容停留旧索引"
+    /// 的失败形态（原生未重发 elementPrepared 且 reconcile 未对上）。
+    /// repeater 停放的已清除容器（映射为 -1，两味共有行为）不参与断言，
+    /// 只记数观察是否无界累积。
+    private func checkMappedRows(_ stage: String) {
+        let containers = ItemsViewBase.descendants(
+            ofType: ItemContainer.self, from: testIndexView)
+        guard let repeater = ItemsViewBase.descendants(
+            ofType: WinUI.ItemsRepeater.self, from: testIndexView
+        ).first else {
+            check(false, "\(stage): 未找到内部 ItemsRepeater")
+            return
+        }
+        var mapped = 0
+        var parked = 0
+        var mismatches: [String] = []
+        for container in containers {
+            guard let index = try? repeater.getElementIndex(container), index >= 0 else {
+                parked += 1
+                continue
+            }
+            mapped += 1
+            let text = (container.child as? TextBlock)?.text
+            let number = text.flatMap {
+                $0.hasPrefix("item ") ? Int($0.dropFirst("item ".count)) : nil
+            }
+            if number != Int(index) {
+                mismatches.append("index \(index) 显示 \(number.map(String.init) ?? "nil")")
+            }
+        }
+        log.info(
+            "IVLT: \(stage) 映射容器 \(mapped)/共 \(containers.count)（停放未映射 \(parked)）")
+        check(
+            mismatches.isEmpty,
+            "\(stage): \(mismatches.count) 个映射容器内容与索引不符（\(mismatches.prefix(3).joined(separator: "；"))）")
+        check(mapped >= 2, "\(stage): 可校验的映射行不足（\(mapped) 行）")
     }
 
     private func check(_ condition: Bool, _ message: String) {
@@ -135,7 +254,7 @@ final class ItemsViewLifecycleTestWindow: Window {
     private func report() {
         if failures.isEmpty {
             log.info(
-                "IVLT: ALL PASS — realized=\(realizedIds.count) unloaded=\(unloadedIds.count)")
+                "IVLT: ALL PASS — ids realized=\(realizedIds.count) unloaded=\(unloadedIds.count); indexes realized=\(realizedIndexes.count) unloaded=\(unloadedIndexes.count)")
             exit(0)
         } else {
             for failure in failures {

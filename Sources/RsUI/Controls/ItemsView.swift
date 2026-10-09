@@ -3,7 +3,211 @@ import RsFoundation
 import WinUI
 import WindowsFoundation
 
-/// 基于 `WinUI.ItemsView` 的"代码填充"列表组件，以字符串 id 标识条目。
+/// `ItemsView` 系列表组件的共享基座，承载与"条目身份"无关的全部机制：
+/// 内部可观察向量（itemsSource 的计数与变更通知载体）、repeater 接线
+/// （`elementPrepared` / `elementClearing` 分发到 `fillContainer` /
+/// `clearContainer` 挂钩）、条目过渡动画、按索引增删与选择索引读取。
+///
+/// 两个叶类：
+/// - ``ItemsView`` —— 字符串 id 味（向量元素即 id，身份稳定，内容按 id 构建）；
+/// - ``ItemsIndexView`` —— 索引味（`makeView` 直接收 repeater 索引，位置即身份，
+///   全程不读回向量元素值，不依赖任何装箱解箱原语）。
+open class ItemsViewBase: WinUI.ItemsView {
+
+    private var isRepeaterWired = false
+    /// 视觉树内部的 ItemsRepeater（elementPrepared 订阅与索引换算用）。
+    /// 事件闭包只弱引用 self，避免 repeater → 事件闭包 → repeater 的引用循环。
+    internal private(set) var repeater: ItemsRepeater?
+    /// itemsSource 的载体：单一可观察向量（经 C++ shim 创建，投影里没有对应工厂）。
+    /// 元素含义由叶类决定——字符串味元素即 id；索引味元素为索引数字、只写不读。
+    internal let items: WinUI.IVectorAny
+    /// 条目过渡动画的载体（内置 `FadeSlideItemTransitionProvider`，
+    /// 见 `animatesItemChanges`）。
+    private let transitionProvider: FadeSlideItemTransitionProvider
+
+    override internal init() {
+        guard let vector = single_threaded_observable_vector([]) else {
+            fatalError("ItemsViewBase: failed to create the observable items vector")
+        }
+        items = vector
+        transitionProvider = FadeSlideItemTransitionProvider()
+        super.init()
+
+        // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
+        // 经 elementPrepared 在代码里填 child，见 makeContainerFactory 与文件尾工厂。
+        itemTemplate = makeContainerFactory()
+        itemsSource = vector
+        // StackLayout / UniformGridLayout 都不带默认 transition provider
+        // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
+        itemTransitionProvider = transitionProvider
+
+        // elementPrepared 挂在内部 ItemsRepeater 上。loaded 时 repeater 可能尚未
+        // 进视觉树（模板应用时序），layoutUpdated 重试到成功为止。
+        loaded.addHandler { [weak self] _, _ in
+            self?.wireRepeater()
+        }
+        layoutUpdated.addHandler { [weak self] _, _ in
+            self?.wireRepeater()
+        }
+    }
+
+    /// 产出 itemTemplate 的代码工厂。`rebuildViews()` 依赖换入新实例触发
+    /// ItemsRepeater 的整体 Reset；叶类可覆写以产出自己的容器子类
+    /// （见 `ItemsIndexView` 的 `IndexedItemContainer`）。
+    func makeContainerFactory() -> IElementFactory {
+        ItemContainerFactory()
+    }
+
+    /// 条目增删/顺移是否播放过渡动画（默认 `true`）。
+    ///
+    /// 内置 `FadeSlideItemTransitionProvider`：新增淡入上滑、移除淡出、索引
+    /// 顺移平滑位移；整体重置（`ItemsView.setIds` / `ItemsIndexView.setCount`）
+    /// 按新增动画整体重新入场。需要其他风格时，直接改赋继承自 `WinUI.ItemsView`
+    /// 的 `itemTransitionProvider`（如原生缩放风格的
+    /// `LinedFlowLayoutItemCollectionTransitionProvider`；置 `nil` 即完全关闭）。
+    public var animatesItemChanges = true {
+        didSet {
+            guard animatesItemChanges != oldValue else { return }
+            itemTransitionProvider = animatesItemChanges ? transitionProvider : nil
+        }
+    }
+
+    /// 当前条目数。
+    public var count: Int {
+        Int((try? items.get_Size()) ?? 0)
+    }
+
+    /// 按索引移除条目（增量更新：选择与滚动位置保留）。索引基于当前状态，
+    /// 顺序无关；越界索引告警并跳过。
+    ///
+    /// 注意：索引顺移后的已实现容器内容一致性由叶类负责——字符串味天然成立
+    /// （id 不随顺移变化），索引味覆写本方法补顺移对账（见 `ItemsIndexView`）。
+    public func removeIndexes(_ indexes: [Int]) {
+        guard !indexes.isEmpty, count > 0 else { return }
+        let valid = Set(indexes.filter { $0 >= 0 && $0 < count })
+        let invalid = Set(indexes).subtracting(valid)
+        if !invalid.isEmpty {
+            log.warning("ItemsViewBase: removeIndexes skips out-of-range indexes: \(invalid.sorted())")
+        }
+        for index in valid.sorted(by: >) {
+            try? items.RemoveAt(UInt32(index))
+        }
+    }
+
+    /// 内部 ItemsRepeater 的垂直实现缓存长度(视口倍数,视口上下各按此倍数
+    /// 预实现条目;WinUI 默认 2)。repeater 接线前赋值会先暂存,接线时落上。
+    ///
+    /// 用途:UniformGridLayout 恒以 index 0 校准条目尺寸——0 离开实现窗口后
+    /// 布局每趟走 ForceCreate(0)→测量→Recycle 的昂贵路径,其记账进出使
+    /// 未实现区估高翻转一行(视口被锚点补偿拨动、贴底时滚动条 thumb 停不到
+    /// 底的根源)。把缓存加宽到盖住整个内容即可让 0 恒在实现窗口内。
+    public var verticalCacheLength: Double {
+        get { repeater?.verticalCacheLength ?? pendingVerticalCacheLength ?? 2.0 }
+        set {
+            pendingVerticalCacheLength = newValue
+            repeater?.verticalCacheLength = newValue
+        }
+    }
+
+    private var pendingVerticalCacheLength: Double?
+
+    /// 丢弃并重建全部已实现条目的视图，条目集合本身不变。
+    ///
+    /// 通过换一个新的 ItemTemplate 工厂实例实现：ItemsRepeater 对模板变更做
+    /// 整体 Reset——已实现容器先卸载（回调 `unloadView`），下次布局经
+    /// 新工厂重新实现化（`makeIdView` / `makeView` 重建）。itemsSource 不动，
+    /// 选择与滚动位置全部保留，适合“条目不变、视图需要按新参数重造”的场景
+    /// （如布局档位切换）；条目集合有变化时仍应整体重设。
+    /// 注意模板变更不允许发生在 repeater 自身布局进行中（WinUI 会抛错），
+    /// 在 sizeChanged 等布局完成后的事件里调用是安全的。
+    public func rebuildViews() {
+        itemTemplate = makeContainerFactory()
+    }
+
+    /// 当前选中条目索引（升序）。ItemsView 不暴露选中索引集（`selectedItems`
+    /// 只有值），按 `isSelected` 全量扫描。
+    public var selectedIndexes: [Int] {
+        var indexes: [Int] = []
+        var index: Int32 = 0
+        let total = Int32(count)
+        while index < total {
+            if (try? isSelected(index)) == true { indexes.append(Int(index)) }
+            index += 1
+        }
+        return indexes
+    }
+
+    // MARK: - 内部布线
+
+    /// 在视觉树内定位内部 ItemsRepeater 并订阅 elementPrepared/elementClearing。
+    /// 已接线后为空操作；条目整体重设后调用可重试（repeater 尚未进树的早期窗口）。
+    func wireRepeater() {
+        guard !isRepeaterWired,
+            let found = Self.findDescendant(ItemsRepeater.self, from: self)
+        else { return }
+        isRepeaterWired = true
+        repeater = found
+        if let pending = pendingVerticalCacheLength {
+            found.verticalCacheLength = pending
+        }
+        found.elementPrepared.addHandler { [weak self] _, args in
+            guard let self, let args, let container = args.element as? ItemContainer
+            else { return }
+            self.fillContainer(container)
+        }
+        found.elementClearing.addHandler { [weak self] _, args in
+            guard let self, let args, let container = args.element as? ItemContainer
+            else { return }
+            self.clearContainer(container)
+        }
+        // 兜底：订阅前已实现的容器不会再触发 elementPrepared。
+        for container in Self.descendants(ofType: ItemContainer.self, from: self) {
+            fillContainer(container)
+        }
+    }
+
+    /// 容器就绪（elementPrepared 或兜底填充）时填入条目内容，叶类覆写。
+    func fillContainer(_ container: ItemContainer) {}
+
+    /// 容器卸载（elementClearing）时清理，叶类覆写。
+    func clearContainer(_ container: ItemContainer) {}
+
+    /// 深度优先查找指定类型的后代元素（取内部 ItemsRepeater 用）。
+    private static func findDescendant<T: FrameworkElement>(
+        _ type: T.Type, from root: DependencyObject
+    ) -> T? {
+        let count = (try? VisualTreeHelper.getChildrenCount(root)) ?? 0
+        var index: Int32 = 0
+        while index < count {
+            if let child = try? VisualTreeHelper.getChild(root, index) {
+                if let match = child as? T { return match }
+                if let found = findDescendant(type, from: child) { return found }
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    /// 收集指定类型的全部后代（订阅前已实现容器的兜底填充、顺移对账用）。
+    static func descendants<T: FrameworkElement>(
+        ofType type: T.Type, from root: DependencyObject
+    ) -> [T] {
+        var result: [T] = []
+        let count = (try? VisualTreeHelper.getChildrenCount(root)) ?? 0
+        var index: Int32 = 0
+        while index < count {
+            if let child = try? VisualTreeHelper.getChild(root, index) {
+                if let match = child as? T { result.append(match) }
+                result.append(contentsOf: descendants(ofType: type, from: child))
+            }
+            index += 1
+        }
+        return result
+    }
+}
+
+/// 基于 `WinUI.ItemsView` 的"代码填充"列表组件（字符串 id 味），以字符串 id
+/// 标识条目。条目数据天然按位置组织、无需稳定字符串身份时用 ``ItemsIndexView``。
 ///
 /// ItemsView 没有 `Items` 集合（只能走 `itemsSource`），loose XAML 模板又无法
 /// `{Binding}` Swift 对象的具名属性，因此富内容条目需要订阅内部 ItemsRepeater
@@ -38,16 +242,14 @@ import WindowsFoundation
 /// - 条目增删/顺移默认播放过渡动画（`animatesItemChanges` 可关）：内置
 ///   `FadeSlideItemTransitionProvider` —— 新增淡入上滑、移除淡出、索引顺移
 ///   平滑位移；`setIds` 整体重置按新增动画整体重新入场。需要其他风格时直接
-///   改赋继承的 `itemTransitionProvider`（如原生缩放风格的
-///   `LinedFlowLayoutItemCollectionTransitionProvider`，或继承
-///   `ItemCollectionTransitionProvider` 自写子类）。
+///   改赋继承的 `itemTransitionProvider`。
 /// - 布局沿用 ItemsView 原生 `layout` 属性（默认样式即单列 StackLayout），
 ///   需要条目间距或网格布局时由调用方自行设置。
 /// - 选择沿用 ItemsView 原生语义（`selectionMode` / `select` / `deselect`，按索引），
 ///   id 维度的便捷读取走 `selectedIds`（`selectionChanged` 事件参数是空壳）。
 /// - 列表需要有限高度的父容器（如 Grid 星型行）才能在内部滚动；
 ///   放进无限高的垂直 StackPanel 会导致内部滚动失效。
-open class ItemsView: WinUI.ItemsView {
+open class ItemsView: ItemsViewBase {
 
     /// 按 id 构建条目视图。容器因虚拟化被回收复用时会再次调用，需返回新实例。
     public var makeIdView: (String) -> UIElement
@@ -60,62 +262,10 @@ open class ItemsView: WinUI.ItemsView {
     /// 视觉树的视图。增量增删接口只移动容器不卸载它们，不触发本回调。
     public var unloadView: ((String) -> Void)?
 
-    private var isRepeaterWired = false
-    /// 视觉树内部的 ItemsRepeater（elementPrepared 订阅与索引换算用）。
-    /// 事件闭包只弱引用 self，避免 repeater → 事件闭包 → repeater 的引用循环。
-    private var repeater: ItemsRepeater?
-    /// itemsSource 的载体：单一可观察向量（经 C++ shim 创建，投影里没有对应工厂）。
-    /// 元素即 id 字符串；计数、按索引取 id 与增删都直接走它，不维护 Swift 侧镜像。
-    private let items: WinUI.IVectorAny
-    /// 条目过渡动画的载体（内置 `FadeSlideItemTransitionProvider`，
-    /// 见 `animatesItemChanges`）。
-    private let transitionProvider: FadeSlideItemTransitionProvider
-
     /// - Parameter makeIdView: 条目视图构建闭包（按 id）。
     public init(makeIdView: @escaping (String) -> UIElement) {
         self.makeIdView = makeIdView
-        guard let vector = single_threaded_observable_vector([]) else {
-            fatalError("ItemsView: failed to create the observable items vector")
-        }
-        items = vector
-        transitionProvider = FadeSlideItemTransitionProvider()
         super.init()
-
-        // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
-        // 经 elementPrepared 在代码里填 child，见文件尾的 ItemContainerFactory。
-        itemTemplate = ItemContainerFactory()
-        itemsSource = vector
-        // StackLayout / UniformGridLayout 都不带默认 transition provider
-        // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
-        itemTransitionProvider = transitionProvider
-
-        // elementPrepared 挂在内部 ItemsRepeater 上。loaded 时 repeater 可能尚未
-        // 进视觉树（模板应用时序），layoutUpdated 重试到成功为止。
-        loaded.addHandler { [weak self] _, _ in
-            self?.wireRepeater()
-        }
-        layoutUpdated.addHandler { [weak self] _, _ in
-            self?.wireRepeater()
-        }
-    }
-
-    /// 条目增删/顺移是否播放过渡动画（默认 `true`）。
-    ///
-    /// 内置 `FadeSlideItemTransitionProvider`：新增淡入上滑、移除淡出、索引
-    /// 顺移平滑位移；`setIds` 整体重置按新增动画整体重新入场。需要其他风格时，
-    /// 直接改赋继承自 `WinUI.ItemsView` 的 `itemTransitionProvider`（如原生
-    /// 缩放风格的 `LinedFlowLayoutItemCollectionTransitionProvider`；置 `nil`
-    /// 即完全关闭）。
-    public var animatesItemChanges = true {
-        didSet {
-            guard animatesItemChanges != oldValue else { return }
-            itemTransitionProvider = animatesItemChanges ? transitionProvider : nil
-        }
-    }
-
-    /// 当前条目数。
-    public var count: Int {
-        Int((try? items.get_Size()) ?? 0)
     }
 
     /// 显示顺序下的 id 快照（升序）。按索引逐项读取向量（GetMany 的数组
@@ -166,52 +316,6 @@ open class ItemsView: WinUI.ItemsView {
         removeIndexes(matchedPairs.map { $0.offset })
     }
 
-    /// 按索引移除条目（增量更新：选择与滚动位置保留）。索引基于当前状态，
-    /// 顺序无关；越界索引告警并跳过。
-    public func removeIndexes(_ indexes: [Int]) {
-        guard !indexes.isEmpty, count > 0 else { return }
-        let valid = Set(indexes.filter { $0 >= 0 && $0 < count })
-        let invalid = Set(indexes).subtracting(valid)
-        if !invalid.isEmpty {
-            log.warning("ItemsView: removeIndexes skips out-of-range indexes: \(invalid.sorted())")
-        }
-        for index in valid.sorted(by: >) {
-            try? items.RemoveAt(UInt32(index))
-        }
-    }
-
-    // MARK: - 条目视图重建
-
-    /// 内部 ItemsRepeater 的垂直实现缓存长度(视口倍数,视口上下各按此倍数
-    /// 预实现条目;WinUI 默认 2)。repeater 接线前赋值会先暂存,接线时落上。
-    ///
-    /// 用途:UniformGridLayout 恒以 index 0 校准条目尺寸——0 离开实现窗口后
-    /// 布局每趟走 ForceCreate(0)→测量→Recycle 的昂贵路径,其记账进出使
-    /// 未实现区估高翻转一行(视口被锚点补偿拨动、贴底时滚动条 thumb 停不到
-    /// 底的根源)。把缓存加宽到盖住整个内容即可让 0 恒在实现窗口内。
-    public var verticalCacheLength: Double {
-        get { repeater?.verticalCacheLength ?? pendingVerticalCacheLength ?? 2.0 }
-        set {
-            pendingVerticalCacheLength = newValue
-            repeater?.verticalCacheLength = newValue
-        }
-    }
-
-    private var pendingVerticalCacheLength: Double?
-
-    /// 丢弃并重建全部已实现条目的视图，条目集合本身不变。
-    ///
-    /// 通过换一个新的 ItemTemplate 工厂实现：ItemsRepeater 对模板变更做
-    /// 整体 Reset——已实现容器先卸载（回调 `unloadView`），下次布局经
-    /// 新工厂按 id 重新实现化（`makeIdView` 重建）。itemsSource 不动，
-    /// 选择与滚动位置全部保留，适合“id 不变、视图需要按新参数重造”的
-    /// 场景（如布局档位切换）；id 有变化时仍应走 `setIds`。
-    /// 注意模板变更不允许发生在 repeater 自身布局进行中（WinUI 会抛错），
-    /// 在 sizeChanged 等布局完成后的事件里调用是安全的。
-    public func rebuildViews() {
-        itemTemplate = ItemContainerFactory()
-    }
-
     // MARK: - 选择便捷读取
 
     /// 当前选中条目 id（按视图顺序）。桥接 ItemsView 原生 `selectedItems`
@@ -222,47 +326,9 @@ open class ItemsView: WinUI.ItemsView {
         return (0..<selected.count).compactMap { selected.string(at: $0) }
     }
 
-    /// 当前选中条目索引（升序）。ItemsView 不暴露选中索引集（`selectedItems`
-    /// 只有值），按 `isSelected` 全量扫描。
-    public var selectedIndexes: [Int] {
-        var indexes: [Int] = []
-        var index: Int32 = 0
-        let total = Int32(count)
-        while index < total {
-            if (try? isSelected(index)) == true { indexes.append(Int(index)) }
-            index += 1
-        }
-        return indexes
-    }
+    // MARK: - 容器填充
 
-    // MARK: - 内部布线
-
-    private func wireRepeater() {
-        guard !isRepeaterWired,
-            let found = Self.findDescendant(ItemsRepeater.self, from: self)
-        else { return }
-        isRepeaterWired = true
-        repeater = found
-        if let pending = pendingVerticalCacheLength {
-            found.verticalCacheLength = pending
-        }
-        found.elementPrepared.addHandler { [weak self] _, args in
-            guard let self, let args, let container = args.element as? ItemContainer
-            else { return }
-            self.fillContainer(container)
-        }
-        found.elementClearing.addHandler { [weak self] _, args in
-            guard let self, let args, let container = args.element as? ItemContainer
-            else { return }
-            self.clearContainer(container)
-        }
-        // 兜底：订阅前已实现的容器不会再触发 elementPrepared。
-        for container in Self.descendants(ofType: ItemContainer.self, from: self) {
-            fillContainer(container)
-        }
-    }
-
-    private func fillContainer(_ container: ItemContainer) {
+    override func fillContainer(_ container: ItemContainer) {
         guard let repeater,
             let index = try? repeater.getElementIndex(container),
             index >= 0, let id = items.string(at: Int(index))
@@ -272,7 +338,7 @@ open class ItemsView: WinUI.ItemsView {
         container.child = makeIdView(id)
     }
 
-    private func clearContainer(_ container: ItemContainer) {
+    override func clearContainer(_ container: ItemContainer) {
         guard let id = Self.tagString(container.tag) else { return }
         // 注意：不能置 container.child = nil —— ItemContainer.Child 拒绝 null
         // （put 抛 E_INVALIDARG，经 try! 投影直接致命崩溃）。容器本身会被
@@ -287,45 +353,17 @@ open class ItemsView: WinUI.ItemsView {
     private static func tagString(_ tag: Any?) -> String? {
         (tag as? String) ?? (tag as? WindowsFoundation.IInspectable)?.boxedString
     }
-
-    /// 深度优先查找指定类型的后代元素（取内部 ItemsRepeater 用）。
-    private static func findDescendant<T: FrameworkElement>(
-        _ type: T.Type, from root: DependencyObject
-    ) -> T? {
-        let count = (try? VisualTreeHelper.getChildrenCount(root)) ?? 0
-        var index: Int32 = 0
-        while index < count {
-            if let child = try? VisualTreeHelper.getChild(root, index) {
-                if let match = child as? T { return match }
-                if let found = findDescendant(type, from: child) { return found }
-            }
-            index += 1
-        }
-        return nil
-    }
-
-    /// 收集指定类型的全部后代（订阅前已实现容器的兜底填充用）。
-    private static func descendants<T: FrameworkElement>(
-        ofType type: T.Type, from root: DependencyObject
-    ) -> [T] {
-        var result: [T] = []
-        let count = (try? VisualTreeHelper.getChildrenCount(root)) ?? 0
-        var index: Int32 = 0
-        while index < count {
-            if let child = try? VisualTreeHelper.getChild(root, index) {
-                if let match = child as? T { result.append(match) }
-                result.append(contentsOf: descendants(ofType: type, from: child))
-            }
-            index += 1
-        }
-        return result
-    }
 }
 
 /// `itemTemplate` 的代码工厂：每次产出新的 `ItemContainer`。`DataTemplate` 的内容
 /// 无法纯代码定义（WinUI 没有 WPF 的 `FrameworkElementFactory`），而 ItemsView 的
 /// `itemTemplate` 收的是 `IElementFactory` —— 投影允许 Swift 类型直接实现该接口，
 /// 借此免去为这么个空模板走 `XamlReader`。
+///
+/// 已知行为留档（IVLT 实测，两味共有）：repeater 清除容器后会将其停放在自身
+/// 子集合里（`getElementIndex` 返回 -1、不可复用），本工厂每次 get 新建 →
+/// 停放容器随实现化窗口更替单调累积（unloadView 会照常回调，功能无碍，
+/// 内存缓慢增长）。若要修复，方向是让 recycleElement 真正取回并复用容器。
 private final class ItemContainerFactory: IElementFactory {
 
     func getElement(_ args: ElementFactoryGetArgs!) throws -> UIElement! {
