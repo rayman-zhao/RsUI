@@ -203,6 +203,12 @@ open class AnnotatedScrollBar: WinUI.Grid {
     private var attachedScrollView: WinUI.ScrollView?
     private weak var attachedList: WinUI.ItemsView?
 
+    /// 上下箭头按钮的单次滚动步进（内容坐标）；attach 后可随条目尺寸变化更新。
+    public var smallChange: Double {
+        get { nativeBar.smallChange }
+        set { nativeBar.smallChange = newValue }
+    }
+
     /// - Parameters:
     ///   - smallChange: 上下箭头按钮的单次滚动步进（内容坐标）。
     ///   - labels: 标签规格闭包。重排时（窗口缩放等）会重新求值——offset 依赖
@@ -308,6 +314,26 @@ open class AnnotatedScrollBar: WinUI.Grid {
     }
 
     // MARK: - Label repopulation
+
+    /// 挂宿主一次性 layoutUpdated 的注销凭据（refreshLabelsAfterLayout 用）。
+    private var labelRefreshCleanup: EventCleanup?
+
+    /// 宿主条目集整体重设（如 `setIds`）后的标签重填：extent 要到下一次布局趟
+    /// 才更新，同步重填会以旧 extent 算标签 offset——内部挂宿主一次性
+    /// layoutUpdated，布局完成后重填并注销；重复调用合并为一次。未 attach 时
+    /// 为空操作（attach 后的 loaded/sizeChanged 自然会填）。
+    public func refreshLabelsAfterLayout() {
+        guard let host: WinUI.FrameworkElement = attachedList ?? attachedScrollView,
+            labelRefreshCleanup == nil
+        else { return }
+        labelRefreshCleanup = host.layoutUpdated.addHandler { [weak self] _, _ in
+            guard let self else { return }
+            let cleanup = self.labelRefreshCleanup
+            self.labelRefreshCleanup = nil
+            cleanup?.dispose()
+            self.repopulate()
+        }
+    }
 
     /// 重填标签集合并按当前 specs 重建模板选择器。集合与 labelTemplate 的变动
     /// 都会触发控件内部约 50ms 防抖的标签重排（同一防抖合并）。
