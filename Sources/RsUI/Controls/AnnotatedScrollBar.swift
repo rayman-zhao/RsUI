@@ -212,7 +212,8 @@ open class AnnotatedScrollBar: WinUI.Grid {
     /// 内部原生控件的启用态（rail/箭头灰显、不可交互）。本封装是 Grid、没有
     /// `Control.isEnabled`，经此直通。组件在每个标签重填点（attach / loaded /
     /// 宿主 sizeChanged / `refreshLabelsAfterLayout`）按宿主当前可滚动高度
-    /// **自动同步**——无可滚动内容即禁用；手动赋值会被下一次重填覆盖。
+    /// **自动同步**——无可滚动内容即禁用并收起 thumb；手动赋值会被下一次
+    /// 重填覆盖。
     public var isEnabled: Bool {
         get { nativeBar.isEnabled }
         set { nativeBar.isEnabled = newValue }
@@ -317,6 +318,10 @@ open class AnnotatedScrollBar: WinUI.Grid {
             guard let args else { return }
             self?.onScrolling?(args)
         }
+        // 模板应用（thumb 部件就绪）后的可用性补同步，见 syncAvailability
+        nativeBar.loaded.addHandler { [weak self] _, _ in
+            self?.syncAvailability()
+        }
         if detailLabelMode == .overlay && detailText != nil {
             bindDetailOverlayTracking()
         }
@@ -346,10 +351,10 @@ open class AnnotatedScrollBar: WinUI.Grid {
 
     /// 重填标签集合并按当前 specs 重建模板选择器。集合与 labelTemplate 的变动
     /// 都会触发控件内部约 50ms 防抖的标签重排（同一防抖合并）。
-    /// 可用性在此同批同步：宿主无可滚动内容时禁用（rail/箭头灰显）。重填点
-    /// 有界，滚动中的 extent 抖动不会触发翻转。
+    /// 可用性在此同批同步（见 syncAvailability），重填点有界，滚动中的
+    /// extent 抖动不会触发翻转。
     private func repopulate() {
-        nativeBar.isEnabled = hostScrollableHeight() > 0
+        syncAvailability()
         let specs = labelsProvider()
         var templatesByOffset: [Double: WinUI.DataTemplate] = [:]
         for spec in specs {
@@ -359,6 +364,19 @@ open class AnnotatedScrollBar: WinUI.Grid {
         nativeBar.labels.clear()
         for spec in specs {
             nativeBar.labels.append(WinUI.AnnotatedScrollBarLabel(spec.text, spec.scrollOffset))
+        }
+    }
+
+    /// 按宿主可滚动高度同步启用态与 thumb 可见性。禁用态下原生模板的 thumb
+    /// 仍以主题色渲染、悬在灰 rail 里像可拖，无可滚动内容时直接收起。
+    /// 模板部件要 OnApplyTemplate 之后才存在——重填点之外另挂 loaded 补一次
+    /// （模板应用早于 loaded，两处都调幂等）。收起 thumb 不改控件布局宽度，
+    /// 不会牵动宿主的列宽反馈。
+    private func syncAvailability() {
+        let scrollable = hostScrollableHeight() > 0
+        nativeBar.isEnabled = scrollable
+        if let thumb = Self.findNamedElement(nativeBar, name: "PART_VerticalThumb") {
+            thumb.visibility = scrollable ? .visible : .collapsed
         }
     }
 
