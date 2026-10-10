@@ -209,6 +209,15 @@ open class AnnotatedScrollBar: WinUI.Grid {
         set { nativeBar.smallChange = newValue }
     }
 
+    /// 内部原生控件的启用态（rail/箭头灰显、不可交互）。本封装是 Grid、没有
+    /// `Control.isEnabled`，经此直通。组件在每个标签重填点（attach / loaded /
+    /// 宿主 sizeChanged / `refreshLabelsAfterLayout`）按宿主当前可滚动高度
+    /// **自动同步**——无可滚动内容即禁用；手动赋值会被下一次重填覆盖。
+    public var isEnabled: Bool {
+        get { nativeBar.isEnabled }
+        set { nativeBar.isEnabled = newValue }
+    }
+
     /// - Parameters:
     ///   - smallChange: 上下箭头按钮的单次滚动步进（内容坐标）。
     ///   - labels: 标签规格闭包。重排时（窗口缩放等）会重新求值——offset 依赖
@@ -337,7 +346,10 @@ open class AnnotatedScrollBar: WinUI.Grid {
 
     /// 重填标签集合并按当前 specs 重建模板选择器。集合与 labelTemplate 的变动
     /// 都会触发控件内部约 50ms 防抖的标签重排（同一防抖合并）。
+    /// 可用性在此同批同步：宿主无可滚动内容时禁用（rail/箭头灰显）。重填点
+    /// 有界，滚动中的 extent 抖动不会触发翻转。
     private func repopulate() {
+        nativeBar.isEnabled = hostScrollableHeight() > 0
         let specs = labelsProvider()
         var templatesByOffset: [Double: WinUI.DataTemplate] = [:]
         for spec in specs {
