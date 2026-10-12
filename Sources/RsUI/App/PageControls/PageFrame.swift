@@ -28,6 +28,10 @@ class PageFrame: PageTransitionHost, PageControl {
     /// 间共享的形态（`PageTabView`）：切 tab 时把共享 frame 的 model 重设到目标
     /// tab 的 `PageModel`，并立刻渲染其 currentPage。
     func rebind(to newModel: PageModel) {
+        // 同 model 直接跳过：TabView 条带折叠→可见的实现中途会重发 selectionChanged
+        // （选中项未变），此时同步重渲染会在 XAML 处理中途改视觉树，put_Child 抛
+        // E_INVALIDARG（Ctrl+点击 nav item 的 .newTabNoFocus 路径）
+        guard newModel !== model else { return }
         model = newModel
         render()
     }
