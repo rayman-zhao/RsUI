@@ -186,6 +186,10 @@ open class AnnotatedScrollBar: WinUI.Grid {
     private let detailLabelMode: AnnotatedScrollBarDetailLabelMode
     /// 按文本缓存已加载的模板，避免 resize 重排时重复 XamlReader 加载。
     private var labelTemplatesByText: [String: WinUI.DataTemplate] = [:]
+    /// 当前挂在 labelTemplate 上的选择器（强持有，repopulate 换新时替换）：
+    /// XAML 模板系统会在标签重排的异步路径调用 SelectTemplate，临时表达式
+    /// 赋值会留下与 scroll-controller 桥同族的悬空调用面。
+    private var labelSelector: AnnotatedScrollBarLabelTemplateSelector?
 
     /// overlay 模式状态（懒创建）。
     private var detailOverlay: WinUI.Border?
@@ -202,6 +206,11 @@ open class AnnotatedScrollBar: WinUI.Grid {
     /// Swift 子类、树保活）实例；纯 WinUI.ItemsView wrapper 无身份保活。
     private var attachedScrollView: WinUI.ScrollView?
     private weak var attachedList: WinUI.ItemsView?
+    /// attach 创建的桥（强持有，随本控件同寿命）：XAML 侧 verticalScrollController
+    /// 属性引用释放后，宿主 ScrollView 的拆除路径仍可能异步调用控制器——只靠
+    /// 属性引用保活会在页面拆除竞态中留下悬空调用（DEP 跳转 / stowed
+    /// E_INVALIDARG）。不构成环：桥 → inner → 原生条控制器，单向引用。
+    private var scrollBridges: [FullSpanScrollControllerBridge] = []
 
     /// 上下箭头按钮的单次滚动步进（内容坐标）；attach 后可随条目尺寸变化更新。
     public var smallChange: Double {
@@ -256,7 +265,9 @@ open class AnnotatedScrollBar: WinUI.Grid {
     /// 桥接(见该类型注释)。
     public func attach(to list: WinUI.ItemsView) {
         attachedList = list
-        list.verticalScrollController = FullSpanScrollControllerBridge(inner: nativeBar.scrollController)
+        let bridge = FullSpanScrollControllerBridge(inner: nativeBar.scrollController)
+        list.verticalScrollController = bridge
+        scrollBridges.append(bridge)
 
         var hidBuiltInScrollbar = false
         func hideBuiltInScrollbarIfNeeded(_ list: WinUI.ItemsView) {
@@ -289,8 +300,9 @@ open class AnnotatedScrollBar: WinUI.Grid {
         scrollView.loaded.addHandler { [weak self] _, _ in
             guard let self, !wired, let presenter = scrollView.scrollPresenter else { return }
             wired = true
-            presenter.verticalScrollController = FullSpanScrollControllerBridge(
-                inner: nativeBar.scrollController)
+            let bridge = FullSpanScrollControllerBridge(inner: self.nativeBar.scrollController)
+            presenter.verticalScrollController = bridge
+            self.scrollBridges.append(bridge)
             self.repopulate()
             self.adoptDetailOverlayIfNeeded()
         }
@@ -360,7 +372,9 @@ open class AnnotatedScrollBar: WinUI.Grid {
         for spec in specs {
             templatesByOffset[spec.scrollOffset] = labelTemplate(for: spec.text)
         }
-        nativeBar.labelTemplate = AnnotatedScrollBarLabelTemplateSelector(templatesByOffset: templatesByOffset)
+        let selector = AnnotatedScrollBarLabelTemplateSelector(templatesByOffset: templatesByOffset)
+        nativeBar.labelTemplate = selector
+        labelSelector = selector
         nativeBar.labels.clear()
         for spec in specs {
             nativeBar.labels.append(WinUI.AnnotatedScrollBarLabel(spec.text, spec.scrollOffset))
