@@ -30,14 +30,12 @@ private var xamlUI: String {
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Row 0: Header — WinUI default NavigationViewHeaderMargin (56,44,0,0) is too large, use Photos app's (32,28,0,28) instead.
-             Grid 而非水平 StackPanel：UIElement header 须拉伸占满行宽（页面内部
-             才能自行左右分栏），String header 与容器互斥、TextBlock 左起不受影响。 -->
+        <!-- Row 0: Header — WinUI default NavigationViewHeaderMargin (56,44,0,0) is too large, use Photos app's (32,28,0,28) instead. -->
         <Border Name="headerBorder" Grid.Row="0" Margin="32,28,0,28">
-            <Grid>
+            <StackPanel Orientation="Horizontal">
                 <Border Name="headerContainer" />
                 <TextBlock Name="headerText" Style="{StaticResource TitleTextBlockStyle}"/>
-            </Grid>
+            </StackPanel>
         </Border>
         <!-- Row 1: Content -->
         <Border Name="contentBorder" Grid.Row="1" />
