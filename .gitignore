@@ -5,6 +5,11 @@ Packages/
 Package.resolved
 .swiftpm
 
+// Swift 6.4 rubbish
+info.plist
+SampleApp.*
+*.xcstrings
+
 # Editors / tools
 .vscode/
 .VSCodeCounter/
