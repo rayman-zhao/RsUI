@@ -78,7 +78,7 @@ public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProv
                 easing = try? compositor.createCubicBezierEasingFunction(
                     Vector2(x: 0.215, y: 0.61), Vector2(x: 0.355, y: 1))
             }
-            guard let batch else {
+            guard batch != nil else {
                 try? progress.complete()
                 continue
             }

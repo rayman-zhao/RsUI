@@ -67,7 +67,7 @@ final class RestorationLifecycleTestWindow: AppearanceWindow {
         }
 
         let window = RestorationLifecycleTestWindow()
-        weak var tracked = window
+        weak let tracked = window
         do {
             try window.activate()
             try? window.appWindow?.moveAndResize(
