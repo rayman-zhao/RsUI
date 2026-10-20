@@ -95,6 +95,8 @@ class PageFrame: PageTransitionHost, PageControl {
             App.context.theme != renderedTheme
                 || App.context.language != renderedLanguage
         else { return }
+        renderedTheme = App.context.theme
+        renderedLanguage = App.context.language
         /// NOTE: A page inplace transition will have problem if some UI Elements been referenced in the Page object.
         /// So that, must remove the page view from visual tree first, then release COM references in event loop,
         /// then add to new visual tree node.
