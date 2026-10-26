@@ -12,9 +12,23 @@ import WindowsFoundation
 public final class AppContext: @unchecked Sendable {
     public private(set) var groupName: String
     public private(set) var productName: String
-    public private(set) var supportDirectory: URL
-    public private(set) var preferences: Preferences
     public private(set) var resourceBundle: Bundle
+
+    /// 支持目录与偏好存储由 group/product 推导、首次访问才落盘：static 构造看不见
+    /// 子类配置（App.init 两段式），默认阶段若急切 ensure 会先建出框架默认身份的
+    /// stray 目录。真实 app 首次访问必然发生在 bootstrap 之后。
+    public var supportDirectory: URL {
+        guard let support = URL.applicationSupportDirectory.ensuringChild(
+            named: "\(groupName)/\(productName)/")
+        else {
+            fatalError("AppContext: failed to ensure support directory for \(groupName)/\(productName)")
+        }
+        return support
+    }
+
+    public var preferences: Preferences {
+        JSONPreferences.makeStandard(group: groupName, product: productName)
+    }
 
     public var iconPath: String? {
         resourceBundle.path(forResource: productName, ofType: "ico")
@@ -53,44 +67,15 @@ public final class AppContext: @unchecked Sendable {
     internal private(set) var modules: [any Module] = []
 
     init() {
-        let defaults = Self.makeConfiguration(
-            group: "SwiftWorks", product: "RsUI", resourceBundle: .main)
-        groupName = defaults.group
-        productName = defaults.product
-        supportDirectory = defaults.supportDirectory
-        preferences = defaults.preferences
-        resourceBundle = defaults.resourceBundle
+        groupName = "SwiftWorks"
+        productName = "RsUI"
+        resourceBundle = .main
     }
 
     func bootstrap(group: String, product: String, resourceBundle: Bundle) {
-        let config = Self.makeConfiguration(
-            group: group, product: product, resourceBundle: resourceBundle)
-        groupName = config.group
-        productName = config.product
-        supportDirectory = config.supportDirectory
-        preferences = config.preferences
-        self.resourceBundle = config.resourceBundle
-    }
-
-    /// init 默认配置与 bootstrap 覆盖共用的目录/偏好构建逻辑。
-    private static func makeConfiguration(
-        group: String, product: String, resourceBundle: Bundle
-    ) -> (
-        group: String, product: String, supportDirectory: URL, preferences: Preferences,
-        resourceBundle: Bundle
-    ) {
-        guard let support = URL.applicationSupportDirectory.ensuringChild(
-            named: "\(group)/\(product)/")
-        else {
-            fatalError("AppContext: failed to ensure support directory for \(group)/\(product)")
-        }
-        return (
-            group: group,
-            product: product,
-            supportDirectory: support,
-            preferences: JSONPreferences.makeStandard(group: group, product: product),
-            resourceBundle: resourceBundle
-        )
+        groupName = group
+        productName = product
+        self.resourceBundle = resourceBundle
     }
 
     @MainActor func bootstrapGUI() {
