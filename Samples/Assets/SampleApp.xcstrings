@@ -35,6 +35,23 @@
         }
       }
     },
+    "A data-driven year / month / day cascade picker. Days without records are disabled; picking a year or month jumps to its first day with data. When height is limited, lists split into side-by-side columns." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A data-driven year / month / day cascade picker. Days without records are disabled; picking a year or month jumps to its first day with data. When height is limited, lists split into side-by-side columns."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据驱动的年/月/日三列级联选择器。无数据的日期禁用置灰；点击年份或月份会自动选中该范围内第一个有数据的日期；高度受限时列表自动分栏并排显示。"
+          }
+        }
+      }
+    },
     "A dual-thumb slider for picking a range. Drag a thumb, click the track, or drag between the thumbs to slide both together (width kept). Tab to a thumb for keyboard: ←/→ adjust, PageUp/PageDown larger steps, Home/End to the bounds." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -273,6 +290,23 @@
         }
       }
     },
+    "Applied to all three pickers above." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applied to all three pickers above."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作用于上方全部三个选择器。"
+          }
+        }
+      }
+    },
     "Basic SettingsCard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -375,6 +409,23 @@
         }
       }
     },
+    "Cascade Date Picker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cascade Date Picker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "级联日期选择器"
+          }
+        }
+      }
+    },
     "Child rows live inside the expander's animated panel." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -388,6 +439,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "子行位于 expander 的动画面板中。"
+          }
+        }
+      }
+    },
+    "Clear data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空数据"
           }
         }
       }
@@ -524,6 +592,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "深色"
+          }
+        }
+      }
+    },
+    "Data & options" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data & options"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据与选项"
           }
         }
       }
@@ -851,6 +936,23 @@
         }
       }
     },
+    "Height-constrained host" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Height-constrained host"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定高宿主"
+          }
+        }
+      }
+    },
     "Hides chrome and reparents the selected tab content to a root overlay. Press Esc to exit." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -864,6 +966,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隐藏窗口框架，把当前标签页的内容重新挂载到根级覆盖层。按 Esc 退出。"
+          }
+        }
+      }
+    },
+    "Host height is 260: the lists split into side-by-side columns instead of scrolling." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host height is 260: the lists split into side-by-side columns instead of scrolling."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "宿主高度为 260：列表不滚动，而是自动分栏并排显示。"
           }
         }
       }
@@ -898,6 +1017,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "图片文件"
+          }
+        }
+      }
+    },
+    "In a flyout" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In a flyout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嵌入浮出层"
           }
         }
       }
@@ -1106,6 +1242,40 @@
         }
       }
     },
+    "Natural height" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natural height"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自然高度"
+          }
+        }
+      }
+    },
+    "Natural height is capped at 12 rows: the month column always fits, and days (up to 31) split into side-by-side columns. A tighter host splits further." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natural height is capped at 12 rows: the month column always fits, and days (up to 31) split into side-by-side columns. A tighter host splits further."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自然高度上限为 12 行：月份列始终完整显示，日期（至多 31 天）自动分栏并排；更紧的宿主会进一步分栏。"
+          }
+        }
+      }
+    },
     "Navigation Modes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1187,6 +1357,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "嵌套项 B"
+          }
+        }
+      }
+    },
+    "No date selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No date selected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择日期"
           }
         }
       }
@@ -1497,6 +1684,23 @@
         }
       }
     },
+    "Pick a date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a date"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择日期"
+          }
+        }
+      }
+    },
     "Pick a folder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1646,6 +1850,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已请求显示：%@"
+          }
+        }
+      }
+    },
+    "Restore data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复数据"
           }
         }
       }
@@ -1939,6 +2160,23 @@
         }
       }
     },
+    "Show record counts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show record counts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示记录数"
+          }
+        }
+      }
+    },
     "Show tooltip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2105,6 +2343,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "投影允许 Swift 类型实现 WinRT 接口：容器工厂在 recycleElement 里把清除的容器入池、在 getElement 里取池复用（对齐 WinUI 的 ItemTemplateWrapper + RecyclePool 模式），取代了此前的 XAML 字符串模板。"
+          }
+        }
+      }
+    },
+    "The same control hosted in a DropDownButton flyout." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The same control hosted in a DropDownButton flyout."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同一控件宿主在 DropDownButton 的浮出层中。"
           }
         }
       }

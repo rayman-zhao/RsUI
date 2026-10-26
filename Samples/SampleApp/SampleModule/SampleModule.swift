@@ -115,6 +115,9 @@ final class SampleModule: @MainActor Module {
             NavigationViewItem.build(
                 iconGlyph: "\u{E946}", label: tr("Range Slider"), url: "rs://\(id)/range-slider"),
             NavigationViewItem.build(
+                iconGlyph: "\u{E787}", label: tr("Cascade Date Picker"),
+                url: "rs://\(id)/cascade-date-picker"),
+            NavigationViewItem.build(
                 iconGlyph: "\u{E8CB}", label: tr("Annotated ScrollBar"),
                 url: "rs://\(id)/annotated-scroll-bar"),
             itemsViewNavItem(id: id),
@@ -223,6 +226,8 @@ final class SampleModule: @MainActor Module {
             return ViewerPage()
         case "/range-slider":
             return RangeSliderPage()
+        case "/cascade-date-picker":
+            return CascadeDatePickerPage()
         case "/annotated-scroll-bar":
             return AnnotatedScrollBarPage()
         case "/items-view":
