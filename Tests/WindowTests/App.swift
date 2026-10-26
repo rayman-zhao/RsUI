@@ -10,7 +10,7 @@ import WinUI
 
 @main
 final class App: SwiftApplication {
-    public required init() {
+    public nonisolated required init() {
         super.init()
     }
 

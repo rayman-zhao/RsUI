@@ -50,9 +50,12 @@
 public enum XamlDeferredRelease {
     /// 延迟释放：主线程保活 `millis` 毫秒后放行最后一个引用。
     public static func retain(_ object: AnyObject, millis: UInt64 = 2_000) {
+        // 引用仅用于延长生命周期（不做任何成员访问）；COM 引用计数原子，
+        // 跨 Task 边界持有引用本身无数据竞争。
+        nonisolated(unsafe) let retained = object
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: millis * 1_000_000)
-            _ = object  // 睡醒后才触发的"最后使用"，保证捕获活到此刻
+            _ = retained  // 睡醒后才触发的"最后使用"，保证捕获活到此刻
         }
     }
 }

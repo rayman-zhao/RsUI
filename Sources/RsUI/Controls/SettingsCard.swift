@@ -149,43 +149,46 @@ public class SettingsCard: ButtonBase {
 
     /// 默认动作图标：ChevronRight（RTL 下自动镜像）。仅 `isClickEnabled` 时可见
     /// （见 `updateActionIconVisibility`）；`SettingsExpander` 等会替换为自己的实例。
-    private static func defaultActionIcon() -> FontIcon {
-        let icon = WinUI.FontIcon()
-        icon.glyph = "\u{E974}"  // ChevronRight
-        icon.mirroredWhenRightToLeft = true
-        return icon
+    private nonisolated static func defaultActionIcon() -> FontIcon {
+        MainActor.assumeIsolated {
+            let icon = WinUI.FontIcon()
+            icon.glyph = "\u{E974}"  // ChevronRight
+            icon.mirroredWhenRightToLeft = true
+            return icon
+        }
     }
 
-    private override init() {
+    private nonisolated override init() {
         super.init()
+        MainActor.assumeIsolated {
+            self.horizontalAlignment = .stretch
+            self.verticalAlignment = .stretch
+            self.horizontalContentAlignment = .stretch
+            self.verticalContentAlignment = .stretch
 
-        self.horizontalAlignment = .stretch
-        self.verticalAlignment = .stretch
-        self.horizontalContentAlignment = .stretch
-        self.verticalContentAlignment = .stretch
+            cardRoot.minWidth = 148
+            cardRoot.minHeight = 68
+            cardRoot.padding = WinUI.Thickness(left: 16, top: 16, right: 16, bottom: 16)
+            cardRoot.horizontalAlignment = .stretch
+            cardRoot.verticalAlignment = .center
+            cardRoot.backgroundSizing = .innerBorderEdge
+            cardRoot.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
+            cardRoot.cornerRadius = WinUI.CornerRadius(
+                topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
+            let backgroundTransition = WinUI.BrushTransition()
+            backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
+            cardRoot.backgroundTransition = backgroundTransition
 
-        cardRoot.minWidth = 148
-        cardRoot.minHeight = 68
-        cardRoot.padding = WinUI.Thickness(left: 16, top: 16, right: 16, bottom: 16)
-        cardRoot.horizontalAlignment = .stretch
-        cardRoot.verticalAlignment = .center
-        cardRoot.backgroundSizing = .innerBorderEdge
-        cardRoot.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
-        cardRoot.cornerRadius = WinUI.CornerRadius(
-            topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        let backgroundTransition = WinUI.BrushTransition()
-        backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
-        cardRoot.backgroundTransition = backgroundTransition
+            // Like the toolkit style: the card only joins tab navigation when it acts as a button.
+            self.isTabStop = false
+            self.useSystemFocusVisuals = true
+            self.focusVisualMargin = WinUI.Thickness(left: -3, top: -3, right: -3, bottom: -3)
 
-        // Like the toolkit style: the card only joins tab navigation when it acts as a button.
-        self.isTabStop = false
-        self.useSystemFocusVisuals = true
-        self.focusVisualMargin = WinUI.Thickness(left: -3, top: -3, right: -3, bottom: -3)
+            self.content = cardRoot
 
-        self.content = cardRoot
-
-        registerStateCallbacks()
-        applyVisualState()
+            registerStateCallbacks()
+            applyVisualState()
+        }
     }
 
     /// Header + description (text) + right-side content control, with a glyph icon.

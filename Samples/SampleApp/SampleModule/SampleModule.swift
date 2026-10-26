@@ -22,7 +22,7 @@ func tr(xaml: String) -> String {
 let sampleModuleID = "sample"
 
 @Observable
-final class SampleModule: Module {
+final class SampleModule: @MainActor Module {
     let id = sampleModuleID
     var state = "loading"
 

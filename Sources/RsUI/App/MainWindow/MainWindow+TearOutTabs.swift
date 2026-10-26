@@ -99,11 +99,11 @@ class MainWindow {
         bootstrap()
 
         //Bind Events
-                // An empty tear-out receiver: the torn tab is injected later by
-                // tabTearOutRequested, so skip all startup navigation and come up blank.
-                if awaitTransferredTab {
-                    return
-                }
+        // An empty tear-out receiver: the torn tab is injected later by
+        // tabTearOutRequested, so skip all startup navigation and come up blank.
+        if awaitTransferredTab {
+            return
+        }
     }
 
     func setupWindow() {
@@ -261,7 +261,7 @@ class MainWindow {
                 // still finalizing the drop on the receiver window, so closing it
                 // synchronously here crashes. Close on the next UI tick instead.
                 let receiver = pending.receiver
-                Task { @MainActor in receiver.closeIfEmpty() }
+                Task { receiver.closeIfEmpty() }
             }
             MainWindow.pendingTearOut = nil
         }

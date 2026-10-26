@@ -4,8 +4,9 @@ import RsFoundation
 import WinAppSDK
 
 extension AppInstance {
+    // onActivated 只收 args：sender 为 Any? 存在类型，非 Sendable，无法跨 Task 边界
     static func redirectOrRegister(
-        for key: String, onActivated: @escaping @MainActor (Any?, AppActivationArguments?) -> Void
+        for key: String, onActivated: @escaping @MainActor (AppActivationArguments?) -> Void
     ) {
         guard let instance = try? AppInstance.findOrRegisterForKey(key)
         else {
@@ -31,9 +32,9 @@ extension AppInstance {
         }
 
         // Response to activated event.
-        instance.activated.addHandler { sender, args in
+        instance.activated.addHandler { _, args in
             Task { @MainActor in
-                onActivated(sender, args)
+                onActivated(args)
             }
         }
     }

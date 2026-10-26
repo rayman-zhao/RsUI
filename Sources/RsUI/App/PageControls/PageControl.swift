@@ -1,7 +1,7 @@
 import Foundation
 import WinUI
 
-protocol PageControl {
+@MainActor protocol PageControl {
     var currentPage: Page? { get }
     var canGoBack: Bool { get }
     var canGoForward: Bool { get }

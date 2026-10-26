@@ -35,46 +35,53 @@ final class TabViewPageFrameTestWindow: Window {
     // 跨 tab 全局递增，保证 Tab #N / Page #N 编号唯一，便于肉眼区分。
     private var counter = 0
 
-    override init() {
+    nonisolated override init() {
         // TabView 顶层内容 + drag region，必须在 super.init() 之前成型。
-        tabView = TabView()
-        tabView.isAddTabButtonVisible = true
-        tabView.tabWidthMode = .sizeToContent
-        tabView.closeButtonOverlayMode = .onPointerOver
-        tabView.canDragTabs = true
-        tabView.canReorderTabs = true
-        tabView.canTearOutTabs = false
-        tabView.padding = Thickness(left: 0, top: 0, right: 0, bottom: 0)
-        tabView.margin = Thickness(left: 0, top: -1, right: 0, bottom: 0)
+        let built = MainActor.assumeIsolated { () -> (TabView, Grid) in
+            let tabView = TabView()
+            tabView.isAddTabButtonVisible = true
+            tabView.tabWidthMode = .sizeToContent
+            tabView.closeButtonOverlayMode = .onPointerOver
+            tabView.canDragTabs = true
+            tabView.canReorderTabs = true
+            tabView.canTearOutTabs = false
+            tabView.padding = Thickness(left: 0, top: 0, right: 0, bottom: 0)
+            tabView.margin = Thickness(left: 0, top: -1, right: 0, bottom: 0)
 
-        // 透明 Grid 作为 strip footer / drag region。MinWidth=188 是 Microsoft
-        // Learn TabView 文档建议的最小可拖动宽度。
-        dragRegion = Grid()
-        dragRegion.minWidth = 188
-        tabView.tabStripFooter = dragRegion
+            // 透明 Grid 作为 strip footer / drag region。MinWidth=188 是 Microsoft
+            // Learn TabView 文档建议的最小可拖动宽度。
+            let dragRegion = Grid()
+            dragRegion.minWidth = 188
+            tabView.tabStripFooter = dragRegion
+            return (tabView, dragRegion)
+        }
+        tabView = built.0
+        dragRegion = built.1
 
         super.init()
-        title = "TabView PageFrame Test"
-        extendsContentIntoTitleBar = true
-        appWindow.titleBar.preferredHeightOption = .tall
-        content = tabView
-        // 把 drag region 注册到 window 之后，整个 strip footer 区域可拖动
-        // （含启动首帧、Strip 无 tab 的情形）。
-        try? setTitleBar(dragRegion)
+        MainActor.assumeIsolated {
+            title = "TabView PageFrame Test"
+            extendsContentIntoTitleBar = true
+            appWindow.titleBar.preferredHeightOption = .tall
+            content = tabView
+            // 把 drag region 注册到 window 之后，整个 strip footer 区域可拖动
+            // （含启动首帧、Strip 无 tab 的情形）。
+            try? setTitleBar(dragRegion)
 
-        // 只接窗口级事件：strip 选中切换无窗口级状态可刷新（状态在每 Tab 内
-        // 自维护），新建 tab ＋ 关 tab ＋ 关闭按钮请求仍由窗口统筹。
-        tabView.addTabButtonClick.addHandler { [weak self] _, _ in
-            self?.addDefaultTabTapped()
-        }
-        tabView.tabCloseRequested.addHandler { [weak self] _, args in
-            guard let self, let args, let item = args.tab else { return }
-            self.closeTab(for: item)
-        }
+            // 只接窗口级事件：strip 选中切换无窗口级状态可刷新（状态在每 Tab 内
+            // 自维护），新建 tab ＋ 关 tab ＋ 关闭按钮请求仍由窗口统筹。
+            tabView.addTabButtonClick.addHandler { [weak self] _, _ in
+                self?.addDefaultTabTapped()
+            }
+            tabView.tabCloseRequested.addHandler { [weak self] _, args in
+                guard let self, let args, let item = args.tab else { return }
+                self.closeTab(for: item)
+            }
 
-        Task { @MainActor in
-            let homePage = makePage(name: "Home", headerKind: .string)
-            _ = addTab(page: homePage, tabHeader: "Home")
+            Task { @MainActor in
+                let homePage = makePage(name: "Home", headerKind: .string)
+                _ = addTab(page: homePage, tabHeader: "Home")
+            }
         }
     }
 
@@ -184,7 +191,8 @@ final class TabViewPageFrameTestWindow: Window {
         let statusText = (try? root.findName("StatusText")) as? TextBlock
 
         // 局部刷新该 tab 的工具条状态。闭包 capture frame 与 statusText。
-        let updateStatus = { [weak frame] in
+        // click 处理器为 @MainActor 闭包，捕获的局部闭包同标注（仅 UI 线程执行）
+        let updateStatus = { @MainActor [weak frame] in
             guard let frame else { return }
             let current = frame.currentPage?.title ?? "(empty)"
             statusText?.text =

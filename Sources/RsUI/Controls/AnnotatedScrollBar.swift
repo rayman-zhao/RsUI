@@ -117,23 +117,23 @@ private final class FullSpanScrollControllerBridge: WinUI.IScrollController {
     var panningInfo: WinUI.AnyIScrollControllerPanningInfo! { inner.panningInfo }
 
     var addScrollVelocityRequested: WindowsFoundation.Event<
-        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerAddScrollVelocityRequestedEventArgs?>
+        WinUI.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerAddScrollVelocityRequestedEventArgs?>
     > { inner.addScrollVelocityRequested }
 
     var canScrollChanged: WindowsFoundation.Event<
-        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, Any?>
+        WinUI.TypedEventHandler<WinUI.IScrollController?, Any?>
     > { inner.canScrollChanged }
 
     var isScrollingWithMouseChanged: WindowsFoundation.Event<
-        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, Any?>
+        WinUI.TypedEventHandler<WinUI.IScrollController?, Any?>
     > { inner.isScrollingWithMouseChanged }
 
     var scrollByRequested: WindowsFoundation.Event<
-        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollByRequestedEventArgs?>
+        WinUI.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollByRequestedEventArgs?>
     > { inner.scrollByRequested }
 
     var scrollToRequested: WindowsFoundation.Event<
-        WindowsFoundation.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollToRequestedEventArgs?>
+        WinUI.TypedEventHandler<WinUI.IScrollController?, WinUI.ScrollControllerScrollToRequestedEventArgs?>
     > { inner.scrollToRequested }
 }
 
@@ -180,7 +180,8 @@ open class AnnotatedScrollBar: WinUI.Grid {
     private let nativeBar: WinUI.AnnotatedScrollBar
 
     private let labelsProvider: () -> [AnnotatedScrollBarLabelSpec]
-    private let detailText: ((Double) -> String)?
+    // detailLabelRequested 事件回调为 @MainActor 闭包，格式化闭包同域直呼
+    private let detailText: (@MainActor (Double) -> String)?
     private let labelAlignment: AnnotatedScrollBarLabelAlignment
     private let labelSpacing: Double
     private let detailLabelMode: AnnotatedScrollBarDetailLabelMode
@@ -241,7 +242,7 @@ open class AnnotatedScrollBar: WinUI.Grid {
     public init(
         smallChange: Double,
         labels: @escaping () -> [AnnotatedScrollBarLabelSpec],
-        detailText: ((Double) -> String)? = nil,
+        detailText: (@MainActor (Double) -> String)? = nil,
         labelAlignment: AnnotatedScrollBarLabelAlignment = .trailing,
         labelSpacing: Double = 0,
         detailLabelMode: AnnotatedScrollBarDetailLabelMode = .overlay
@@ -269,6 +270,7 @@ open class AnnotatedScrollBar: WinUI.Grid {
         list.verticalScrollController = bridge
         scrollBridges.append(bridge)
 
+        // 事件回调为 @MainActor 闭包，一次性标记直接用捕获变量
         var hidBuiltInScrollbar = false
         func hideBuiltInScrollbarIfNeeded(_ list: WinUI.ItemsView) {
             guard !hidBuiltInScrollbar, let inner = list.scrollView else { return }

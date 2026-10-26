@@ -8,8 +8,8 @@ import Observation
 /// `onChanged` 返回 `false`（in-band 停止），要么持住返回的 Task 在 UI 卸载时 `cancel()`
 /// （页面 deinit、content 重建、窗口 closed）；两者都不做，闭包强引用的对象将随 Task 常驻。
 @discardableResult
-public func startObserving<Element>(
-    emitting: @escaping @Sendable () -> Element,
+public func startObserving<Element: Sendable>(
+    emitting: @escaping @MainActor () -> Element,
     onChanged: @escaping @MainActor (Element) async -> Bool
 ) -> Task<Void, Never> {
     let obs = Observations(emitting)

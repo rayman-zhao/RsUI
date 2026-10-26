@@ -21,42 +21,53 @@ open class SettingsPanel: WinUI.Grid {
             secondHiddenStoryboard: Storyboard,
         )
 
-    public override init() {
-        let loaded: Grid = App.context.requireXaml(withString: xamlUI)
-        ui = (
-            root: loaded,
-            backButton: loaded.requireElement("BackButton"),
-            headerPanel: loaded.requireElement("HeaderPanel"),
-            secondHeaderPanel: loaded.requireElement("SecondHeaderPanel"),
-
-            mainScrollView: loaded.requireElement("MainScrollView"),
-            mainPanel: loaded.requireElement("MainPanel"),
-            secondPanel: loaded.requireElement("SecondPanel"),
-
-            mainShownStoryboard: loaded.requireResource("MainShownStoryboard"),
-            mainHiddenStoryboard: loaded.requireResource("MainHiddenStoryboard"),
-            secondShownStoryboard: loaded.requireResource("SecondShownStoryboard"),
-            secondHiddenStoryboard: loaded.requireResource("SecondHiddenStoryboard"),
+    public nonisolated override init() {
+        typealias UI = (
+            root: Grid, backButton: Button, headerPanel: StackPanel, secondHeaderPanel: StackPanel,
+            mainScrollView: ScrollView, mainPanel: StackPanel, secondPanel: Grid,
+            mainShownStoryboard: Storyboard, mainHiddenStoryboard: Storyboard,
+            secondShownStoryboard: Storyboard, secondHiddenStoryboard: Storyboard
         )
+        let built = MainActor.assumeIsolated { () -> UI in
+            let loaded: Grid = App.context.requireXaml(withString: xamlUI)
+            return (
+                root: loaded,
+                backButton: loaded.requireElement("BackButton"),
+                headerPanel: loaded.requireElement("HeaderPanel"),
+                secondHeaderPanel: loaded.requireElement("SecondHeaderPanel"),
+
+                mainScrollView: loaded.requireElement("MainScrollView"),
+                mainPanel: loaded.requireElement("MainPanel"),
+                secondPanel: loaded.requireElement("SecondPanel"),
+
+                mainShownStoryboard: loaded.requireResource("MainShownStoryboard"),
+                mainHiddenStoryboard: loaded.requireResource("MainHiddenStoryboard"),
+                secondShownStoryboard: loaded.requireResource("SecondShownStoryboard"),
+                secondHiddenStoryboard: loaded.requireResource("SecondHiddenStoryboard")
+            )
+        }
+        ui = built
 
         super.init()
-        children.append(ui.root)
+        MainActor.assumeIsolated {
+            children.append(ui.root)
 
-        ui.backButton.click.addHandler { [weak self] _, _ in
-            guard let self else { return }
-            self.isMainShown = true
+            ui.backButton.click.addHandler { [weak self] _, _ in
+                guard let self else { return }
+                self.isMainShown = true
 
-            ui.backButton.visibility = .collapsed
-            ui.headerPanel.visibility = .visible
-            ui.secondHeaderPanel.visibility = .collapsed
-            ui.mainPanel.visibility = .visible
-            ui.secondPanel.visibility = .collapsed
+                ui.backButton.visibility = .collapsed
+                ui.headerPanel.visibility = .visible
+                ui.secondHeaderPanel.visibility = .collapsed
+                ui.mainPanel.visibility = .visible
+                ui.secondPanel.visibility = .collapsed
 
-            ui.secondHeaderPanel.children.clear()
-            ui.secondPanel.children.clear()
+                ui.secondHeaderPanel.children.clear()
+                ui.secondPanel.children.clear()
 
-            try? ui.mainShownStoryboard.begin()
-            try? ui.secondHiddenStoryboard.begin()
+                try? ui.mainShownStoryboard.begin()
+                try? ui.secondHiddenStoryboard.begin()
+            }
         }
     }
 

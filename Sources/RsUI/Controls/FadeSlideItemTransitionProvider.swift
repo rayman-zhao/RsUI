@@ -89,8 +89,14 @@ public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProv
         guard let batch else { return }
         try? batch.end()
         // 批次完成（批内动画全部结束）后才 complete，框架随之回收移除的旧元素。
+        // completed 处理器为 @Sendable 闭包，捕获循环结束后的不可变快照
+        let pendingProgresses = progresses
+        // WinAppSDK 模块的 TypedEventHandler 未随 WinUI shadow，回调仍是 @Sendable；
+        // XAML 合成批次在 UI 线程完成，这里直接跳上主 actor
         batch.completed.addHandler { _, _ in
-            for progress in progresses { try? progress.complete() }
+            MainActor.assumeIsolated {
+                for progress in pendingProgresses { try? progress.complete() }
+            }
         }
     }
 

@@ -4,9 +4,9 @@ import UWP
 import WindowsFoundation
 
 extension JumpList {
-    public static func register(arguments: String, displayName: String, logo: Uri? = nil) {
+    @MainActor public static func register(arguments: String, displayName: String, logo: Uri? = nil) {
         guard (try? JumpList.isSupported()) == true else { return }
-        Task { @MainActor in
+        Task {
             do {
                 guard let jumpList = try await JumpList.loadCurrentAsync().get() else { return }
                 guard let items = jumpList.items else { return }

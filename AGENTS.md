@@ -5,7 +5,7 @@
 RsUI is a native LOB (Line of Business) application framework built with **Swift on Windows** + **WinUI 3** / **Windows App SDK**. It provides a tabbed multiple-window shell with a modular plugin system.
 
 - **Platform**: Windows only (Swift for Windows, NOT Apple Swift)
-- **Package manager**: Swift Package Manager (SPM), `swift-tools-version 5.10` (see Toolchain Version Note below)
+- **Package manager**: Swift Package Manager (SPM), `swift-tools-version 6.4` (see Toolchain Version Note below)
 - **Outputs**: `RsUI` library + three executables: `SampleApp` (the demo app), `PageControlTests` (GUI test host) and `WindowTests` (window-shell GUI test host)
 - **Build**: `swift build` | **Run**: `swift run SampleApp` | **Test**: `swift test`
 
@@ -22,9 +22,11 @@ RsUI is a native LOB (Line of Business) application framework built with **Swift
 
 ### Toolchain Version Note
 
-- `Package.swift` declares `swift-tools-version: 5.10`. This pin is temporary: the swift-winrt projection code currently produces Swift 6 concurrency errors and cannot build under Swift 6 language mode.
-- Code outside the UI/projection layer is still expected to follow Swift 6+ conventions (strict concurrency, `Sendable`, `async/await`, structured concurrency). Only the swift-winrt compatibility issue keeps the tools version pinned today.
-- Do not treat the `5.10` marker as permission to write pre-Swift-6 code in non-UI / non-projection modules.
+- `Package.swift` declares `swift-tools-version: 6.4`, builds in the Swift 6 language mode. **RsUI 框架目标（RsUI / 测试宿主）不使用 defaultIsolation**：WinUI 子类经继承链自动获得 @MainActor（全局 actor 隔离沿类继承传播），数据模型类型默认非隔离——这是库的正确形态（显式于边界，推断于叶子）。仅 `SampleApp` 作为下游应用示例保留 `.defaultIsolation(MainActor.self)`。
+- The swift-winui fork projects `Microsoft.UI.Xaml.*` with `-main_actor` and shadows `Windows.Foundation.TypedEventHandler`/`EventHandler` with `@MainActor` flavors; event handler closures are therefore `@MainActor` and may touch MainActor state directly (no `Task { @MainActor in }` hops).
+- 构造器链条由投影根部（`WinRTClass.init()`）钉死为 nonisolated：覆写构造器必须保持 nonisolated（`App`/`AppearanceWindow`/`SettingsPanel`/`ToggleButtons`/`ItemsViewBase` 的 `nonisolated override init()`），其 body 内 MainActor 工作经 `MainActor.assumeIsolated` 兑换。**defaultIsolation 下游子类**（如 SampleApp 的 App）需为每个未覆写的 nonisolated 指定构造器补显式 `nonisolated override/convenience override init()` 转发——SE-0466 会为它们合成 MainActor 覆写并冲突。
+- Data-model types polled off-actor (`AppContext`, `AppTheme`, `AppRoute`, `PageModel`, …) stay plain nonisolated; UI-only state is MainActor (inherited). WinAppSDK-module events (e.g. `AppInstance.activated`, composition batch `completed`) are NOT MainActor-flavored — their handlers still need an explicit hop (`Task { @MainActor in }` or `MainActor.assumeIsolated`).
+- 修饰词顺序（手写代码）：访问级别最前——`public nonisolated override init()`、`private nonisolated static func`。生成代码（`Generated/` 目录）保留投影的历史顺序 `nonisolated override public init`，两个方言各自一致，边界即目录本身。
 
 ## Architecture
 

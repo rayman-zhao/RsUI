@@ -16,7 +16,7 @@ public enum NavigationOpenMode: Sendable {
 /// Window-scoped services exposed to RsUI modules and pages.
 ///
 /// A `WindowContext` lets module works with main windows without knowing `MainWindow` specific type.
-public struct WindowContext {
+@MainActor public struct WindowContext {
     // Modules may keep this context from a Page, so the underlying window owner is weak.
     private weak var host: WindowContextHost?
 
@@ -43,15 +43,13 @@ public struct WindowContext {
     ///     print("Selected folder: \(path)")
     /// }
     /// ```
-    public func pickFolder(_ handler: @escaping (String?) -> Void) {
+    public func pickFolder(_ handler: @escaping @MainActor (String?) -> Void) {
         guard let host, let hwnd = host.hwnd else { return }
 
         let picker = FolderPicker(hwnd)
-        Task { @MainActor in
+        Task {
             let result = try? await picker.pickSingleFolderAsync().get()
-            await MainActor.run {
-                handler(result?.path)
-            }
+            handler(result?.path)
         }
     }
 
@@ -60,7 +58,7 @@ public struct WindowContext {
         fileTypeChoices: [String: [String]] = [:],
         suggestedFileName: String? = nil,
         defaultFileExtension: String? = nil,
-        handler: @escaping (String?) -> Void
+        handler: @escaping @MainActor (String?) -> Void
     ) {
         guard let host, let hwnd = host.hwnd else { return }
 
@@ -76,11 +74,9 @@ public struct WindowContext {
             picker.defaultFileExtension = defaultFileExtension
         }
 
-        Task { @MainActor in
+        Task {
             let result = try? await picker.pickSaveFileAsync().get()
-            await MainActor.run {
-                handler(result?.path)
-            }
+            handler(result?.path)
         }
     }
 
@@ -117,7 +113,7 @@ public struct WindowContext {
         primaryButtonText: String? = nil,
         secondaryButtonText: String? = nil,
         closeButtonText: String? = nil,
-        handler: @escaping (ContentDialogResult) -> Void = { _ in }
+        handler: @escaping @MainActor (ContentDialogResult) -> Void = { _ in }
     ) {
         guard let host else { return }
 
@@ -139,12 +135,9 @@ public struct WindowContext {
         // current actual theme on every show.
         dialog.requestedTheme = App.context.theme.elementTheme
 
-        Task { @MainActor in
+        Task {
             guard let result = try? await dialog.showAsync().get() else { return }
-
-            await MainActor.run {
-                handler(result)
-            }
+            handler(result)
         }
     }
 

@@ -101,7 +101,7 @@ class PageFrame: PageTransitionHost, PageControl {
         /// So that, must remove the page view from visual tree first, then release COM references in event loop,
         /// then add to new visual tree node.
         transition(to: nil)
-        Task { @MainActor in
+        Task {
             transition(to: currentPage?.view)
         }
     }
@@ -117,7 +117,7 @@ class PageFrame: PageTransitionHost, PageControl {
         renderedTheme = App.context.theme
         renderedLanguage = App.context.language
         transition(to: currentPage?.view, transitionInfo: transitionInfo)
-        Task { @MainActor in
+        Task {
             pageChanged.invoke(self, currentPage)
         }
     }

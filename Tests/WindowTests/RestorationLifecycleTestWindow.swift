@@ -31,24 +31,26 @@ final class RestorationLifecycleTestWindow: AppearanceWindow {
         log.info("RLT: window deinit 执行")
     }
 
-    override init() {
+    nonisolated override init() {
         super.init()
-        title = "Restoration Lifecycle Test"
-        useRestoration(false)
+        MainActor.assumeIsolated {
+            title = "Restoration Lifecycle Test"
+            useRestoration(false)
 
-        sizeChanged.addHandler { [weak self] _, _ in
-            guard let self else {
-                log.error("RLT: sizeChanged 触发但 weak self 为 nil")
-                return
+            sizeChanged.addHandler { [weak self] _, _ in
+                guard let self else {
+                    log.error("RLT: sizeChanged 触发但 weak self 为 nil")
+                    return
+                }
+                self.sawSizeChanged = true
             }
-            self.sawSizeChanged = true
-        }
-        closed.addHandler { [weak self] _, _ in
-            guard let self else {
-                log.error("RLT: closed 触发但 weak self 为 nil")
-                return
+            closed.addHandler { [weak self] _, _ in
+                guard let self else {
+                    log.error("RLT: closed 触发但 weak self 为 nil")
+                    return
+                }
+                log.info("RLT: closed 触发，weak self 解析成功（sawSizeChanged=\(self.sawSizeChanged)）")
             }
-            log.info("RLT: closed 触发，weak self 解析成功（sawSizeChanged=\(self.sawSizeChanged)）")
         }
     }
 

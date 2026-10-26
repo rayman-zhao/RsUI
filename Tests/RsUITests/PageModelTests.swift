@@ -21,6 +21,7 @@ private final class MockView: RsUI.Page {
 }
 
 @Suite
+@MainActor
 struct PageModelTests {
     @Test
     func initialState() {

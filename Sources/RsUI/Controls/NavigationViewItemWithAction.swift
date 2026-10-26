@@ -26,7 +26,7 @@ public final class NavigationViewItemWithAction: NavigationViewItem {
         url: String,
         actionGlyph: String,
         actionTooltip: String,
-        actionHandler: @escaping (Any?, RoutedEventArgs?) throws -> Void
+        actionHandler: @escaping @MainActor (Any?, RoutedEventArgs?) throws -> Void
     ) {
         // 内容：标签(填充) | 动作按钮(自动)
         let grid = Grid()

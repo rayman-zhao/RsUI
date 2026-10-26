@@ -11,38 +11,43 @@ class AppearanceWindow: Window {
     private var observationTask: Task<Void, Never>?
     private var isApplyingAppearance = false
 
-    override init() {
+    nonisolated override init() {
         super.init()
 
-        observationTask = startObserving {
-            (App.context.theme, App.context.language)
-        } onChanged: { [weak self] _ in
-            // 防止并发/重入（多窗口下 env Observation 接连触发可能引发 menuItems 的双 parent 错误）
-            // self 已亡 = 观察终点（无 owner 弱引用兜底，返回 true 会让 Task 无限期活着）
-            guard let self else { return false }
-            // Really happend?
-            guard self.appWindow != nil else {
-                log.warning("self.appWindow == nil")
+        // the override chain down to WinRTClass.init() is nonisolated; the setup body is
+        // main-actor work and the window is always constructed on the UI thread
+        MainActor.assumeIsolated {
+            let context = App.context
+            observationTask = startObserving {
+                (context.theme, context.language)
+            } onChanged: { [weak self] _ in
+                // 防止并发/重入（多窗口下 env Observation 接连触发可能引发 menuItems 的双 parent 错误）
+                // self 已亡 = 观察终点（无 owner 弱引用兜底，返回 true 会让 Task 无限期活着）
+                guard let self else { return false }
+                // Really happend?
+                guard self.appWindow != nil else {
+                    log.warning("self.appWindow == nil")
+                    return true
+                }
+                // Really happend?
+                guard !self.isApplyingAppearance else {
+                    log.warning("self.isApplyingAppearance == true")
+                    return true
+                }
+                self.isApplyingAppearance = true
+                defer { self.isApplyingAppearance = false }
+
+                appearanceChanged.invoke(self)
                 return true
             }
-            // Really happend?
-            guard !self.isApplyingAppearance else {
-                log.warning("self.isApplyingAppearance == true")
-                return true
+
+            self.closed.addHandler { [weak self] _, _ in
+                guard let self else { return }
+
+                // 先 cancel observation task，避免死窗口的 task 继续访问 self.appWindow / self.viewModel
+                self.observationTask?.cancel()
+                self.observationTask = nil
             }
-            self.isApplyingAppearance = true
-            defer { self.isApplyingAppearance = false }
-
-            appearanceChanged.invoke(self)
-            return true
-        }
-
-        self.closed.addHandler { [weak self] _, _ in
-            guard let self else { return }
-
-            // 先 cancel observation task，避免死窗口的 task 继续访问 self.appWindow / self.viewModel
-            self.observationTask?.cancel()
-            self.observationTask = nil
         }
     }
 }

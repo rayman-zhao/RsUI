@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.4
 
 import PackageDescription
 
@@ -61,6 +61,8 @@ let package = Package(
             resources: [
                 .process("Assets")
             ],
+            // 下游应用示例：叶子应用采用 defaultIsolation（框架侧为显式 @MainActor）
+            swiftSettings: [.defaultIsolation(MainActor.self)],
             linkerSettings: GUILinkerSettings,
         ),
         .executableTarget(

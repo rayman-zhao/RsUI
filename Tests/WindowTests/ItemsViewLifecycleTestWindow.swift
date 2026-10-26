@@ -31,14 +31,10 @@ import WinUI
 /// 中途 crash（进程非零退出）即为 RsUI 侧问题。
 final class ItemsViewLifecycleTestWindow: Window {
 
-    private let testItemsView = ItemsView { _ in
-        let block = TextBlock()
-        block.text = "item"
-        block.padding = Thickness(left: 8, top: 6, right: 8, bottom: 6)
-        return block
-    }
+    private let testItemsView: RsUI.ItemsView
+    private let testIndexView: RsUI.ItemsIndexView
 
-    private let testIndexView = ItemsIndexView { _ in
+    private static func makeItemBlock() -> TextBlock {
         let block = TextBlock()
         block.text = "item"
         block.padding = Thickness(left: 8, top: 6, right: 8, bottom: 6)
@@ -55,11 +51,17 @@ final class ItemsViewLifecycleTestWindow: Window {
     private let totalIds = 5000
     private let totalIndexes = 5000
 
-    override init() {
+    nonisolated override init() {
+        (testItemsView, testIndexView) = MainActor.assumeIsolated {
+            (RsUI.ItemsView { _ in Self.makeItemBlock() },
+             RsUI.ItemsIndexView { _ in Self.makeItemBlock() })
+        }
         super.init()
-        title = "ItemsView Lifecycle Test"
-        content = makeRoot()
-        runScenario()
+        MainActor.assumeIsolated {
+            title = "ItemsView Lifecycle Test"
+            content = makeRoot()
+            runScenario()
+        }
     }
 
     private func makeRoot() -> FrameworkElement {

@@ -5,13 +5,13 @@ import WinAppSDK
 import WinUI
 
 open class App: SwiftApplication {
-    public static let context = AppContext()
+    public nonisolated static let context = AppContext()
 
-    public required init() {
+    public nonisolated required init() {
         super.init()
     }
 
-    public init(group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type])
+    public nonisolated init(group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type])
     {
         App.context.bootstrap(
             group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes
@@ -19,7 +19,7 @@ open class App: SwiftApplication {
         super.init()
 
         // AppInstance can be used start from app initilization.
-        AppInstance.redirectOrRegister(for: "\(group)/\(product)") { [weak self] _, args in
+        AppInstance.redirectOrRegister(for: "\(group)/\(product)") { [weak self] args in
             guard let self else { return }
             self.onActivated(args)
         }

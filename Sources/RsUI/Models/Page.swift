@@ -2,7 +2,8 @@ import Foundation
 import Observation
 import WinUI
 
-public protocol Page: AnyObject {
+// 页面为 UI 线程对象：协议显式 @MainActor（实现者多为 WinUI 子类，隐式继承本隔离）。
+@MainActor public protocol Page: AnyObject {
     var url: URL { get }
     var header: Any? { get }
     var title: String { get }

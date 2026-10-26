@@ -5,8 +5,12 @@ import UWP
 import WinUI
 import WindowsFoundation
 
+// 进程级单例（App.context）：读写全部发生在主线程。@unchecked Sendable 仅为满足
+// App 的 nonisolated 构造器链——App.context 是 nonisolated static let（类型须 Sendable），
+// bootstrap 的 [Module.Type] 参数携带隔离 conformance、无法送进 MainActor 域，
+// 故初始化只能留在 nonisolated 上下文完成。
 @Observable
-public final class AppContext {
+public final class AppContext: @unchecked Sendable {
     public private(set) var groupName: String
     public private(set) var productName: String
     public private(set) var supportDirectory: URL
@@ -32,7 +36,10 @@ public final class AppContext {
     public var theme: AppTheme = .undefined {
         didSet {
             guard oldValue != theme else { return }
-            Application.current.requestedTheme = theme.applicationTheme
+            // mutations happen on the UI thread; the WinRT side is main-actor projected
+            MainActor.assumeIsolated {
+                Application.current.requestedTheme = theme.applicationTheme
+            }
             preferences.save(theme)
         }
     }
@@ -93,7 +100,7 @@ public final class AppContext {
         )
     }
 
-    func bootstrapGUI() {
+    @MainActor func bootstrapGUI() {
         theme = preferences.load(for: AppTheme.self)
         if case .undefined = theme {
             theme = (Application.current.requestedTheme == .dark) ? .dark : .light
@@ -106,7 +113,7 @@ public final class AppContext {
         if route.maxHistoryPages < 1 { route.maxHistoryPages = 1 }
     }
 
-    func initializeModules() {
+    @MainActor func initializeModules() {
         modules = moduleTypes.map { $0.init() }
     }
 
@@ -139,7 +146,7 @@ public final class AppContext {
         return result
     }
 
-    public func requireXaml<T>(withString xaml: String, trTable: String? = nil) -> T {
+    @MainActor public func requireXaml<T>(withString xaml: String, trTable: String? = nil) -> T {
         let trXaml = tr(xaml: xaml, table: trTable)
         do {
             guard let root = try XamlReader.load(trXaml) as? T else {
@@ -151,7 +158,7 @@ public final class AppContext {
         }
     }
 
-    public func requireXaml<T>(withResource name: String, trTable: String? = nil) -> T {
+    @MainActor public func requireXaml<T>(withResource name: String, trTable: String? = nil) -> T {
         guard let path = resourceBundle.path(forResource: name, ofType: "xaml") else {
             fatalError("Can't find \(name).xaml in bundle \(resourceBundle)")
         }
@@ -172,7 +179,7 @@ public final class AppContext {
     ///     the NavigationView pane minimized and its closing handler skips
     ///     persisting the layout unless user expended it. Use for viewer-style
     ///     windows (e.g. slide presenters) where chrome would distract from content.
-    public func openNewWindow(
+    @MainActor public func openNewWindow(
         with urls: [URL],
         forceMinimalMode: Bool = false
     ) {
@@ -184,8 +191,8 @@ public final class AppContext {
     }
 
     /// Reveals a file or directory in File Explorer with the item selected in its parent folder.
-    public func revealInFileExplorer(_ url: URL) {
-        Task { @MainActor in
+    @MainActor public func revealInFileExplorer(_ url: URL) {
+        Task {
             let options = FolderLauncherOptions()
             let folder: URL
 

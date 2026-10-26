@@ -43,7 +43,7 @@ func makeClickableCard(
     glyph: String,
     header: String,
     description: String,
-    onClick: @escaping () -> Void
+    onClick: @escaping @MainActor () -> Void
 ) -> SettingsCard {
     let card = SettingsCard(
         headerIconGlyph: glyph,

@@ -28,31 +28,33 @@ open class ItemsViewBase: WinUI.ItemsView {
     /// 见 `RecyclableItemContainerFactory`）。
     private var activeFactory: RecyclableItemContainerFactory?
 
-    override internal init() {
+    internal nonisolated override init() {
         guard let vector = single_threaded_observable_vector([]) else {
             fatalError("ItemsViewBase: failed to create the observable items vector")
         }
         items = vector
-        transitionProvider = FadeSlideItemTransitionProvider()
+        transitionProvider = MainActor.assumeIsolated { FadeSlideItemTransitionProvider() }
         super.init()
 
-        // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
-        // 经 elementPrepared 在代码里填 child，见 makeContainerFactory 与文件尾工厂。
-        let factory = makeContainerFactory()
-        activeFactory = factory
-        itemTemplate = factory
-        itemsSource = vector
-        // StackLayout / UniformGridLayout 都不带默认 transition provider
-        // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
-        itemTransitionProvider = transitionProvider
+        MainActor.assumeIsolated {
+            // 模板只需产出 ItemContainer 根（选择/复选框视觉挂在容器上），条目内容
+            // 经 elementPrepared 在代码里填 child，见 makeContainerFactory 与文件尾工厂。
+            let factory = makeContainerFactory()
+            activeFactory = factory
+            itemTemplate = factory
+            itemsSource = vector
+            // StackLayout / UniformGridLayout 都不带默认 transition provider
+            // （Layout 基类返回空），这里显式接入，见 animatesItemChanges。
+            itemTransitionProvider = transitionProvider
 
-        // elementPrepared 挂在内部 ItemsRepeater 上。loaded 时 repeater 可能尚未
-        // 进视觉树（模板应用时序），layoutUpdated 重试到成功为止。
-        loaded.addHandler { [weak self] _, _ in
-            self?.wireRepeater()
-        }
-        layoutUpdated.addHandler { [weak self] _, _ in
-            self?.wireRepeater()
+            // elementPrepared 挂在内部 ItemsRepeater 上。loaded 时 repeater 可能尚未
+            // 进视觉树（模板应用时序），layoutUpdated 重试到成功为止。
+            loaded.addHandler { [weak self] _, _ in
+                self?.wireRepeater()
+            }
+            layoutUpdated.addHandler { [weak self] _, _ in
+                self?.wireRepeater()
+            }
         }
     }
 
@@ -379,6 +381,9 @@ open class ItemsView: ItemsViewBase {
 /// 元素跳过重复 Append）。无池工厂会导致停放的容器单调累积（IVLT 实测只增
 /// 不减）。`rebuildViews()` 换新工厂代际时由基座把旧池移交新工厂——repeater 的
 /// Children 非公开 API，工厂侧无法主动摘离，弃池即孤儿。
+// IElementFactory 继承 WinRTInterface: Sendable（投影协议要求）；工厂只在 UI 线程被
+// repeater 调用，@MainActor 隔离同时满足协议的隔离与 Sendable 两侧要求
+@MainActor
 internal final class RecyclableItemContainerFactory: IElementFactory {
 
     private let makeContainer: () -> ItemContainer

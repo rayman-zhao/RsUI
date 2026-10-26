@@ -17,14 +17,16 @@ open class ToggleButtons: ContentControl {
     private var buttons: [AppBarToggleButton] = []
     private var _selectedTag: String?
 
-    override public init() {
+    public nonisolated override init() {
         super.init()
-        // Orientation 必须显式置 horizontal：默认 Vertical 时子项按列填充（单列竖排）。
-        wrapGrid.orientation = .horizontal
-        wrapGrid.horizontalAlignment = .stretch
-        // 组容器本身不是交互元素，不占用 Tab 停靠点（Control 默认 isTabStop = true）。
-        isTabStop = false
-        content = wrapGrid
+        MainActor.assumeIsolated {
+            // Orientation 必须显式置 horizontal：默认 Vertical 时子项按列填充（单列竖排）。
+            wrapGrid.orientation = .horizontal
+            wrapGrid.horizontalAlignment = .stretch
+            // 组容器本身不是交互元素，不占用 Tab 停靠点（Control 默认 isTabStop = true）。
+            isTabStop = false
+            content = wrapGrid
+        }
     }
 
     // MARK: - Items

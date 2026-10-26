@@ -4,12 +4,12 @@ import WinUI
 
 @testable import RsUI
 
-var colorCycle: UInt32 = 0
+nonisolated(unsafe) var colorCycle: UInt32 = 0
 
 enum HeaderKind { case string, uiElement, nilHeader }
 
 // MARK: - Concrete test pages
-func makePage(name: String, headerKind: HeaderKind) -> RsUI.Page {
+@MainActor func makePage(name: String, headerKind: HeaderKind) -> RsUI.Page {
     // 循环颜色用肉眼分辨转场
     let palette: [(r: UInt8, g: UInt8, b: UInt8)] = [
         (0xE6, 0xF2, 0xFB), (0xFB, 0xF3, 0xE6), (0xF3, 0xE6, 0xFB),
@@ -97,7 +97,7 @@ private final class NilHeaderPage: RsUI.Page {
 
 /// 用 XAML 字符串构建内容卡片：彩色 Border + 内部 StackPanel + 两个 TextBlock。
 /// 颜色用 `#AARRGGBB` 十六进制字符串嵌入 XAML，避免运行时再设置画刷。
-private func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElement {
+@MainActor private func make(name: String, subtitle: String, bg: SolidColorBrush) -> UIElement {
     let escapedName = escape(name)
     let escapedSub = escape(subtitle)
     // SolidColorBrush 的 Color 在运行时才知道（来自调色板），故把 ARGB 拼成 XAML 颜色字面量。

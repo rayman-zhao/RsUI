@@ -5,6 +5,7 @@ import UWP
 import WinAppSDK
 import WinUI
 
+// 事件回调为 @Sendable 闭包；本类只在 XAML UI 线程的事件处理器中读写，跨域安全
 private class WindowPosition: PreferenceValue {
     var windowWidth: Int = 1440
     var windowHeight: Int = 800
