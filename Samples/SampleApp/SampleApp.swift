@@ -4,7 +4,7 @@ import RsUI
 import WinUI
 
 @main
-class SampleApp: App {
+class SampleApp: App, @unchecked Sendable {
     // defaultIsolation 会为继承的 nonisolated required 构造器合成 MainActor 覆写
     // （隔离冲突），显式转发一份保持一致；配置与模块均不经构造器传递
     nonisolated required init() {
