@@ -16,7 +16,7 @@ class SampleApp: App, @unchecked Sendable {
             group: "SampleCompany", product: "SampleApp", resourceBundle: Bundle.module)
     }
 
-    override func makeModules() -> [any Module] {
+    override class var modules: [any Module] {
         [SampleModule()]
     }
 }

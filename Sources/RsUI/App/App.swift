@@ -35,15 +35,15 @@ open class App: SwiftApplication {
         }
     }
 
-    /// Modules constructed by the app subclass. Called in `onLaunched` (MainActor,
-    /// context ready) — modules may depend on `App.context` at construction, so the
-    /// framework asks for instances only once the context is bootstrapped.
-    open func makeModules() -> [any Module] { [] }
+    /// Modules constructed by the app subclass. Read once in `onLaunched` (MainActor,
+    /// context ready) — modules may depend on `App.context` at construction. Each
+    /// access constructs fresh instances; the framework reads it exactly once.
+    open class var modules: [any Module] { [] }
 
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
         // Application.current.requestedTheme can be used only start from launch.
         App.context.bootstrapGUI()
-        App.context.loadModules(makeModules())
+        App.context.loadModules(Self.modules)
 
         JumpList.register(
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
