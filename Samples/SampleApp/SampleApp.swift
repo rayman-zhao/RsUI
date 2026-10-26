@@ -11,7 +11,7 @@ class SampleApp: App, @unchecked Sendable {
         super.init()
     }
 
-    nonisolated override class func makeConfiguration() -> AppConfiguration? {
+    override class var configuration: AppConfiguration {
         AppConfiguration(
             group: "SampleCompany", product: "SampleApp", resourceBundle: Bundle.module)
     }

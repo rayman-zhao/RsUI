@@ -7,13 +7,19 @@ import WinUI
 open class App: SwiftApplication {
     public nonisolated static let context = AppContext()
 
-    /// App identity consumed before anything else — support directories, preferences
-    /// and the single-instance key all derive from it. Overridden by the app subclass;
-    /// `nil` keeps the framework defaults.
-    nonisolated open class func makeConfiguration() -> AppConfiguration? { nil }
+    /// App identity — support directories, preferences and the single-instance key
+    /// all derive from it. Override to declare your app's identity; the default keeps
+    /// the framework's own. Read once in `init`, before anything else.
+    open class var configuration: AppConfiguration {
+        AppConfiguration(group: "SwiftWorks", product: "RsUI", resourceBundle: .main)
+    }
 
     public nonisolated required init() {
-        if let config = Self.makeConfiguration() {
+        // App 构造发生在主线程（SwiftApplication 启动链，同 SettingsCard 构造器
+        // 兑换先例）；@MainActor 的 configuration 在闭包内读取并消费，子类由此
+        // 免写任何隔离关键字
+        MainActor.assumeIsolated {
+            let config = Self.configuration
             App.context.bootstrap(
                 group: config.group, product: config.product,
                 resourceBundle: config.resourceBundle)
