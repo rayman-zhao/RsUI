@@ -5,17 +5,18 @@ import WinUI
 
 @main
 class SampleApp: App {
-    nonisolated convenience required init() {
-        // Module 协议是 @MainActor，元类型数组需在主 actor 上下文取用
-        let moduleTypes = MainActor.assumeIsolated { () -> [Module.Type] in [SampleModule.self] }
-        self.init(
-            group: "SampleCompany", product: "SampleApp", resourceBundle: Bundle.module,
-            moduleTypes: moduleTypes)
+    // defaultIsolation 会为继承的 nonisolated required 构造器合成 MainActor 覆写
+    // （隔离冲突），显式转发一份保持一致；配置与模块均不经构造器传递
+    nonisolated required init() {
+        super.init()
     }
 
-    // defaultIsolation 会为未覆写的 nonisolated 指定构造器合成 MainActor 覆写（冲突），
-    // 显式转发一份以保持隔离一致
-    nonisolated override init(group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]) {
-        super.init(group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes)
+    nonisolated override class func makeConfiguration() -> AppConfiguration? {
+        AppConfiguration(
+            group: "SampleCompany", product: "SampleApp", resourceBundle: Bundle.module)
+    }
+
+    override func makeModules() -> [any Module] {
+        [SampleModule()]
     }
 }

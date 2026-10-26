@@ -7,28 +7,37 @@ import WinUI
 open class App: SwiftApplication {
     public nonisolated static let context = AppContext()
 
-    public nonisolated required init() {
-        super.init()
-    }
+    /// App identity consumed before anything else — support directories, preferences
+    /// and the single-instance key all derive from it. Overridden by the app subclass;
+    /// `nil` keeps the framework defaults.
+    nonisolated open class func makeConfiguration() -> AppConfiguration? { nil }
 
-    public nonisolated init(group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type])
-    {
-        App.context.bootstrap(
-            group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes
-        )
+    public nonisolated required init() {
+        if let config = Self.makeConfiguration() {
+            App.context.bootstrap(
+                group: config.group, product: config.product,
+                resourceBundle: config.resourceBundle)
+        }
         super.init()
 
         // AppInstance can be used start from app initilization.
-        AppInstance.redirectOrRegister(for: "\(group)/\(product)") { [weak self] args in
+        AppInstance.redirectOrRegister(
+            for: "\(App.context.groupName)/\(App.context.productName)"
+        ) { [weak self] args in
             guard let self else { return }
             self.onActivated(args)
         }
     }
 
+    /// Modules constructed by the app subclass. Called in `onLaunched` (MainActor,
+    /// context ready) — modules may depend on `App.context` at construction, so the
+    /// framework asks for instances only once the context is bootstrapped.
+    open func makeModules() -> [any Module] { [] }
+
     override open func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
         // Application.current.requestedTheme can be used only start from launch.
         App.context.bootstrapGUI()
-        App.context.initializeModules()
+        App.context.loadModules(makeModules())
 
         JumpList.register(
             arguments: "--new-window", displayName: App.context.tr("newWindow"),

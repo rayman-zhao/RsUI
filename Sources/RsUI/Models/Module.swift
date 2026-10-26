@@ -2,7 +2,7 @@ import Foundation
 import RsFoundation
 import WinUI
 
-@MainActor public protocol Module: ExpressibleByEmptyLiteral {
+@MainActor public protocol Module {
     var id: String { get }
 
     func titleBarRightHeaderItem(in context: WindowContext) -> UIElement?

@@ -7,8 +7,7 @@ import WindowsFoundation
 
 // 进程级单例（App.context）：读写全部发生在主线程。@unchecked Sendable 仅为满足
 // App 的 nonisolated 构造器链——App.context 是 nonisolated static let（类型须 Sendable），
-// bootstrap 的 [Module.Type] 参数携带隔离 conformance、无法送进 MainActor 域，
-// 故初始化只能留在 nonisolated 上下文完成。
+// 构造只能留在 nonisolated 上下文完成；模块实例不经过 bootstrap，见 loadModules(_:)。
 @Observable
 public final class AppContext: @unchecked Sendable {
     public private(set) var groupName: String
@@ -51,39 +50,34 @@ public final class AppContext: @unchecked Sendable {
     }
     public var route = AppRoute()
 
-    private var moduleTypes: [Module.Type] = []
     internal private(set) var modules: [any Module] = []
 
     init() {
         let defaults = Self.makeConfiguration(
-            group: "SwiftWorks", product: "RsUI", resourceBundle: .main, moduleTypes: [])
+            group: "SwiftWorks", product: "RsUI", resourceBundle: .main)
         groupName = defaults.group
         productName = defaults.product
         supportDirectory = defaults.supportDirectory
         preferences = defaults.preferences
         resourceBundle = defaults.resourceBundle
-        moduleTypes = defaults.moduleTypes
     }
 
-    func bootstrap(
-        group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]
-    ) {
+    func bootstrap(group: String, product: String, resourceBundle: Bundle) {
         let config = Self.makeConfiguration(
-            group: group, product: product, resourceBundle: resourceBundle, moduleTypes: moduleTypes)
+            group: group, product: product, resourceBundle: resourceBundle)
         groupName = config.group
         productName = config.product
         supportDirectory = config.supportDirectory
         preferences = config.preferences
         self.resourceBundle = config.resourceBundle
-        self.moduleTypes = config.moduleTypes
     }
 
     /// init 默认配置与 bootstrap 覆盖共用的目录/偏好构建逻辑。
     private static func makeConfiguration(
-        group: String, product: String, resourceBundle: Bundle, moduleTypes: [Module.Type]
+        group: String, product: String, resourceBundle: Bundle
     ) -> (
         group: String, product: String, supportDirectory: URL, preferences: Preferences,
-        resourceBundle: Bundle, moduleTypes: [Module.Type]
+        resourceBundle: Bundle
     ) {
         guard let support = URL.applicationSupportDirectory.ensuringChild(
             named: "\(group)/\(product)/")
@@ -95,8 +89,7 @@ public final class AppContext: @unchecked Sendable {
             product: product,
             supportDirectory: support,
             preferences: JSONPreferences.makeStandard(group: group, product: product),
-            resourceBundle: resourceBundle,
-            moduleTypes: moduleTypes
+            resourceBundle: resourceBundle
         )
     }
 
@@ -113,11 +106,14 @@ public final class AppContext: @unchecked Sendable {
         if route.maxHistoryPages < 1 { route.maxHistoryPages = 1 }
     }
 
-    @MainActor func initializeModules() {
-        modules = moduleTypes.map { $0.init() }
+    /// 模块实例由 App 子类在主 actor 上构造后传入（App.makeModules()）——模块
+    /// 构造可依赖 context 就绪；@MainActor Module 实例不经 nonisolated 的
+    /// bootstrap 传递。
+    @MainActor func loadModules(_ modules: [any Module]) {
+        self.modules = modules
     }
 
-    func releaseModules() {
+    @MainActor func releaseModules() {
         modules = []
 
         preferences.save(route)
