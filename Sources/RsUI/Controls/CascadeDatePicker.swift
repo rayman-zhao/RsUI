@@ -113,20 +113,39 @@ struct CascadeDatePickerState {
         return select(key)
     }
 
-    /// 在当前选中年内选中 `month`，并级联到该月第一个有数据的日。
+    /// 在当前展示年内选中 `month`，并级联到该月第一个有数据的日。
+    /// 未选年时以展示锚点年（最早数据年）为当前年——首击即生效。
     mutating func select(month: Int) -> Bool {
-        guard let year = selection?.year,
+        let year = selection?.year ?? sortedKeys.first?.year
+        guard let year,
             let key = sortedKeys.first(where: { $0.year == year && $0.month == month })
         else { return false }
         return select(key)
     }
 
-    /// 选中当前选中月内的 `day`；当日无数据返回 false 且不动选择。
+    /// 选中当前展示月内的 `day`；当日无数据返回 false 且不动选择。
+    /// 再次点击已选中的日即清除选择。
     mutating func select(day: Int) -> Bool {
-        guard let current = selection else { return false }
+        guard let current = selection ?? sortedKeys.first else { return false }
         let key = DayKey(year: current.year, month: current.month, day: day)
         guard counts[key] != nil else { return false }
+        if selection == key { return clearSelection() }
         return select(key)
+    }
+
+    /// 选中 `date` 当天（时间部分按日历截断）。该日无数据返回 false 且不动选择。
+    mutating func select(date: Date, calendar: Calendar) -> Bool {
+        let key = DayKey(date, calendar: calendar)
+        guard counts[key] != nil else { return false }
+        return select(key)
+    }
+
+    /// 清空选择（不动数据聚合）。已无选择返回 false（真变化才触发事件）。
+    @discardableResult
+    mutating func clearSelection() -> Bool {
+        guard selection != nil else { return false }
+        selection = nil
+        return true
     }
 
     mutating func selectEarliest() -> Bool {
@@ -153,7 +172,8 @@ struct CascadeDatePickerState {
 ///
 /// 输入一组日期（`setDates`，重复日期计为多条记录，时间部分截断到天）并按年/月/日聚合：
 /// 有数据的条目可点，无数据的条目禁用置灰；点击年或月会级联选中该范围内第一个有数据的日，
-/// 因此 `selectionChanged` 携带的总是一个完整日期。自然高度默认为 12 行预算——月份列
+/// 因此 `selectionChanged` 携带的总是一个完整日期；再次点击已选中的日即清除选择（nil 负载）。
+/// 初始不预选时月/日列以最早数据日为展示锚点，锚点内的月/日首击即落位（无须先选年）。自然高度默认为 12 行预算——月份列
 /// 始终完整显示，日至多 31 天自动分栏（≤3 栏）；可选 `maxVisibleHeight` 自定高度预算，
 /// 宿主高度不足时同样自动分栏（先填满一栏再开下一栏，横向滚动兜底）。数据为空时展示
 /// 当年、12 个月与 1...31 日占位（全部禁用、无选中样式，与真实月长无关，`selectedDate`
@@ -164,7 +184,8 @@ struct CascadeDatePickerState {
 /// （同一 COM 聚合桥，树成员资格保活；按类型实证，本库 ContentControl 子类全部存活）。
 open class CascadeDatePicker: ContentControl, @unchecked Sendable {
     /// 选中日变化时触发（点击条目、`selectEarliestDate()` / `selectLatestDate()`），
-    /// 负载为选中的日期；`setDates` 导致选中日从数据中消失而清空时以 nil 触发。
+    /// 负载为选中的日期；再次点击已选中的日以 nil 触发（清除），`setDates`
+    /// 导致选中日从数据中消失而清空时同样以 nil 触发。
     public let selectionChanged = EventWithArgumentHandler<CascadeDatePicker, Date?>()
 
     /// 条目右侧是否显示聚合计数（年/月为区间累计，日为当天条数）。默认关闭。
@@ -283,6 +304,18 @@ open class CascadeDatePicker: ContentControl, @unchecked Sendable {
     @discardableResult
     public func selectLatestDate() -> Bool {
         commitSelection { $0.selectLatest() }
+    }
+
+    /// 选中指定日期（该日须有数据）。供重建等场景恢复既有选择。
+    @discardableResult
+    public func select(date: Date) -> Bool {
+        commitSelection { $0.select(date: date, calendar: calendar) }
+    }
+
+    /// 清空选择（数据聚合不变）。已无选择时不触发事件。
+    @discardableResult
+    public func clearSelection() -> Bool {
+        commitSelection { $0.clearSelection() }
     }
 
     // MARK: - Setup

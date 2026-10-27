@@ -106,26 +106,39 @@ struct CascadeDatePickerStateTests {
     }
 
     @Test
-    func selectingMonthRequiresSelectedYear() {
+    func selectingMonthFromUnselectedStateUsesAnchorYear() {
         var state = CascadeDatePickerState()
         state.setDates([date(2024, 3, 1), date(2024, 4, 2)], calendar: calendar)
 
-        // 初始无选中年：月不可先选。
+        // 未选年：月列以展示锚点年（最早数据年）为当前年，首击即落位该月第一个数据日。
         let monthBeforeYear = state.select(month: 3)
-        #expect(!monthBeforeYear)
-        #expect(state.selection == nil)
-
-        let yearSelected = state.select(year: 2024)
-        #expect(yearSelected)
+        #expect(monthBeforeYear)
         #expect(state.selection == key(2024, 3, 1))
 
-        // 当前年内无数据的月不可选。
+        // 锚点年内无数据的月不可选。
         let emptyMonth = state.select(month: 5)
         #expect(!emptyMonth)
-        // 切换到有数据的月：级联到该月第一个有数据的日。
+        #expect(state.selection == key(2024, 3, 1))
+
+        // 已有选中年后保持既有语义：在当前年内切换到有数据的月。
         let dataMonth = state.select(month: 4)
         #expect(dataMonth)
         #expect(state.selection == key(2024, 4, 2))
+    }
+
+    @Test
+    func selectingDayFromUnselectedStateUsesAnchorMonth() {
+        var state = CascadeDatePickerState()
+        state.setDates([date(2024, 3, 10), date(2024, 3, 15)], calendar: calendar)
+
+        // 未选中：日列以最早数据日所在月为当前月，首击即选中该月内有数据的日。
+        let dayBeforeSelection = state.select(day: 15)
+        #expect(dayBeforeSelection)
+        #expect(state.selection == key(2024, 3, 15))
+
+        let noDataDay = state.select(day: 11)
+        #expect(!noDataDay)
+        #expect(state.selection == key(2024, 3, 15))
     }
 
     @Test
@@ -140,8 +153,30 @@ struct CascadeDatePickerStateTests {
 
         let otherDay = state.select(day: 15)
         #expect(otherDay)
-        let sameDay = state.select(day: 15)
-        #expect(!sameDay)
+        #expect(state.selection == key(2024, 3, 15))
+    }
+
+    @Test
+    func clickingSelectedDayClearsSelection() {
+        var state = CascadeDatePickerState()
+        state.setDates([date(2024, 3, 10), date(2024, 3, 15)], calendar: calendar)
+        _ = state.select(day: 15)
+        #expect(state.selection == key(2024, 3, 15))
+
+        // 再次点击已选中的日：清除选择（真变化，返回 true）。
+        let toggled = state.select(day: 15)
+        #expect(toggled)
+        #expect(state.selection == nil)
+
+        // 清除后未选中态再点同一天：重新选中（锚点回退路径）。
+        let reselected = state.select(day: 15)
+        #expect(reselected)
+        #expect(state.selection == key(2024, 3, 15))
+
+        // 非选中日的重复点击保持普通选中语义（选别的日）。
+        let otherDay = state.select(day: 10)
+        #expect(otherDay)
+        #expect(state.selection == key(2024, 3, 10))
     }
 
     @Test
@@ -161,6 +196,41 @@ struct CascadeDatePickerStateTests {
         let latest = state.selectLatest()
         #expect(latest)
         #expect(state.selection == key(2024, 6, 15))
+    }
+
+    @Test
+    func selectingExactDateTruncatesTimeAndRequiresData() {
+        var state = CascadeDatePickerState()
+        state.setDates([date(2024, 3, 10), date(2024, 3, 15, hour: 9)], calendar: calendar)
+
+        // 时间部分截断到天：同日晚间时刻命中当天数据。
+        let restored = state.select(date: date(2024, 3, 15, hour: 23), calendar: calendar)
+        #expect(restored)
+        #expect(state.selection == key(2024, 3, 15))
+
+        // 无数据的日不可选、不动既有选择。
+        let missing = state.select(date: date(2024, 3, 11), calendar: calendar)
+        #expect(!missing)
+        #expect(state.selection == key(2024, 3, 15))
+
+        // 与当前一致时返回 false（真变化才触发事件）。
+        let same = state.select(date: date(2024, 3, 15), calendar: calendar)
+        #expect(!same)
+    }
+
+    @Test
+    func clearingSelection() {
+        var state = CascadeDatePickerState()
+        state.setDates([date(2024, 3, 10)], calendar: calendar)
+        _ = state.select(year: 2024)
+
+        let cleared = state.clearSelection()
+        #expect(cleared)
+        #expect(state.selection == nil)
+        // 已无选择再清：返回 false，数据聚合不受影响。
+        let clearedAgain = state.clearSelection()
+        #expect(!clearedAgain)
+        #expect(state.recordCount(day: key(2024, 3, 10)) == 1)
     }
 
     @Test

@@ -10,6 +10,15 @@ Notable changes to RsUI. Format follows [Keep a Changelog](https://keepachangelo
 - **`startObserving(_:onChanged:)` — `onChanged` now returns `Bool`** (all five mirrors: `Page`, `NavigationViewItem`, `ProgressBar`, `ProgressRing`, `Window`, plus the shared `startObservingChanges`). Return `false` to stop the observation from inside the callback (`true` = keep observing, `takeWhile` polarity); the loop then finishes normally. Cancelling the returned `Task` remains the out-of-band stop (e.g. teardown). Existing closures must now return `true`.
 - **`Module.settingsGroup()` now returns `SettingsGroup?`** instead of `(title: String, cards: [UIElement])?`. Modules construct the group themselves, so they control `isExpandable` and the initial `isExpanded` (previously `SettingsPage` always wrapped the tuple in an expandable group). `SettingsPage` appends the returned group as-is.
 
+### Behavior changes
+
+- **`CascadeDatePicker`: month/day items are clickable from an unselected state** — clicks now fall back to the display anchor (earliest data day) for the year/month context instead of being silent no-ops (previously only year clicks worked until something was selected; the sample pages preselect, so the dead path never showed there).
+- **`CascadeDatePicker`: clicking the selected day again clears the selection** (`selectionChanged` fires `nil`) — a round-trip toggle instead of the previous silent no-op.
+
+### Added
+
+- **`CascadeDatePicker.select(date:)` / `clearSelection()`**: programmatic selection of an arbitrary data-backed day (e.g. restoring a selection after a view rebuild) and programmatic clear (data aggregation untouched). Both fire `selectionChanged` like item clicks; clear carries `nil`.
+
 ### Fixed
 
 - All WinUI-subclassed framework classes (24) and the GUI test-host windows (6) restate the inherited `@unchecked Sendable` conformance, clearing every Swift 6 "must restate inherited '@unchecked Sendable' conformance" warning. Downstream apps hit the same warning on their own UI subclasses (class Sendable is never implicit, even `final` without stored properties) — restate `@unchecked Sendable` on each, see the convention note in AGENTS.md (Toolchain Version Note).
