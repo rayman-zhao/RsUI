@@ -25,7 +25,7 @@ import WinUI
 ///    是一个 `Grid{ Row0 工具条, Row1 PageFrame }`。Back / Forward / +String /
 ///    +UIElem / +NilHdr / +Nav 全部作用于本 Tab 的 PageFrame，与窗口级选中
 ///    状态解耦；新 Page 只进入本 Tab 的导航栈。
-final class TabViewPageFrameTestWindow: Window {
+final class TabViewPageFrameTestWindow: Window, @unchecked Sendable {
     // 中枢：strip 是数量/顺序/选中的真理来源，frame 由 name 索引跟随 strip
     // （WinRT 投影里 TabViewItem 的 `===` 不稳，故按 name 索引）。
     private var tabView: TabView!

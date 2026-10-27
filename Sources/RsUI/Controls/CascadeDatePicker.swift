@@ -162,7 +162,7 @@ struct CascadeDatePickerState {
 /// 基类取 `ContentControl`（同 RangeSlider / ToggleButtons）：`isEnabled` 沿可视树自动级联
 /// 到全部条目，`isTabStop` 等控件语义齐备。投影类 Swift 子类的生命周期与基类选择无关
 /// （同一 COM 聚合桥，树成员资格保活；按类型实证，本库 ContentControl 子类全部存活）。
-open class CascadeDatePicker: ContentControl {
+open class CascadeDatePicker: ContentControl, @unchecked Sendable {
     /// 选中日变化时触发（点击条目、`selectEarliestDate()` / `selectLatestDate()`），
     /// 负载为选中的日期；`setDates` 导致选中日从数据中消失而清空时以 nil 触发。
     public let selectionChanged = EventWithArgumentHandler<CascadeDatePicker, Date?>()

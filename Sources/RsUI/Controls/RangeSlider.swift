@@ -157,7 +157,7 @@ struct RangeSliderState {
 ///
 /// 交互：直接拖动滑块(Thumb 原生捕获)、点击轨道(就近滑块跳到点击处后拖拽)、
 /// 键盘(聚焦滑块后 ←/→ 步进,PageUp/PageDown 大步进,Home/End 到边界)。
-public class RangeSlider: ContentControl {
+public class RangeSlider: ContentControl, @unchecked Sendable {
 
     /// `valueChanged` 事件的负载。
     public struct Change {

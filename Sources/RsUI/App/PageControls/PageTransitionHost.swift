@@ -3,7 +3,7 @@ import WinUI
 import WindowsFoundation
 
 /// Hosts page content and applies WinUI-style navigation transition overrides.
-class PageTransitionHost: Grid {
+class PageTransitionHost: Grid, @unchecked Sendable {
     private let animationDurationMs: Int64 = 200
     private let slideDistance: Double = 40.0
 

@@ -23,7 +23,7 @@ import WinUI
 /// 依赖 `{x:AppIconPath}` 占位符在已 bootstrap 的 App 中解析，测试宿主没有
 /// 应用图标会让 XamlReader 直接 fatal（与被测的内存问题无关）。泄漏机制
 /// （Window 级原生事件 + 聚合子类实例 + useRestoration 闭包）两者一致。
-final class RestorationLifecycleTestWindow: AppearanceWindow {
+final class RestorationLifecycleTestWindow: AppearanceWindow, @unchecked Sendable {
 
     private(set) var sawSizeChanged = false
 

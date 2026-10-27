@@ -21,7 +21,7 @@ import WindowsFoundation
 ///
 /// 本类自身为 `Grid`（2 行：strip / 内容），可直接 `window.content = pageTabView`
 /// 或塞进任意 WinUI 容器。
-class PageTabView: Grid, PageControl {
+class PageTabView: Grid, PageControl, @unchecked Sendable {
     var tabCount: Int { return tabView.tabItems.count }
 
     // WinUI.TabView 自身：只作 strip（行内不可见性的隐藏区 + 各 TabViewItem）。

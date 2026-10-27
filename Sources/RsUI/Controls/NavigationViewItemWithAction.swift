@@ -14,7 +14,7 @@ import WindowsFoundation
 /// load we locate that group in the visual subtree and track its `currentStateChanged`
 /// transitions (a classic, non-routed event, unaffected by pointer handling). Selection and
 /// focus ride the reliable property / focus events.
-public final class NavigationViewItemWithAction: NavigationViewItem {
+public final class NavigationViewItemWithAction: NavigationViewItem, @unchecked Sendable {
     public let actionButton: Button
     private var rowHovered = false
     private var buttonFocused = false

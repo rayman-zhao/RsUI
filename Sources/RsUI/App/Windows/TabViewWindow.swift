@@ -1,4 +1,4 @@
 import WinUI
 
-class TabViewWindow: AppearanceWindow {
+class TabViewWindow: AppearanceWindow, @unchecked Sendable {
 }

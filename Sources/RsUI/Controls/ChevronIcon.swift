@@ -16,7 +16,7 @@ import WindowsFoundation
 ///   chevron.expand()
 ///   // 收起时调用
 ///   chevron.collapse()
-public class ChevronIcon: WinUI.FontIcon {
+public class ChevronIcon: WinUI.FontIcon, @unchecked Sendable {
     private let expandAngle: Double
     private let durationMs: Int64
     private let transform = WinUI.CompositeTransform()

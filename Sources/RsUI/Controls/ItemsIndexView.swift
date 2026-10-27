@@ -26,7 +26,7 @@ import WinUI
 ///   需先为 swift-cppwinrt 补整数解箱原语（镜像 `boxedString` 先例：读回的
 ///   装箱整数是不透明 IInspectable，`as? Int` 恒失败），再按字符串味同构
 ///   实现整数味叶类；本类不承载该形态。
-open class ItemsIndexView: ItemsViewBase {
+open class ItemsIndexView: ItemsViewBase, @unchecked Sendable {
 
     /// 按索引构建条目视图。容器因虚拟化被回收复用时会再次调用，需返回新实例。
     public var makeView: (Int) -> UIElement
@@ -157,6 +157,6 @@ open class ItemsIndexView: ItemsViewBase {
 /// 携带"最后展示的索引"的条目容器：elementClearing 时实时索引已失效，
 /// 靠该 Swift 属性反查，免 tag 装箱解箱往返（读回装箱 Int 是不透明
 /// IInspectable，`as? Int` 恒失败，见类头"差异与边界"）。
-private final class IndexedItemContainer: ItemContainer {
+private final class IndexedItemContainer: ItemContainer, @unchecked Sendable {
     var displayedIndex: Int?
 }

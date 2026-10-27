@@ -10,7 +10,7 @@ import WindowsFoundation
 /// `VariableSizedWrapGrid` 在投影里是 final，无法继承，故继承 `ContentControl`、
 /// content 内嵌一个铺满的 wrapGrid（同 `RangeSlider` 的模式）。由此 `isEnabled`
 /// 直接继承自 `Control`：禁用沿可视树自动级联到全部子按钮，无需手动遍历。
-open class ToggleButtons: ContentControl {
+open class ToggleButtons: ContentControl, @unchecked Sendable {
     public let selectionChanged = EventWithArgumentHandler<ToggleButtons, String>()
 
     private let wrapGrid = VariableSizedWrapGrid()

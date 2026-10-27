@@ -1,7 +1,7 @@
 import WinUI
 import WindowsFoundation
 
-open class SettingsPanel: WinUI.Grid {
+open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
     public var isMainShown: Bool = true
 
     private let ui:

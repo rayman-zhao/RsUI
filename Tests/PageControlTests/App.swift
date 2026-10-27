@@ -4,7 +4,7 @@ import WinUI
 @testable import RsUI
 
 @main
-final class App: SwiftApplication {
+final class App: SwiftApplication, @unchecked Sendable {
     public nonisolated required init() {
         super.init()
     }

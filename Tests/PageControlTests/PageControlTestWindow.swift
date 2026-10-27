@@ -18,7 +18,7 @@ import WinUI
 ///   Window → Grid(root, 2 行: 工具栏 auto / 控件 star)
 ///     Row0: Border 工具栏（back / forward / 3 个加页按钮 + +NewTab + 计数显示）
 ///     Row1: PageFrame | PageTabView
-final class PageControlTestWindow: Window {
+final class PageControlTestWindow: Window, @unchecked Sendable {
     enum Mode {
         case frame
         case tabView

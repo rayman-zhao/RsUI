@@ -91,7 +91,7 @@ private struct OverlayRuntimeState {
 /// - Viewer 可以通过 `preferenceKey` 自行保存通用布局偏好；业务偏好仍由调用方维护。
 /// - 同一个 UIElement 同一时间只能属于一个父容器，设置内容前应确保它未挂载到其他位置。
 /// - 左右区域支持拖拽调整尺寸；顶部和底部当前只支持内容自适应尺寸。
-open class Viewer: WinUI.Grid {
+open class Viewer: WinUI.Grid, @unchecked Sendable {
     private let ui:
         (
             shellRoot: Grid,

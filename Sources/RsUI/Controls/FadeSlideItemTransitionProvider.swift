@@ -19,7 +19,7 @@ import WindowsFoundation
 /// ```swift
 /// list.itemTransitionProvider = FadeSlideItemTransitionProvider()
 /// ```
-public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProvider {
+public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProvider, @unchecked Sendable {
 
     /// 入场与顺移动画时长（默认 200ms，对齐 `PageTransitionHost`）。
     public var duration: TimeSpan

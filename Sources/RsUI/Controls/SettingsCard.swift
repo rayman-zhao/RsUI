@@ -16,7 +16,7 @@ public enum SettingsCardContentAlignment {
 /// (Normal/PointerOver/Pressed/Disabled) are driven by pointer and keyboard input,
 /// with a smooth background transition between states.
 /// Can be used standalone or hosted inside a SettingsExpander.
-public class SettingsCard: ButtonBase {
+public class SettingsCard: ButtonBase, @unchecked Sendable {
 
     // MARK: - Properties
 

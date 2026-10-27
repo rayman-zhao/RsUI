@@ -48,7 +48,7 @@ public enum AnnotatedScrollBarDetailLabelMode {
 /// 运行时要经应用的 IXamlMetadataProvider 反射 WinRT 类属性——swift-winui 应用
 /// 没有元数据提供器，绑定解析为空，标签实现化后零尺寸不可见（实测）。把文本直接
 /// 写进模板、用 Swift 侧的 offset 匹配来选模板，可完全绕开属性绑定。
-final class AnnotatedScrollBarLabelTemplateSelector: WinUI.DataTemplateSelector {
+final class AnnotatedScrollBarLabelTemplateSelector: WinUI.DataTemplateSelector, @unchecked Sendable {
     private let templatesByOffset: [Double: WinUI.DataTemplate]
 
     init(templatesByOffset: [Double: WinUI.DataTemplate]) {
@@ -171,7 +171,7 @@ private final class FullSpanScrollControllerBridge: WinUI.IScrollController {
 /// 生命周期：外层 Grid 挂进视觉树即被树持有（投影控件 Swift 子类语义），事件闭包
 /// 按惯例 `[weak self]`；labels / detailText / onScrolling 闭包请勿捕获比页面
 /// 更长命的状态。
-open class AnnotatedScrollBar: WinUI.Grid {
+open class AnnotatedScrollBar: WinUI.Grid, @unchecked Sendable {
     /// 滚动条发起滚动时透出（可读 `scrollingEventKind` / `scrollOffset`，
     /// 写 `cancel` 拦截——配合本回调可复刻「取消滚动」类交互）。
     public var onScrolling: ((WinUI.AnnotatedScrollBarScrollingEventArgs) -> Void)?

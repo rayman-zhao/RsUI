@@ -8,7 +8,7 @@ import WinUI
 /// 本类主要功能在于处理导航URL与Page对象的映射，并协调UI元素的显示。
 ///
 /// 提供context接口用于隔离窗口具体类型。
-class MainWindow: NavigationViewWindow, WindowContextHost {
+class MainWindow: NavigationViewWindow, WindowContextHost, @unchecked Sendable {
     private lazy var context = WindowContext(host: self)
     private lazy var pageControl: PageControl = PageTabView(windowContext: context)
 

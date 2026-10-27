@@ -1,6 +1,6 @@
 import WinUI
 
-public class SettingsGroup: StackPanel {
+public class SettingsGroup: StackPanel, @unchecked Sendable {
 
     // MARK: - Public properties
 

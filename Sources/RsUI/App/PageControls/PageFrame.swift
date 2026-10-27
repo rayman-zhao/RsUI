@@ -5,7 +5,7 @@ import WinUI
 /// 单页面栈容器：拥有一个 `PageModel`（back/forward 历史）+ 一个
 /// `PageTransitionHost`（转场渲染），负责把当前 Page 的 header/content 渲染进
 /// 转场宿主。
-class PageFrame: PageTransitionHost, PageControl {
+class PageFrame: PageTransitionHost, PageControl, @unchecked Sendable {
     private var model: PageModel
     let windowContext: WindowContext
     /// 上次渲染时的外观值。`updateAppearance` 在值未变时整体跳过：启动期

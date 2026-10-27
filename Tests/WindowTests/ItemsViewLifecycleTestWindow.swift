@@ -29,7 +29,7 @@ import WinUI
 ///
 /// 每阶段校验计数并输出 `IVLT:` 前缀日志，全部通过 exit(0)，断言失败或
 /// 中途 crash（进程非零退出）即为 RsUI 侧问题。
-final class ItemsViewLifecycleTestWindow: Window {
+final class ItemsViewLifecycleTestWindow: Window, @unchecked Sendable {
 
     private let testItemsView: RsUI.ItemsView
     private let testIndexView: RsUI.ItemsIndexView

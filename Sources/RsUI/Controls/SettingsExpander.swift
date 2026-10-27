@@ -1,7 +1,7 @@
 import WinUI
 import WindowsFoundation
 
-public class SettingsExpander: StackPanel {
+public class SettingsExpander: StackPanel, @unchecked Sendable {
 
     // MARK: - Public properties
 

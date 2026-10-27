@@ -12,7 +12,7 @@ import WindowsFoundation
 /// - ``ItemsView`` —— 字符串 id 味（向量元素即 id，身份稳定，内容按 id 构建）；
 /// - ``ItemsIndexView`` —— 索引味（`makeView` 直接收 repeater 索引，位置即身份，
 ///   全程不读回向量元素值，不依赖任何装箱解箱原语）。
-open class ItemsViewBase: WinUI.ItemsView {
+open class ItemsViewBase: WinUI.ItemsView, @unchecked Sendable {
 
     private var isRepeaterWired = false
     /// 视觉树内部的 ItemsRepeater（elementPrepared 订阅与索引换算用）。
@@ -262,7 +262,7 @@ open class ItemsViewBase: WinUI.ItemsView {
 ///   id 维度的便捷读取走 `selectedIds`（`selectionChanged` 事件参数是空壳）。
 /// - 列表需要有限高度的父容器（如 Grid 星型行）才能在内部滚动；
 ///   放进无限高的垂直 StackPanel 会导致内部滚动失效。
-open class ItemsView: ItemsViewBase {
+open class ItemsView: ItemsViewBase, @unchecked Sendable {
 
     /// 按 id 构建条目视图。容器因虚拟化被回收复用时会再次调用，需返回新实例。
     public var makeIdView: (String) -> UIElement
