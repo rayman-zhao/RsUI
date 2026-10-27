@@ -10,30 +10,30 @@ import WindowsFoundation
 // 构造只能留在 nonisolated 上下文完成；模块实例不经过 bootstrap，见 loadModules(_:)。
 @Observable
 public final class AppContext: @unchecked Sendable {
+    @ObservationIgnored
     public private(set) var groupName: String
+    @ObservationIgnored
     public private(set) var productName: String
+    @ObservationIgnored
     public private(set) var resourceBundle: Bundle
-
-    /// 支持目录与偏好存储由 group/product 推导、首次访问才落盘：static 构造看不见
-    /// 子类配置（App.init 两段式），默认阶段若急切 ensure 会先建出框架默认身份的
-    /// stray 目录。真实 app 首次访问必然发生在 bootstrap 之后。
-    public var supportDirectory: URL {
+    // 身份派生值：lazy 按首访时的身份永久缓存，首访必须晚于 bootstrap（真实流程
+    // 首次触达在 onLaunched 的 bootstrapGUI）；bootstrap 前访问会以框架默认身份
+    // 冻结并建出 stray 目录。
+    @ObservationIgnored
+    public private(set) lazy var supportDirectory: URL = {
         guard let support = URL.applicationSupportDirectory.ensuringChild(
             named: "\(groupName)/\(productName)/")
         else {
             fatalError("AppContext: failed to ensure support directory for \(groupName)/\(productName)")
         }
         return support
-    }
-
-    public var preferences: Preferences {
-        JSONPreferences.makeStandard(group: groupName, product: productName)
-    }
-
-    public var iconPath: String? {
-        resourceBundle.path(forResource: productName, ofType: "ico")
-    }
-    public var iconAppxUri: Uri? {
+    }()
+    @ObservationIgnored
+    public private(set) lazy var preferences = JSONPreferences.makeStandard(group: groupName, product: productName)
+    @ObservationIgnored
+    public private(set) lazy var iconPath: String? = resourceBundle.path(forResource: productName, ofType: "ico")
+    @ObservationIgnored
+    public private(set) lazy var iconAppxUri: Uri? = {
         guard let path = iconPath else { return nil }
         // ms-appx:// URI 必须是包根（exe 目录）相对路径。icon 不在包根下时无法
         // 推导，返回 nil 让调用方走无 logo 回退，而不是拼出畸形 URI 静默失败。
@@ -45,7 +45,8 @@ public final class AppContext: @unchecked Sendable {
         }
         let relativePath = path.trimmingPrefix(Bundle.main.bundlePath)
         return Uri("ms-appx://\(relativePath)")
-    }
+    }()
+
     public var theme: AppTheme = .undefined {
         didSet {
             guard oldValue != theme else { return }
@@ -64,6 +65,7 @@ public final class AppContext: @unchecked Sendable {
     }
     public var route = AppRoute()
 
+    @ObservationIgnored
     internal private(set) var modules: [any Module] = []
 
     init() {
@@ -91,7 +93,7 @@ public final class AppContext: @unchecked Sendable {
         if route.maxHistoryPages < 1 { route.maxHistoryPages = 1 }
     }
 
-    /// 模块实例由 App 子类在主 actor 上构造后传入（App.makeModules()）——模块
+    /// 模块实例由 App 子类在主 actor 上构造后传入（App.modules）——模块
     /// 构造可依赖 context 就绪；@MainActor Module 实例不经 nonisolated 的
     /// bootstrap 传递。
     @MainActor func loadModules(_ modules: [any Module]) {
@@ -110,8 +112,7 @@ public final class AppContext: @unchecked Sendable {
     }
 
     public func tr(xaml: String, table: String? = nil) -> String {
-        // FIXME: Prior to Swift 6, need to write #/myregex/# instead of /myregex/
-        let pattern = #/{x:Tr ([^}]+)}/#
+        let pattern = /{x:Tr ([^}]+)}/
         let matches = xaml.matches(of: pattern).map { $0.1 }
 
         var result = xaml
