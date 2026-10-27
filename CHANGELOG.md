@@ -6,8 +6,13 @@ Notable changes to RsUI. Format follows [Keep a Changelog](https://keepachangelo
 
 ### Breaking
 
+- **`AppConfiguration` removed — app identity is now three flat `class var` overrides**: `groupName` / `productName` / `resourceBundle` (defaults keep the framework's own identity; `modules` unchanged). `AppContext` identity-derived values (`supportDirectory`, `preferences`, `iconPath`, `iconAppxUri`) are now `@ObservationIgnored` lazy and `private(set)` — first access must postdate `bootstrap` (values cache permanently under the identity at first access; `supportDirectory`/`preferences` previously re-derived on every access).
 - **`startObserving(_:onChanged:)` — `onChanged` now returns `Bool`** (all five mirrors: `Page`, `NavigationViewItem`, `ProgressBar`, `ProgressRing`, `Window`, plus the shared `startObservingChanges`). Return `false` to stop the observation from inside the callback (`true` = keep observing, `takeWhile` polarity); the loop then finishes normally. Cancelling the returned `Task` remains the out-of-band stop (e.g. teardown). Existing closures must now return `true`.
 - **`Module.settingsGroup()` now returns `SettingsGroup?`** instead of `(title: String, cards: [UIElement])?`. Modules construct the group themselves, so they control `isExpandable` and the initial `isExpanded` (previously `SettingsPage` always wrapped the tuple in an expandable group). `SettingsPage` appends the returned group as-is.
+
+### Fixed
+
+- All WinUI-subclassed framework classes (24) and the GUI test-host windows (6) restate the inherited `@unchecked Sendable` conformance, clearing every Swift 6 "must restate inherited '@unchecked Sendable' conformance" warning. Downstream apps hit the same warning on their own UI subclasses (class Sendable is never implicit, even `final` without stored properties) — restate `@unchecked Sendable` on each, see the convention note in AGENTS.md (Toolchain Version Note).
 
 ## [0.1.0] — 2026-09-21
 
