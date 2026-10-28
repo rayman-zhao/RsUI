@@ -208,15 +208,14 @@ open class CascadeDatePicker: ContentControl, @unchecked Sendable {
         static let naturalRows = 12
         /// 空数据时日列的占位天数（1...31），不查真实月长。
         static let emptyDisplayDays = 31
-        /// Root 上下 Padding=4 的合计；高度预算与行数换算两处必须一致。
-        static let rootVerticalPadding: Double = 8
         static let chevronGlyph = "\u{E76C}"
     }
 
-    /// 12 行预算对应的控件高度（含 Root 上下 Padding 与行间距）。
+    /// 12 行预算对应的控件高度。Root 无 padding（Flyout 的 presenter 自带
+    /// 16/15/16/17 留白；独立宿主由条目内距与分隔线 margin 兜底）。
     private var naturalHeightBudget: Double {
         Double(Metrics.naturalRows) * itemHeight
-            + Double(Metrics.naturalRows - 1) * itemSpacing + Metrics.rootVerticalPadding
+            + Double(Metrics.naturalRows - 1) * itemSpacing
     }
 
     /// 条目高由控件字号推导：14px 字号对应 Segoe UI 约 20px 行高，上下各留 2px 呼吸
@@ -461,7 +460,7 @@ open class CascadeDatePicker: ContentControl, @unchecked Sendable {
         let button = Button()
         button.height = itemHeight
         button.cornerRadius = CornerRadius(topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
-        button.padding = Thickness(left: 12, top: 0, right: 10, bottom: 0)
+        button.padding = Thickness(left: 6, top: 0, right: 4, bottom: 0)
         button.horizontalContentAlignment = .left
         button.isEnabled = isEnabled
         try? AutomationProperties.setName(button, label)
@@ -615,8 +614,7 @@ open class CascadeDatePicker: ContentControl, @unchecked Sendable {
         } else {
             // StackPanel 不在末项后追加间距：行数判定先把间距补回去再按节距取整，
             // 否则恰好容纳全部行的宿主会被误判少一行而多余分栏。
-            let usable = max(0, available - Metrics.rootVerticalPadding)
-            rows = max(1, Int((usable + itemSpacing) / itemPitch))
+            rows = max(1, Int((max(0, available) + itemSpacing) / itemPitch))
         }
         for index in columns.indices where columns[index].rows != rows {
             columns[index].rows = rows
@@ -656,8 +654,7 @@ private var xamlUI: String {
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Name="Root"
-        Background="Transparent"
-        Padding="4">
+        Background="Transparent">
         <Grid.Resources>
             <ResourceDictionary>
                 <ResourceDictionary.ThemeDictionaries>

@@ -73,15 +73,21 @@ final class CascadeDatePickerPage: RsUI.Page {
         flyout.content = flyoutPicker
         dropDown.flyout = flyout
 
+        // 原生对照：同屏打开两个浮层，直接比密度与留白。
+        let nativePicker = CalendarDatePicker()
+        nativePicker.placeholderText = tr("Native CalendarDatePicker")
+
         let flyoutRow = StackPanel()
         flyoutRow.orientation = .horizontal
         flyoutRow.spacing = 12
         flyoutRow.children.append(dropDown)
         flyoutRow.children.append(echo)
+        flyoutRow.children.append(nativePicker)
 
         let flyoutCard = SettingsCard(
             header: tr("In a flyout"),
-            description: makeCaption(tr("The same control hosted in a DropDownButton flyout.")),
+            description: makeCaption(
+                tr("The same control hosted in a DropDownButton flyout, next to the native CalendarDatePicker for comparison.")),
             content: flyoutRow)
 
         // —— 数据与选项（作用于上面三个 picker）——

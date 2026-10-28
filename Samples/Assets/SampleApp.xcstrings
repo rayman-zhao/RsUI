@@ -1242,6 +1242,23 @@
         }
       }
     },
+    "Native CalendarDatePicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Native CalendarDatePicker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生 CalendarDatePicker"
+          }
+        }
+      }
+    },
     "Natural height" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2347,19 +2364,19 @@
         }
       }
     },
-    "The same control hosted in a DropDownButton flyout." : {
+    "The same control hosted in a DropDownButton flyout, next to the native CalendarDatePicker for comparison." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The same control hosted in a DropDownButton flyout."
+            "value" : "The same control hosted in a DropDownButton flyout, next to the native CalendarDatePicker for comparison."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "同一控件宿主在 DropDownButton 的浮出层中。"
+            "value" : "同一控件宿主在 DropDownButton 浮出层中，并与原生 CalendarDatePicker 并排对照。"
           }
         }
       }
