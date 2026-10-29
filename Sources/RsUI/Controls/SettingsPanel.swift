@@ -1,8 +1,19 @@
+import UWP
 import WinUI
 import WindowsFoundation
 
 open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
     public var isMainShown: Bool = true
+
+    /// append 登记的 group 信息：头部快捷跳转按钮、当前可见性（setGroup 的目标值）
+    /// 与收起时钉住的原始高度（重显时的展开目标）。key 用 ObjectIdentifier——
+    /// 调用方持有的 SettingsGroup Swift 实例是唯一身份来源。
+    private struct GroupRegistration {
+        let button: AppBarButton?
+        var isVisible: Bool
+        var pinnedHeight: Double?
+    }
+    private var groupRegistrations: [ObjectIdentifier: GroupRegistration] = [:]
 
     private let ui:
         (
@@ -74,9 +85,10 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
     public func append(glyph: String?, group: SettingsGroup) {
         ui.mainPanel.children.append(group)
 
+        var button: AppBarButton?
         if let glyph {
-            let button = AppBarButton.makeIconOnly(glyph: glyph, tooltip: group.title)
-            button.click.addHandler { [weak self] _, _ in
+            let jumpButton = AppBarButton.makeIconOnly(glyph: glyph, tooltip: group.title)
+            jumpButton.click.addHandler { [weak self] _, _ in
                 guard
                     let self,
                     let transform = try? group.transformToVisual(ui.mainScrollView),
@@ -86,13 +98,101 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
                 let offset = min(ui.mainScrollView.scrollableHeight, max(0.0, ui.mainScrollView.verticalOffset + Double(point.y)))
                 _ = try? ui.mainScrollView.scrollTo(0, offset)
             }
-            ui.headerPanel.children.append(button)
+            ui.headerPanel.children.append(jumpButton)
+            button = jumpButton
         }
+        groupRegistrations[ObjectIdentifier(group)] = GroupRegistration(button: button, isVisible: true)
     }
 
-    public func append(glyph: String?, title: String, cards: [UIElement]) {
+    @discardableResult
+    public func append(glyph: String?, title: String, cards: [UIElement]) -> SettingsGroup {
         let group = SettingsGroup(title: title, cards: cards)
         append(glyph: glyph, group: group)
+        return group
+    }
+
+    /// 显示或隐藏一个已 append 的 group（连同其头部快捷跳转按钮）。
+    /// 高度展开/收起（节奏对齐 SettingsGroup 卡片宿主：0.333s EaseOut / 0.133s EaseIn），
+    /// 面板内后续 group 随布局上下滑动；头部按钮直接切换可见性（横向栈内邻居位移
+    /// 无法平滑，半程动画反而显脏）。同值重复设置为 no-op，未 append 的 group 静默忽略。
+    public func setGroup(_ group: SettingsGroup, visible: Bool) {
+        let key = ObjectIdentifier(group)
+        guard var registration = groupRegistrations[key], registration.isVisible != visible else { return }
+
+        registration.isVisible = visible
+        registration.button?.visibility = visible ? .visible : .collapsed
+
+        let storyboard = Storyboard()
+        let easing = CubicEase()
+
+        if visible {
+            // 从未隐藏过（初始即显示）时无钉住高度，直接显示即可
+            guard let height = registration.pinnedHeight else {
+                groupRegistrations[key] = registration
+                group.visibility = .visible
+                return
+            }
+            groupRegistrations[key] = registration
+
+            group.visibility = .visible
+            easing.easingMode = .easeOut
+            let duration = makeDuration(milliseconds: 333)
+            addAnimation(to: storyboard, target: group, property: "Height", to: height, duration: duration, easing: easing, enablesDependentAnimation: true)
+            addAnimation(to: storyboard, target: group, property: "Opacity", to: 1.0, duration: duration, easing: easing)
+            storyboard.completed.addHandler { [weak self, weak group] _, _ in
+                guard let self, let group else { return }
+                // 展开完成交还自然布局并清掉钉住高度（组内状态可能已变化）；
+                // 期间目标又翻转为隐藏则保持钉住，由收起动画从当前高度接管
+                if groupRegistrations[ObjectIdentifier(group)]?.isVisible == true {
+                    group.height = Double.nan
+                    groupRegistrations[ObjectIdentifier(group)]?.pinnedHeight = nil
+                }
+            }
+        } else {
+            // 展开半途反向收起时不重抓高度，保留原钉住值作为重显目标
+            if registration.pinnedHeight == nil {
+                registration.pinnedHeight = group.actualHeight
+            }
+            groupRegistrations[key] = registration
+
+            group.height = group.actualHeight
+            easing.easingMode = .easeIn
+            let duration = makeDuration(milliseconds: 133)
+            addAnimation(to: storyboard, target: group, property: "Height", to: 0.0, duration: duration, easing: easing, enablesDependentAnimation: true)
+            addAnimation(to: storyboard, target: group, property: "Opacity", to: 0.0, duration: duration, easing: easing)
+            storyboard.completed.addHandler { [weak self, weak group] _, _ in
+                guard let self, let group else { return }
+                // completed 晚于目标值翻转（收起中被重新显示）时不折叠。
+                // 折叠移除相邻 16px 间距的定格跳变无法避免（StackPanel spacing
+                // 不可动画），方向与滑动一致故不显突兀
+                if groupRegistrations[ObjectIdentifier(group)]?.isVisible == false {
+                    group.visibility = .collapsed
+                }
+            }
+        }
+
+        try? storyboard.begin()
+    }
+
+    /// From 一律省略：以当前值为起点，半途反向（收起中显示/展开中收起）可从中间值续走。
+    /// Height 属依赖动画（逐帧驱动布局），WinUI 默认禁用且静默跳过，须显式开启。
+    private func addAnimation(
+        to storyboard: Storyboard,
+        target: FrameworkElement,
+        property: String,
+        to: Double,
+        duration: Duration,
+        easing: CubicEase,
+        enablesDependentAnimation: Bool = false
+    ) {
+        let animation = DoubleAnimation()
+        animation.to = to
+        animation.duration = duration
+        animation.easingFunction = easing
+        animation.enableDependentAnimation = enablesDependentAnimation
+        try? Storyboard.setTarget(animation, target)
+        try? Storyboard.setTargetProperty(animation, property)
+        storyboard.children.append(animation)
     }
 
     /// 二级页占满内容区；content 的显示与滚动由调用方决定——
@@ -113,6 +213,13 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
 
         try? ui.mainHiddenStoryboard.begin()
         try? ui.secondShownStoryboard.begin()
+    }
+
+    private func makeDuration(milliseconds: Int64) -> Duration {
+        Duration(
+            timeSpan: TimeSpan(duration: milliseconds * 10_000),
+            type: .timeSpan
+        )
     }
 }
 

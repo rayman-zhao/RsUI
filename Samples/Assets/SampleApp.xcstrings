@@ -2483,6 +2483,23 @@
         }
       }
     },
+    "Toggle group visibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle group visibility"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换分组显隐"
+          }
+        }
+      }
+    },
     "Toggle light / dark theme" : {
       "extractionState" : "manual",
       "localizations" : {

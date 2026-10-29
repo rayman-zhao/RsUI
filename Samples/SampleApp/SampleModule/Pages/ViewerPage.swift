@@ -64,6 +64,7 @@ final class ViewerPage: RsUI.Page {
         viewer.leftContent = leftText
 
         let rightPane = SettingsPanel()
+        var groups: [SettingsGroup] = []
         for i in 0..<8 {
             let title = String(format: tr("Group %d"), Int32(i))
             let card = SettingsCard(header: title)
@@ -108,7 +109,18 @@ final class ViewerPage: RsUI.Page {
                 rightPane.navigateTo(label: l, content: content)
             }
             let card2 = SettingsCard(header: String(format: tr("Group %d Not Clickable"), Int32(i)))
-            rightPane.append(glyph: "\u{F0E3}", title: title, cards: [card, card2])
+            groups.append(rightPane.append(glyph: "\u{F0E3}", title: title, cards: [card, card2]))
+        }
+
+        // 演示 setGroup：切换第 4 个组的显隐（组体动画 + 头部按钮随之消失）。
+        let demoGroup = groups[3]
+        var demoGroupVisible = true
+        let toggleButton = (try? loaded.findName("ToggleGroupButton")) as? AppBarButton
+        toggleButton?.click.addHandler { [weak rightPane] _, _ in
+            guard let rightPane else { return }
+
+            demoGroupVisible.toggle()
+            rightPane.setGroup(demoGroup, visible: demoGroupVisible)
         }
 
         viewer.rightContent = rightPane
@@ -152,11 +164,15 @@ final class ViewerPage: RsUI.Page {
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="TopHost" Grid.Column="0" Text="{x:Tr The Viewer Toolbar}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <AppBarButton x:Name="SimulateInitButton" Icon="Sync" Grid.Column="1" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr Simulate initialization}">
             </AppBarButton>
-            <AppBarButton x:Name="FullscreenButton" Icon="Fullscreen" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}">
+            <AppBarButton x:Name="ToggleGroupButton" Grid.Column="2" Style="{StaticResource ViewerChromeAppBarButtonStyle}" ToolTipService.ToolTip="{x:Tr Toggle group visibility}">
+                <FontIcon Glyph="&#xE890;"/>
+            </AppBarButton>
+            <AppBarButton x:Name="FullscreenButton" Icon="Fullscreen" Grid.Column="3" Style="{StaticResource ViewerChromeAppBarButtonStyle}">
             </AppBarButton>
         </Grid>
         """
