@@ -646,8 +646,7 @@ open class AnnotatedScrollBar: WinUI.Grid, @unchecked Sendable {
         animation.enableDependentAnimation = true
         animation.from = overlay.opacity
         animation.to = target
-        animation.duration = WinUI.Duration(
-            timeSpan: WindowsFoundation.TimeSpan(duration: 150 * 10_000), type: .timeSpan)
+        animation.duration = WinUI.Duration.make(milliseconds: 150)
         try? WinUI.Storyboard.setTarget(animation, overlay)
         try? WinUI.Storyboard.setTargetProperty(animation, "Opacity")
 

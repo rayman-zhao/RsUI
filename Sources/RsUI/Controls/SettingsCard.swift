@@ -176,7 +176,7 @@ public class SettingsCard: ButtonBase, @unchecked Sendable {
             cardRoot.cornerRadius = WinUI.CornerRadius(
                 topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4)
             let backgroundTransition = WinUI.BrushTransition()
-            backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
+            backgroundTransition.duration = WindowsFoundation.TimeSpan.make(milliseconds: 83)
             cardRoot.backgroundTransition = backgroundTransition
 
             // Like the toolkit style: the card only joins tab navigation when it acts as a button.

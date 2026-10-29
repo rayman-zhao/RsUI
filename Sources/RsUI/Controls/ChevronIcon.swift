@@ -61,10 +61,7 @@ public class ChevronIcon: WinUI.FontIcon, @unchecked Sendable {
         let anim = WinUI.DoubleAnimation()
         anim.from = transform.rotation
         anim.to = angle
-        anim.duration = WinUI.Duration(
-            timeSpan: WindowsFoundation.TimeSpan(duration: durationMs * 10_000),
-            type: .timeSpan
-        )
+        anim.duration = WinUI.Duration.make(milliseconds: durationMs)
         let easing = WinUI.CubicEase()
         easing.easingMode = .easeOut
         anim.easingFunction = easing

@@ -136,7 +136,7 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
 
             group.visibility = .visible
             easing.easingMode = .easeOut
-            let duration = makeDuration(milliseconds: 333)
+            let duration = Duration.make(milliseconds: 333)
             addAnimation(to: storyboard, target: group, property: "Height", to: height, duration: duration, easing: easing, enablesDependentAnimation: true)
             addAnimation(to: storyboard, target: group, property: "Opacity", to: 1.0, duration: duration, easing: easing)
             storyboard.completed.addHandler { [weak self, weak group] _, _ in
@@ -157,7 +157,7 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
 
             group.height = group.actualHeight
             easing.easingMode = .easeIn
-            let duration = makeDuration(milliseconds: 133)
+            let duration = Duration.make(milliseconds: 133)
             addAnimation(to: storyboard, target: group, property: "Height", to: 0.0, duration: duration, easing: easing, enablesDependentAnimation: true)
             addAnimation(to: storyboard, target: group, property: "Opacity", to: 0.0, duration: duration, easing: easing)
             storyboard.completed.addHandler { [weak self, weak group] _, _ in
@@ -215,12 +215,6 @@ open class SettingsPanel: WinUI.Grid, @unchecked Sendable {
         try? ui.secondShownStoryboard.begin()
     }
 
-    private func makeDuration(milliseconds: Int64) -> Duration {
-        Duration(
-            timeSpan: TimeSpan(duration: milliseconds * 10_000),
-            type: .timeSpan
-        )
-    }
 }
 
 private var xamlUI: String {

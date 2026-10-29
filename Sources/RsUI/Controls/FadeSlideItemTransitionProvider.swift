@@ -29,8 +29,8 @@ public final class FadeSlideItemTransitionProvider: ItemCollectionTransitionProv
     public var slideDistance: Float
 
     public init(
-        duration: TimeSpan = TimeSpan(duration: 200 * 10_000),
-        fadeOutDuration: TimeSpan = TimeSpan(duration: 150 * 10_000),
+        duration: TimeSpan = TimeSpan.make(milliseconds: 200),
+        fadeOutDuration: TimeSpan = TimeSpan.make(milliseconds: 150),
         slideDistance: Float = 40
     ) {
         self.duration = duration

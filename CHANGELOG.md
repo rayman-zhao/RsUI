@@ -19,6 +19,7 @@ Notable changes to RsUI. Format follows [Keep a Changelog](https://keepachangelo
 
 - **`CascadeDatePicker.select(date:)` / `clearSelection()`**: programmatic selection of an arbitrary data-backed day (e.g. restoring a selection after a view rebuild) and programmatic clear (data aggregation untouched). Both fire `selectionChanged` like item clicks; clear carries `nil`.
 - **`SettingsPanel.setGroup(_:visible:)`**: show or hide an appended group together with its header quick-jump button — the group body animates its height (expand/collapse matching `SettingsGroup`'s card-host rhythm: 333 ms EaseOut / 133 ms EaseIn) so following groups slide with the layout; the header button toggles instantly; repeated calls with the same value are no-ops, unknown groups are silently ignored. The `append(glyph:title:cards:)` convenience overload now returns the created `SettingsGroup` (`@discardableResult`), so callers of either append overload hold the group reference `setGroup` needs.
+- **`TimeSpan.make(milliseconds:)` / `WinUI.Duration.make(milliseconds:)`** (`Support/Duration+Extensions.swift`): the single site for the ms → 100ns-tick conversion behind every animation duration — replaces the three per-control private `makeDuration` copies (`PageTransitionHost` / `SettingsExpander` / `SettingsPanel`) and the inline `* 10_000` constructions (`ChevronIcon`, `AnnotatedScrollBar`, the `BrushTransition` setups in `SettingsCard` / `SettingsExpander`, `FadeSlideItemTransitionProvider`'s init defaults; default values unchanged).
 
 ### Fixed
 

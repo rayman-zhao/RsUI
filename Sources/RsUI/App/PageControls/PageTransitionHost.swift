@@ -71,7 +71,7 @@ class PageTransitionHost: Grid, @unchecked Sendable {
         isAnimating = true
 
         let storyboard = Storyboard()
-        let duration = makeDuration(milliseconds: animationDurationMs)
+        let duration = Duration.make(milliseconds: animationDurationMs)
         let easing = CubicEase()
         easing.easingMode = .easeOut
 
@@ -124,7 +124,7 @@ class PageTransitionHost: Grid, @unchecked Sendable {
         isAnimating = true
 
         let storyboard = Storyboard()
-        let duration = makeDuration(milliseconds: animationDurationMs)
+        let duration = Duration.make(milliseconds: animationDurationMs)
         let easing = CubicEase()
         easing.easingMode = .easeOut
 
@@ -214,10 +214,4 @@ class PageTransitionHost: Grid, @unchecked Sendable {
         }
     }
 
-    private func makeDuration(milliseconds: Int64) -> Duration {
-        Duration(
-            timeSpan: TimeSpan(duration: milliseconds * 10_000),
-            type: .timeSpan
-        )
-    }
 }

@@ -142,7 +142,7 @@ public class SettingsExpander: StackPanel, @unchecked Sendable {
         outerCard.borderBrush = Brush.fluentTheme("CardStrokeColorDefaultBrush")
         outerCard.borderThickness = WinUI.Thickness(left: 1, top: 1, right: 1, bottom: 1)
         let backgroundTransition = WinUI.BrushTransition()
-        backgroundTransition.duration = WindowsFoundation.TimeSpan(duration: 83 * 10_000)
+        backgroundTransition.duration = WindowsFoundation.TimeSpan.make(milliseconds: 83)
         outerCard.backgroundTransition = backgroundTransition
         outerCard.children.append(cardStack)
         headerCard.setInteractionVisualTarget(outerCard)
@@ -221,12 +221,12 @@ public class SettingsExpander: StackPanel, @unchecked Sendable {
         let opacityAnim = WinUI.DoubleAnimation()
         opacityAnim.from = expanding ? 0 : 1
         opacityAnim.to = expanding ? 1 : 0
-        opacityAnim.duration = makeDuration(milliseconds: Int64(duration))
+        opacityAnim.duration = WinUI.Duration.make(milliseconds: Int64(duration))
 
         let translateAnim = WinUI.DoubleAnimation()
         translateAnim.from = expanding ? -8 : 0
         translateAnim.to = expanding ? 0 : -8
-        translateAnim.duration = makeDuration(milliseconds: Int64(duration))
+        translateAnim.duration = WinUI.Duration.make(milliseconds: Int64(duration))
 
         let easing = WinUI.CubicEase()
         easing.easingMode = easingMode
@@ -266,10 +266,4 @@ public class SettingsExpander: StackPanel, @unchecked Sendable {
         try? storyboard.begin()
     }
 
-    private func makeDuration(milliseconds: Int64) -> WinUI.Duration {
-        WinUI.Duration(
-            timeSpan: WindowsFoundation.TimeSpan(duration: milliseconds * 10_000),
-            type: .timeSpan
-        )
-    }
 }
