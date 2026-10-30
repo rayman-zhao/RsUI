@@ -123,6 +123,9 @@ final class SampleModule: @MainActor Module {
             itemsViewNavItem(id: id),
             NavigationViewItem.build(
                 iconGlyph: "\u{E73E}", label: tr("Toggle Buttons"), url: "rs://\(id)/toggle-buttons"),
+            NavigationViewItem.build(
+                iconGlyph: "\u{E8B9}", label: tr("Image Toggle Buttons"),
+                url: "rs://\(id)/image-toggle-buttons"),
         ]
         return items
     }
@@ -236,6 +239,8 @@ final class SampleModule: @MainActor Module {
             return ItemsViewDocumentationPage()
         case "/toggle-buttons":
             return ToggleButtonsPage()
+        case "/image-toggle-buttons":
+            return ImageToggleButtonsPage()
         case "/footer-picker":
             return PickerPage(path: url.path)
         default:

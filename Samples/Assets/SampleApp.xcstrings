@@ -18,6 +18,23 @@
         }
       }
     },
+    "15 PNGs sliced from a single labeled illustration — border-flood background removal, content trim, square pad, natural source resolution." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 PNGs sliced from a single labeled illustration — border-flood background removal, content trim, square pad, natural source resolution."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 张 PNG 由一张带文字标注的大图切出——边缘泛洪去白底、按内容裁边、补方、保留原图分辨率。"
+          }
+        }
+      }
+    },
     "A code-filled list over ItemsView in two flavors: string ids (identity stays stable while indexes shift) and pure indexes (content follows position). Toggle the item identity and drive the same incremental actions — inserting at the top keeps row content in the id flavor but renumbers it in the index flavor; Reset rebuilds the whole list." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -99,6 +116,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "稳定整数 id 味（数据库主键）目前刻意未提供：读回的装箱整数是不透明 IInspectable（as? Int 恒失败），需先在投影 fork 补解箱 shim。"
+          }
+        }
+      }
+    },
+    "Activated macrophage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activated macrophage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活化巨噬细胞"
           }
         }
       }
@@ -205,6 +239,23 @@
         }
       }
     },
+    "AppBarToggleButton — image as icon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppBarToggleButton — image as icon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppBarToggleButton——图片即图标"
+          }
+        }
+      }
+    },
     "AppContext.openNewWindow" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -307,6 +358,40 @@
         }
       }
     },
+    "B cell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "B cell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "B 细胞"
+          }
+        }
+      }
+    },
+    "B cell with antibodies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "B cell with antibodies"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "带抗体的 B 细胞"
+          }
+        }
+      }
+    },
     "Basic SettingsCard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -341,6 +426,23 @@
         }
       }
     },
+    "Basophil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basophil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嗜碱性粒细胞"
+          }
+        }
+      }
+    },
     "Batch Open" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -354,6 +456,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "批量打开"
+          }
+        }
+      }
+    },
+    "BitmapIcon — showAsMonochrome recolors the bitmap to the theme foreground, so it tracks hover, checked and theme states." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BitmapIcon — showAsMonochrome recolors the bitmap to the theme foreground, so it tracks hover, checked and theme states."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BitmapIcon——showAsMonochrome 将位图重染为主题前景色，跟随悬停、选中与主题状态。"
           }
         }
       }
@@ -426,6 +545,40 @@
         }
       }
     },
+    "Cell icons sliced from a sprite sheet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cell icons sliced from a sprite sheet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从雪碧图切出的细胞图标"
+          }
+        }
+      }
+    },
+    "Checked:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选中："
+          }
+        }
+      }
+    },
     "Child rows live inside the expander's animated panel." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -439,6 +592,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "子行位于 expander 的动画面板中。"
+          }
+        }
+      }
+    },
+    "Circle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Circle"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圆形"
           }
         }
       }
@@ -507,6 +677,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可点击的 SettingsCard"
+          }
+        }
+      }
+    },
+    "Content accepts any element — an image and a caption can be composed into one button." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content accepts any element — an image and a caption can be composed into one button."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "content 接受任意元素——图片与文字可组合进同一个按钮。"
           }
         }
       }
@@ -630,6 +817,40 @@
         }
       }
     },
+    "Dendritic cell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dendritic cell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "树突状细胞"
+          }
+        }
+      }
+    },
+    "Diamond" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diamond"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菱形"
+          }
+        }
+      }
+    },
     "Directory case: selects the app support directory in its parent folder." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -660,6 +881,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "双击"
+          }
+        }
+      }
+    },
+    "Each button toggles independently; the checked state keeps the pressed background." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each button toggles independently; the checked state keeps the pressed background."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个按钮独立切换；选中态保持按下背景。"
           }
         }
       }
@@ -728,6 +966,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "进入标签页全屏"
+          }
+        }
+      }
+    },
+    "Eosinophil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eosinophil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嗜酸性粒细胞"
+          }
+        }
+      }
+    },
+    "Erythrocytes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erythrocytes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "红细胞"
           }
         }
       }
@@ -953,6 +1225,23 @@
         }
       }
     },
+    "Hexagon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hexagon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "六边形"
+          }
+        }
+      }
+    },
     "Hides chrome and reparents the selected tab content to a root overlay. Press Esc to exit." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1017,6 +1306,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "图片文件"
+          }
+        }
+      }
+    },
+    "Image Toggle Buttons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image Toggle Buttons"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片切换按钮"
+          }
+        }
+      }
+    },
+    "ImageIcon — the bitmap is drawn in full color, unaffected by checked state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ImageIcon — the bitmap is drawn in full color, unaffected by checked state."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ImageIcon——原样绘制彩色位图，不随选中状态变化。"
           }
         }
       }
@@ -1208,6 +1531,40 @@
         }
       }
     },
+    "Lymphocyte" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lymphocyte"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "淋巴细胞"
+          }
+        }
+      }
+    },
+    "Mast cell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mast cell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "肥大细胞"
+          }
+        }
+      }
+    },
     "Medical imaging maps the selected HU range to grayscale: Window Width = upper − lower, Window Level = (upper + lower) / 2. The bar previews the mapping. Drag between the thumbs to pan the level keeping the width." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1225,6 +1582,23 @@
         }
       }
     },
+    "Monocyte" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monocyte"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单核细胞"
+          }
+        }
+      }
+    },
     "Month view" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1238,6 +1612,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "月视图"
+          }
+        }
+      }
+    },
+    "Multiple" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multiple"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多选"
           }
         }
       }
@@ -1293,6 +1684,23 @@
         }
       }
     },
+    "Natural killer cell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natural killer cell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自然杀伤细胞"
+          }
+        }
+      }
+    },
     "Navigation Modes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1323,6 +1731,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NavigationOpenMode"
+          }
+        }
+      }
+    },
+    "Neutrophil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neutrophil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中性粒细胞"
           }
         }
       }
@@ -1820,6 +2245,40 @@
         }
       }
     },
+    "Plain WinUI ToggleButton and AppBarToggleButton carrying PNG images, no custom control. ToggleButton takes the image as its content; AppBarToggleButton takes a BitmapIcon or ImageIcon in its icon slot." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plain WinUI ToggleButton and AppBarToggleButton carrying PNG images, no custom control. ToggleButton takes the image as its content; AppBarToggleButton takes a BitmapIcon or ImageIcon in its icon slot."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标准 WinUI ToggleButton 与 AppBarToggleButton 直接承载 PNG 图片，不涉及自定义控件。ToggleButton 把图片作为 content；AppBarToggleButton 把 BitmapIcon / ImageIcon 放进图标槽。"
+          }
+        }
+      }
+    },
+    "Platelets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platelets"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "血小板"
+          }
+        }
+      }
+    },
     "Range Slider" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1833,6 +2292,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "范围滑块"
+          }
+        }
+      }
+    },
+    "Re-roll all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-roll all"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部重抽"
+          }
+        }
+      }
+    },
+    "Re-roll bar color" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-roll bar color"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换色条颜色"
+          }
+        }
+      }
+    },
+    "Re-roll marker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-roll marker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新抽 Marker"
+          }
+        }
+      }
+    },
+    "Re-roll staining" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-roll staining"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新抽染色"
           }
         }
       }
@@ -1867,6 +2394,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已请求显示：%@"
+          }
+        }
+      }
+    },
+    "Resting macrophage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resting macrophage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "静息巨噬细胞"
           }
         }
       }
@@ -1956,6 +2500,74 @@
         }
       }
     },
+    "Right-click any row for a context menu to re-roll its random picks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right-click any row for a context menu to re-roll its random picks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右键任意条目弹出菜单，可重抽该条目的随机内容。"
+          }
+        }
+      }
+    },
+    "Ring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圆环"
+          }
+        }
+      }
+    },
+    "Same cells on GridView — multi-select" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same cells on GridView — multi-select"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同样的细胞——GridView 集合版（多选）"
+          }
+        }
+      }
+    },
+    "Same cells on ItemsView — multi-select" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same cells on ItemsView — multi-select"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同样的细胞——ItemsView 集合版（多选）"
+          }
+        }
+      }
+    },
     "SampleApp demo module. Each item in the navigation pane focuses on one public RsUI surface. Tap a card below to jump straight to it." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2037,6 +2649,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "选中 tag："
+          }
+        }
+      }
+    },
+    "Selected:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择："
           }
         }
       }
@@ -2211,6 +2840,23 @@
         }
       }
     },
+    "Square" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Square"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方形"
+          }
+        }
+      }
+    },
     "Starts with NavPane collapsed and skips writeback on close." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2275,6 +2921,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系统文件夹选择器，以所属的 MainWindow 为属主窗口。"
+          }
+        }
+      }
+    },
+    "T cell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T cell"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T 细胞"
           }
         }
       }
@@ -2347,6 +3010,23 @@
         }
       }
     },
+    "The native collection control for comparison: GridView (SelectionMode = Multiple, uniform ItemsWrapGrid) over the same rows. Clicks select via the GridViewItem containers; reads go through selectedRanges." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The native collection control for comparison: GridView (SelectionMode = Multiple, uniform ItemsWrapGrid) over the same rows. Clicks select via the GridViewItem containers; reads go through selectedRanges."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生集合控件对照：同样的条目行直接塞进 GridView（SelectionMode = Multiple，ItemsWrapGrid 均匀网格）。点击经 GridViewItem 容器选中，读取走 selectedRanges。"
+          }
+        }
+      }
+    },
     "The projection lets Swift types implement WinRT interfaces: the container factory pools cleared containers in recycleElement and reuses them in getElement (mirroring WinUI's ItemTemplateWrapper + RecyclePool), replacing the former XAML string template." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2411,6 +3091,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "右侧文本实时显示当前下限 – 上限。"
+          }
+        }
+      }
+    },
+    "The RsUI ItemsView flavor over the same rows (selectionMode = .multiple, reads via selectedIds), next to the native GridView card above." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The RsUI ItemsView flavor over the same rows (selectionMode = .multiple, reads via selectedIds), next to the native GridView card above."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RsUI ItemsView 形态，与上方原生 GridView 卡共用同样的条目行（selectionMode = .multiple，读取走 selectedIds）。"
           }
         }
       }
@@ -2513,6 +3210,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在浅色 / 深色主题间切换"
+          }
+        }
+      }
+    },
+    "ToggleButton — image as content" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ToggleButton — image as content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ToggleButton——图片即内容"
+          }
+        }
+      }
+    },
+    "Triangle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triangle"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三角形"
           }
         }
       }

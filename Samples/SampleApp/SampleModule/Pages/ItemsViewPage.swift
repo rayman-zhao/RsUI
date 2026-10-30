@@ -186,11 +186,13 @@ final class ItemsViewPage: RsUI.Page {
         let modeButtons = ToggleButtons()
         modeButtons.addItem(iconGlyph: "\u{E711}", label: tr("None"), tag: "none")
         modeButtons.addItem(iconGlyph: "\u{E73E}", label: tr("Single"), tag: "single")
+        modeButtons.addItem(iconGlyph: "\u{E8E9}", label: tr("Multiple"), tag: "multiple")
         modeButtons.addItem(iconGlyph: "\u{E8FD}", label: tr("Extended"), tag: "extended")
         modeButtons.selectionChanged.addHandler { _, tag in
             let mode: WinUI.ItemsViewSelectionMode
             switch tag {
             case "none": mode = .none
+            case "multiple": mode = .multiple
             case "extended": mode = .extended
             default: mode = .single
             }
