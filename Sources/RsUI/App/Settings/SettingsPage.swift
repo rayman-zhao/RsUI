@@ -11,7 +11,7 @@ private func tr(_ keyAndValue: String) -> String {
 
 /// 构建所用 Swift 工具链版本（与随包分发的运行时 DLL 同源）。
 /// 手工维护：升级工具链后按 `swift --version` 核对更新。
-private let swiftToolchainVersion = "6.4.1"
+private let swiftToolchainVersion = "6.4.2"
 
 /// 设置页面类，管理主题和语言偏好设置
 class SettingsPage: Page {
