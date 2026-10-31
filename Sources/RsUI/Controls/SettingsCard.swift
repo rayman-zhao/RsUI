@@ -16,6 +16,12 @@ public enum SettingsCardContentAlignment {
 /// (Normal/PointerOver/Pressed/Disabled) are driven by pointer and keyboard input,
 /// with a smooth background transition between states.
 /// Can be used standalone or hosted inside a SettingsExpander.
+///
+/// Hosting constraint: as a ButtonBase, the card captures the pointer on press and
+/// consumes the release for content that leaves the press unhandled — which kills the
+/// release-driven click selection of `ItemsView` / `ItemsIndexView` (hover, keyboard
+/// and programmatic selection keep working). Do not wrap those lists in a SettingsCard;
+/// use a plain panel. (GridView/ListView are unaffected: they handle the press themselves.)
 public class SettingsCard: ButtonBase, @unchecked Sendable {
 
     // MARK: - Properties

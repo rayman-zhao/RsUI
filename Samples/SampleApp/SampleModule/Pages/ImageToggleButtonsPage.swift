@@ -79,8 +79,12 @@ final class ImageToggleButtonsPage: RsUI.Page {
         let iconCard = SettingsCard(content: makeAppBarToggleButtonPanel())
         let cellCard = SettingsCard(content: makeCellIconsPanel())
         let gridCard = SettingsCard(content: makeCellGridViewPanel())
-        let itemsCard = SettingsCard(content: makeCellItemsViewPanel())
-        return featurePageContent([contentCard, iconCard, cellCard, gridCard, itemsCard])
+        // ItemsView 卡不能套 SettingsCard:SettingsCard 是 ButtonBase 子类,press
+        // 未被 ItemContainer 置 handled(其点击选择只在 PointerReleased 触发),冒泡
+        // 到卡片后被 ButtonBase 捕获并消费 release——条目点击选择因此全灭(hover、
+        // 键盘、程序化不受影响)。此卡直接以裸面板进页流。
+        let itemsPanel = makeCellItemsViewPanel()
+        return featurePageContent([contentCard, iconCard, cellCard, gridCard, itemsPanel])
     }
 
     // MARK: - ToggleButton (image as content)
@@ -377,8 +381,7 @@ final class ImageToggleButtonsPage: RsUI.Page {
     /// 集合控件对照(RsUI ItemsView 版):与上卡原生 GridView 同样的行,
     /// `selectionMode = .multiple`,读取走 `selectedIds`。
     /// 右键重抽后经 `rebuildViews()` 重造条目视图——itemsSource 与选择保持。
-    /// 注意:ItemsView 的点击选择存在按进程的间歇性失效(竞态,详见 AGENTS.md
-    /// 坑清单)——本卡约半数启动可用,对照组 GridView 稳定可用。
+    /// 本面板不套 SettingsCard(ButtonBase 会吞掉 release,见 `content` 处注释)。
     private func makeCellItemsViewPanel() -> WinUI.StackPanel {
         var refreshList: (() -> Void)?
         let list = ItemsView { id in

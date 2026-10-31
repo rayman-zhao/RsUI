@@ -262,12 +262,12 @@ open class ItemsViewBase: WinUI.ItemsView, @unchecked Sendable {
 ///   id 维度的便捷读取走 `selectedIds`（`selectionChanged` 事件参数是空壳）。
 /// - 列表需要有限高度的父容器（如 Grid 星型行）才能在内部滚动；
 ///   放进无限高的垂直 StackPanel 会导致内部滚动失效。
-/// - 已知缺陷（竞态，未根因）：条目点击选择与多选复选框**按进程间歇性失效**——
-///   约半数进程启动后本控件全部实例的指针选择失灵（程序化 select、选中视觉正常，
-///   同进程原生 ListView/GridView 与普通按钮正常），另半数完全正常，与 selectionMode/
-///   布局/限高/宿主容器/事件订阅/预选均无关（系统性二分排除）。疑似初始化竞态
-///   （wireRepeater 时序 / ItemContainer 模板应用 / 新架构 ScrollView 输入建立）。
-///   排查记录与复现方式见 AGENTS.md 坑清单「ItemsView Click-Selection」。
+/// - 宿主约束：点击选择只在条目收到 `PointerReleased` 时触发（ItemContainer 对
+///   press 触发的 invoke 不置 handled，这是 WinUI 的设计）。因此任何 ButtonBase
+///   子类（如 `SettingsCard`）都不能做本控件的祖先——press 冒泡到 ButtonBase 被
+///   捕获并消费 release，条目点击选择与多选复选框全灭（hover、键盘、程序化选择
+///   不受影响）。原生 ListView/GridView 无此限（其 item 在 press 阶段即置
+///   handled）。详见 AGENTS.md 坑清单「ButtonBase 祖先吞 ItemsView 的点击选择」。
 open class ItemsView: ItemsViewBase, @unchecked Sendable {
 
     /// 按 id 构建条目视图。容器因虚拟化被回收复用时会再次调用，需返回新实例。
