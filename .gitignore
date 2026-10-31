@@ -9,6 +9,7 @@ Package.resolved
 info.plist
 SampleApp.*
 *.xcstrings
+*.png
 
 # Editors / tools
 .vscode/
