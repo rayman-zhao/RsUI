@@ -153,6 +153,77 @@ public final class AppContext: @unchecked Sendable {
         }
     }
 
+    /// `requireXamlView` 的 DataTemplate 缓存。键 = 语言 + 原文/资源名；
+    /// trTable 不入键——一个 XAML 的 `{x:Tr}` 键逻辑上归属单一表，不存在
+    /// 同串配多表的调用方；ThemeResource 在 loadContent 实例化时按当前主题
+    /// 解析，无需失效。
+    @ObservationIgnored
+    private var viewTemplateCache: [String: WinUI.DataTemplate] = [:]
+
+    /// 与 `requireXaml(withString:)` 同契约，但 XAML 只解析一次（包成
+    /// DataTemplate 缓存），每次调用经 `loadContent()` 实例化新根。用于重复
+    /// 构造同一 XAML 的热路径（列表条目等）：`requireXaml` 每次调用都读盘 +
+    /// XamlReader 全量解析（毫秒级，列表重置一次可累积数百毫秒），本方法摊销
+    /// 为纯实例化。x:Name 作用域由 `loadContent` 随实例注册，
+    /// `requireElement` 照常可用；失败与 `requireXaml` 同样致命。
+    @MainActor public func requireXamlView<T>(withString xaml: String, trTable: String? = nil) -> T {
+        let template = cachedViewTemplate(key: xaml, trTable: trTable) { xaml }
+        return loadViewRoot(from: template)
+    }
+
+    /// `requireXamlView(withString:)` 的资源形态：按资源名缓存，未命中才读盘。
+    @MainActor public func requireXamlView<T>(withResource name: String, trTable: String? = nil) -> T {
+        let template = cachedViewTemplate(key: name, trTable: trTable) {
+            guard let path = resourceBundle.path(forResource: name, ofType: "xaml") else {
+                fatalError("Can't find \(name).xaml in bundle \(resourceBundle)")
+            }
+            do {
+                return try String(contentsOfFile: path, encoding: .utf8)
+            } catch {
+                fatalError("Load \(name).xaml failed with error: \(error)")
+            }
+        }
+        return loadViewRoot(from: template)
+    }
+
+    @MainActor private func cachedViewTemplate(
+        key: String, trTable: String?, readXaml: () -> String
+    ) -> WinUI.DataTemplate {
+        let cacheKey = "\(language.rawValue)|\(key)"
+        if let cached = viewTemplateCache[cacheKey] {
+            return cached
+        }
+        let dictionary: ResourceDictionary = requireXaml(
+            withString: """
+                <ResourceDictionary
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    <DataTemplate x:Key="RequireViewTemplate">
+                \(readXaml())
+                    </DataTemplate>
+                </ResourceDictionary>
+                """,
+            trTable: trTable)
+        guard let template = dictionary.lookup("RequireViewTemplate") as? WinUI.DataTemplate else {
+            fatalError("requireXamlView: template not found in loaded ResourceDictionary")
+        }
+        viewTemplateCache[cacheKey] = template
+        return template
+    }
+
+    @MainActor private func loadViewRoot<T>(from template: WinUI.DataTemplate) -> T {
+        let content: WinUI.DependencyObject
+        do {
+            content = try template.loadContent()
+        } catch {
+            fatalError("requireXamlView: loadContent failed with error: \(error)")
+        }
+        guard let root = content as? T else {
+            fatalError("requireXamlView: template content is not \(T.self)")
+        }
+        return root
+    }
+
     /// Opens a brand-new `MainWindow` and navigates it to the given URL.
     ///
     /// - Parameters:
