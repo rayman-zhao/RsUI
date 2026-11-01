@@ -23,7 +23,8 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
         default: return ""
         }
     }
-    var locale: Locale {
+
+    public var locale: Locale {
         struct LocaleConstants {
             static let en = Locale(identifier: "en")
             static let zh_Hans = Locale(identifier: "zh-Hans")
@@ -35,6 +36,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, RawPreferenceValue {
         default: return LocaleConstants.en
         }
     }
+
     public var localeName: String {
         switch self {
         case .zh_CN: return "zh_CN"
