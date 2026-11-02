@@ -2,6 +2,7 @@ import Foundation
 import RsFoundation
 import UWP
 import WinAppSDK
+import WinSDK
 import WinUI
 
 open class App: SwiftApplication, @unchecked Sendable {
@@ -45,14 +46,65 @@ open class App: SwiftApplication, @unchecked Sendable {
             arguments: "--new-window", displayName: App.context.tr("newWindow"),
             logo: App.context.iconAppxUri)
 
-        try? MainWindow(urls: App.context.route.lastPageURL.map { [$0] } ?? []).activate()
+        // 桌面应用（含 full-trust 打包）的激活参数走进程命令行；WinUI 的
+        // LaunchActivatedEventArgs.arguments 是 UWP 激活字符串通道，恒不含内容。
+        // 携带文件路径时文件意图优先于上次页面恢复，且与热启动同样以最小模式
+        // 开查看器窗口（冷热行为等价）
+        if let openedURLs = Self.openedFileURLs(in: ProcessInfo.processInfo.arguments.dropFirst()) {
+            App.context.openNewWindow(with: openedURLs, forceMinimalMode: true)
+        } else {
+            try? MainWindow(urls: App.context.route.lastPageURL.map { [$0] } ?? []).activate()
+        }
     }
 
     override open func onShutdown(exitCode: Int32) {
         App.context.releaseModules()
     }
 
+    /// 热启动入口：仅接收其他进程重定向来的激活；冷启动走 `onLaunched`，一次
+    /// 激活只经其一，两条路径须保持行为等价
     open func onActivated(_ args: AppActivationArguments?) {
-        try? MainWindow().activate()
+        if let urls = Self.redirectedFileURLs(args) {
+            App.context.openNewWindow(with: urls, forceMinimalMode: true)
+        } else {
+            try? MainWindow().activate()
+        }
+    }
+
+    private static func openedFileURLs(in arguments: some Sequence<String>) -> [URL]? {
+        // 重定向激活的参数串是含 argv[0] 的完整命令行，本进程 exe 须排除
+        let ownExecutable = ProcessInfo.processInfo.arguments.first?.lowercased()
+        var urls: [URL] = []
+        var seen = Set<String>()
+        for token in arguments {
+            let key = token.lowercased()
+            guard key != ownExecutable, FileManager.default.fileExists(atPath: token), seen.insert(key).inserted else { continue }
+            urls.append(URL(fileURLWithPath: token))
+        }
+        return urls.isEmpty ? nil : urls
+    }
+
+    /// OS 若以 `.file`/`IProtocolActivatedEventArgs` 等其他形态下发（full-trust
+    /// 预期只收 `.launch`）会落进这两行日志；`IFileActivatedEventArgs` 投影已备，
+    /// 届时改走 `.files` 即可
+    private static func redirectedFileURLs(_ args: AppActivationArguments?) -> [URL]? {
+        guard let args else { return nil }
+        guard args.kind == .launch else {
+            log.warning("onActivated: unhandled activation kind \(String(describing: args.kind))")
+            return nil
+        }
+        guard let launch = args.data as? ILaunchActivatedEventArgs else {
+            log.warning("onActivated: launch data is \(type(of: args.data))")
+            return nil
+        }
+        log.debug("onActivated: arguments=\(launch.arguments.debugDescription)")
+
+        // CommandLineToArgvW 即 CRT argv 解析规则本体；非路径 token（`--new-window`
+        // 等旗标）经存在性检查自然淘汰，格式知识留在模块层
+        var argc: Int32 = 0
+        guard let argv = CommandLineToArgvW(launch.arguments.wideString, &argc), argc > 0 else { return nil }
+        defer { _ = LocalFree(HLOCAL(argv)) }
+        let tokens = (0..<Int(argc)).compactMap { argv[$0].map { String(decodingCString: $0, as: UTF16.self) } }
+        return openedFileURLs(in: tokens)
     }
 }
