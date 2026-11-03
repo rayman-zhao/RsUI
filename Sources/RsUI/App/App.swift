@@ -78,8 +78,12 @@ open class App: SwiftApplication, @unchecked Sendable {
         var seen = Set<String>()
         for token in arguments {
             let key = token.lowercased()
-            guard key != ownExecutable, FileManager.default.fileExists(atPath: token), seen.insert(key).inserted else { continue }
-            urls.append(URL(fileURLWithPath: token))
+            guard key != ownExecutable, seen.insert(key).inserted else { continue }
+            // 目录路径通常不带尾分隔符，目录性必须由这次 stat 落进 directoryHint，
+            // 否则下游 hasDirectoryPath 纯词法判断会把目录当文件分流
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: token, isDirectory: &isDirectory) else { continue }
+            urls.append(URL(filePath: token, directoryHint: isDirectory.boolValue ? .isDirectory : .notDirectory))
         }
         return urls.isEmpty ? nil : urls
     }
