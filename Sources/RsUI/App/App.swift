@@ -53,7 +53,9 @@ open class App: SwiftApplication, @unchecked Sendable {
         if let openedURLs = Self.openedFileURLs(in: ProcessInfo.processInfo.arguments.dropFirst()) {
             App.context.openNewWindow(with: openedURLs, forceMinimalMode: true)
         } else {
-            try? MainWindow(urls: App.context.route.lastPageURL.map { [$0] } ?? []).activate()
+            let window = MainWindow(urls: App.context.route.lastPageURL.map { [$0] } ?? [])
+            try? window.activate()
+            window.bringToForeground()
         }
     }
 
@@ -67,7 +69,9 @@ open class App: SwiftApplication, @unchecked Sendable {
         if let urls = Self.redirectedFileURLs(args) {
             App.context.openNewWindow(with: urls, forceMinimalMode: true)
         } else {
-            try? MainWindow().activate()
+            let window = MainWindow()
+            try? window.activate()
+            window.bringToForeground()
         }
     }
 

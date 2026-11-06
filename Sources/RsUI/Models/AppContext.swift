@@ -237,7 +237,9 @@ public final class AppContext: @unchecked Sendable {
         forceMinimalMode: Bool = false
     ) {
         do {
-            try MainWindow(urls: urls, forceMinimalMode: forceMinimalMode).activate()
+            let window = MainWindow(urls: urls, forceMinimalMode: forceMinimalMode)
+            try window.activate()
+            window.bringToForeground()
         } catch {
             log.warning("openNewWindow: failed to activate new window: \(error)")
         }

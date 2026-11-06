@@ -3,6 +3,7 @@ import Observation
 import RsFoundation
 import UWP
 import WinAppSDK
+import WinSDK
 import WinUI
 
 // 事件回调为 @Sendable 闭包；本类只在 XAML UI 线程的事件处理器中读写，跨域安全
@@ -27,6 +28,34 @@ private class WindowPosition: PreferenceValue {
 }
 
 extension Window {
+    /// `activate()` 不越过 Windows 前台锁——进程不在前台时新窗止步于任务栏闪烁
+    /// (重定向激活、文件关联启动均如此)。先以原生 SetForegroundWindow 兑现重定向
+    /// 链路授予的前台权;该授权会被授权后的下一次用户输入撤销(激活到开窗的间隙
+    /// 里有输入即失效),被撤销时退回 AttachThreadInput 配方——把本线程短暂并入
+    /// 前台线程的输入队列,以前台身份 BringWindowToTop,不受前台锁约束。
+    public func bringToForeground() {
+        guard let appWindow else { return }
+        // 桌面投影中 WindowId.value 即顶层 HWND(Win32Interop.GetWindowIdFromHWND 的恒等包装)
+        let hwnd = HWND(bitPattern: UInt(appWindow.id.value))
+        if SetForegroundWindow(hwnd) { return }
+
+        guard let foreground = GetForegroundWindow() else {
+            log.warning("bringToForeground: no foreground window to attach to")
+            return
+        }
+        let foregroundThread = GetWindowThreadProcessId(foreground, nil)
+        let currentThread = GetCurrentThreadId()
+        guard foregroundThread != 0, foregroundThread != currentThread,
+            AttachThreadInput(currentThread, foregroundThread, true)
+        else {
+            log.warning("bringToForeground: SetForegroundWindow denied for hwnd \(appWindow.id.value)")
+            return
+        }
+        defer { AttachThreadInput(currentThread, foregroundThread, false) }
+        BringWindowToTop(hwnd)
+        _ = SetForegroundWindow(hwnd)
+    }
+
     public func useMicaBackdrop() {
         self.extendsContentIntoTitleBar = true
         self.appWindow.titleBar.preferredHeightOption = .tall
