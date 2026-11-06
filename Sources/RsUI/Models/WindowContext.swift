@@ -29,6 +29,11 @@ public enum NavigationOpenMode: Sendable {
         host = nil
     }
 
+    /// The `WindowId` of the owning window — `nil` for the windowless stand-in
+    /// or after the window closed. Pass to system APIs that parent UI to this
+    /// window (e.g. `OAuth2Manager.requestAuthWithParamsAsync`).
+    public var windowId: WindowId? { host?.hwnd }
+
     /// Opens the system folder picker owned by this window.
     ///
     /// Use this when module UI needs a folder path selected by the user. The picker is

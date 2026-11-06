@@ -68,6 +68,8 @@ open class App: SwiftApplication, @unchecked Sendable {
     open func onActivated(_ args: AppActivationArguments?) {
         if let urls = Self.redirectedFileURLs(args) {
             App.context.openNewWindow(with: urls, forceMinimalMode: true)
+        } else if Self.completeOAuthAuthRequest(args) {
+            return
         } else {
             let window = MainWindow()
             try? window.activate()
@@ -123,5 +125,21 @@ open class App: SwiftApplication, @unchecked Sendable {
             log.warning("onActivated: unhandled activation kind \(String(describing: args.kind))")
             return nil
         }
+    }
+
+    /// 协议激活形态的 OAuth 回调认领：授权码流程由系统浏览器重定向到应用注册的
+    /// 自定义 scheme，经重定向激活送达主实例（授权请求必然由本实例发起，
+    /// state/PKCE 同进程保存），`completeAuthRequest` 配对成功即解除
+    /// RequestAuthWithParamsAsync 的等待，无窗口动作。未配对（非回调 URI 或无
+    /// 挂起请求）返回 false 走默认开窗路径。
+    private static func completeOAuthAuthRequest(_ args: AppActivationArguments?) -> Bool {
+        guard let args, args.kind == .`protocol`, let protocolArgs = args.data as? IProtocolActivatedEventArgs else { return false }
+
+        do {
+            return try OAuth2Manager.completeAuthRequest(protocolArgs.uri)
+        } catch {
+            log.warning("onActivated: completeAuthRequest threw: \(error)")
+        }
+        return false
     }
 }
