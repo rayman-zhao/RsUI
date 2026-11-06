@@ -88,27 +88,36 @@ open class App: SwiftApplication, @unchecked Sendable {
         return urls.isEmpty ? nil : urls
     }
 
-    /// OS 若以 `.file`/`IProtocolActivatedEventArgs` 等其他形态下发（full-trust
-    /// 预期只收 `.launch`）会落进这两行日志；`IFileActivatedEventArgs` 投影已备，
-    /// 届时改走 `.files` 即可
+    /// 热启动重定向的两种形态：FTA 双击是 `.file`（full-trust 打包同样走此通道，
+    /// MSIX 实测主实例收到 IFileActivatedEventArgs）；命令行激活（RsShell verb/CLI）
+    /// 是 `.launch` + 含 argv[0] 的完整命令行。冷启动不走重定向——argv 直读。
+    /// 其余形态落 default 哨兵日志。
     private static func redirectedFileURLs(_ args: AppActivationArguments?) -> [URL]? {
         guard let args else { return nil }
-        guard args.kind == .launch else {
+        switch args.kind {
+        case .launch:
+            guard let launch = args.data as? ILaunchActivatedEventArgs else {
+                log.warning("onActivated: launch data is \(type(of: args.data))")
+                return nil
+            }
+            log.debug("onActivated: arguments=\(launch.arguments.debugDescription)")
+
+            // CommandLineToArgvW 即 CRT argv 解析规则本体；非路径 token（`--new-window`
+            // 等旗标）经存在性检查自然淘汰，格式知识留在模块层
+            var argc: Int32 = 0
+            guard let argv = CommandLineToArgvW(launch.arguments.wideString, &argc), argc > 0 else { return nil }
+            defer { _ = LocalFree(HLOCAL(argv)) }
+            let tokens = (0..<Int(argc)).compactMap { argv[$0].map { String(decodingCString: $0, as: UTF16.self) } }
+            return openedFileURLs(in: tokens)
+        case .file:
+            guard let file = args.data as? IFileActivatedEventArgs else {
+                log.warning("onActivated: file data is \(type(of: args.data))")
+                return nil
+            }
+            return openedFileURLs(in: file.files?.compactMap { $0?.path } ?? [])
+        default:
             log.warning("onActivated: unhandled activation kind \(String(describing: args.kind))")
             return nil
         }
-        guard let launch = args.data as? ILaunchActivatedEventArgs else {
-            log.warning("onActivated: launch data is \(type(of: args.data))")
-            return nil
-        }
-        log.debug("onActivated: arguments=\(launch.arguments.debugDescription)")
-
-        // CommandLineToArgvW 即 CRT argv 解析规则本体；非路径 token（`--new-window`
-        // 等旗标）经存在性检查自然淘汰，格式知识留在模块层
-        var argc: Int32 = 0
-        guard let argv = CommandLineToArgvW(launch.arguments.wideString, &argc), argc > 0 else { return nil }
-        defer { _ = LocalFree(HLOCAL(argv)) }
-        let tokens = (0..<Int(argc)).compactMap { argv[$0].map { String(decodingCString: $0, as: UTF16.self) } }
-        return openedFileURLs(in: tokens)
     }
 }
