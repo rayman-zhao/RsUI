@@ -25,6 +25,7 @@ open class App: SwiftApplication, @unchecked Sendable {
         // 免写任何隔离关键字
         MainActor.assumeIsolated {
             App.context.bootstrap(group: Self.groupName, product: Self.productName, resourceBundle: Self.resourceBundle)
+            log.info("Starting \(App.context.productName)")
         }
         super.init()
 
