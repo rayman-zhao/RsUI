@@ -57,6 +57,7 @@ open class App: SwiftApplication, @unchecked Sendable {
             try? window.activate()
             window.bringToForeground()
         }
+        log.info("Launched \(App.context.productName)")
     }
 
     override open func onShutdown(exitCode: Int32) {
@@ -66,15 +67,15 @@ open class App: SwiftApplication, @unchecked Sendable {
     /// 热启动入口：仅接收其他进程重定向来的激活；冷启动走 `onLaunched`，一次
     /// 激活只经其一，两条路径须保持行为等价
     open func onActivated(_ args: AppActivationArguments?) {
-        if let urls = Self.redirectedFileURLs(args) {
+        if Self.completeOAuthAuthRequest(args) {
+        } else if let urls = Self.redirectedFileURLs(args) {
             App.context.openNewWindow(with: urls, forceMinimalMode: true)
-        } else if Self.completeOAuthAuthRequest(args) {
-            return
         } else {
             let window = MainWindow()
             try? window.activate()
             window.bringToForeground()
         }
+        log.info("Activated \(App.context.productName)")
     }
 
     private static func openedFileURLs(in arguments: some Sequence<String>) -> [URL]? {
@@ -136,10 +137,10 @@ open class App: SwiftApplication, @unchecked Sendable {
         guard let args, args.kind == .`protocol`, let protocolArgs = args.data as? IProtocolActivatedEventArgs else { return false }
 
         do {
-            return try OAuth2Manager.completeAuthRequest(protocolArgs.uri)
+            _ = try OAuth2Manager.completeAuthRequest(protocolArgs.uri)
         } catch {
             log.warning("onActivated: completeAuthRequest threw: \(error)")
         }
-        return false
+        return true
     }
 }
