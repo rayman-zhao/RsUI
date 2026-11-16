@@ -13,6 +13,26 @@ public struct OAuthProvider: Codable, Sendable {
     public let scopes: [String]
     public let redirectUri: URL
     public let accessEndpoint: URL
+
+    public init(
+        key: String,
+        displayName: String,
+        authorizationEndpoint: URL,
+        tokenEndpoint: URL,
+        clientId: String,
+        scopes: [String],
+        redirectUri: URL,
+        accessEndpoint: URL
+    ) {
+        self.key = key
+        self.displayName = displayName
+        self.authorizationEndpoint = authorizationEndpoint
+        self.tokenEndpoint = tokenEndpoint
+        self.clientId = clientId
+        self.scopes = scopes
+        self.redirectUri = redirectUri
+        self.accessEndpoint = accessEndpoint
+    }
 }
 
 public struct OAuthSession: Sendable {
