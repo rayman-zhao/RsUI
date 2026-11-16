@@ -139,16 +139,16 @@ public class OAuthDirector {
         }
     }
 
-    /// token 取用口：临期（余量 10 分钟）先续期再返回，调用方不感知
-    /// expiry/refresh——发请求处逐次经此取用，勿直接读 sessions 的 token。
-    public func validAccessToken(for provider: OAuthProvider) async throws -> String {
+    /// 会话取用口：临期（余量 1 分钟）先续期再返回，调用方不感知
+    /// expiry/refresh——发请求处逐次经此取用，勿直接读 sessions。
+    public func validSession(for provider: OAuthProvider) async throws -> OAuthSession {
         guard var session = sessions[provider.key] else {
             throw OAuthError(stage: .token, error: "not_signed_in", errorDescription: "")
         }
-        if session.expiry < Date().addingTimeInterval(600) {
+        if session.expiry < Date().addingTimeInterval(60) {
             session = try await refresh(provider)
         }
-        return session.accessToken
+        return session
     }
 
     // MARK: - Private
