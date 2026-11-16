@@ -117,6 +117,12 @@ public class OAuthDirector {
         return sessions[provider.key]!
     }
 
+    /// 本地清理：清会话与保存的 refresh token（不吊销，见框架约定）。
+    public func signOut(of provider: OAuthProvider) {
+        sessions[provider.key] = nil
+        storeRefreshToken(nil, for: provider)
+    }
+
     /// 取消进行中的授权：挂起的等待以 cancelled 错误返回；浏览器侧该请求的
     /// state 已无配对，迟到的回调会被 completeAuthRequest 自然拒绝。
     public func cancelAuthorization() {
@@ -132,6 +138,20 @@ public class OAuthDirector {
             _ = try? await refresh(provider)
         }
     }
+
+    /// token 取用口：临期（余量 10 分钟）先续期再返回，调用方不感知
+    /// expiry/refresh——发请求处逐次经此取用，勿直接读 sessions 的 token。
+    public func validAccessToken(for provider: OAuthProvider) async throws -> String {
+        guard var session = sessions[provider.key] else {
+            throw OAuthError(stage: .token, error: "not_signed_in", errorDescription: "")
+        }
+        if session.expiry < Date().addingTimeInterval(600) {
+            session = try await refresh(provider)
+        }
+        return session.accessToken
+    }
+
+    // MARK: - Private
 
     /// 用该提供方保存的 refresh token 换新 access token（启动恢复同一路径）。
     @discardableResult
@@ -159,26 +179,6 @@ public class OAuthDirector {
         adopt(token, for: provider)
         return sessions[provider.key]!
     }
-
-    /// token 取用口：临期（余量 10 分钟）先续期再返回，调用方不感知
-    /// expiry/refresh——发请求处逐次经此取用，勿直接读 sessions 的 token。
-    public func validAccessToken(for provider: OAuthProvider) async throws -> String {
-        guard var session = sessions[provider.key] else {
-            throw OAuthError(stage: .token, error: "not_signed_in", errorDescription: "")
-        }
-        if session.expiry < Date().addingTimeInterval(600) {
-            session = try await refresh(provider)
-        }
-        return session.accessToken
-    }
-
-    /// 本地清理：清会话与保存的 refresh token（不吊销，见框架约定）。
-    public func signOut(of provider: OAuthProvider) {
-        sessions[provider.key] = nil
-        storeRefreshToken(nil, for: provider)
-    }
-
-    // MARK: - Private
 
     /// 授权码 + PKCE 全流程：系统浏览器授权 → 换码。code challenge/verifier
     /// 由 OAuth2Manager 内部生成配对，公共客户端不传 ClientAuthentication。
