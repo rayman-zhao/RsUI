@@ -65,7 +65,7 @@ public struct ProviderFailure: Equatable, Sendable {
 /// 内存持有，refresh token 作为长期凭据存 PasswordVault（用户级加密隔离，resource
 /// 按应用身份派生），进程重启后经 `signIn` 的恢复路径或 `restoreSessions` 续用。
 /// 协议激活回调由 `App.onActivated` 统一认领，无需使用方介入。
-@Observable
+@MainActor @Observable
 public class OAuthDirector {
     /// 进行中的授权（至多一个），nil = 空闲。
     public private(set) var authorizingProvider: String?
