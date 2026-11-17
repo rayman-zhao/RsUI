@@ -36,7 +36,6 @@ public struct OAuthProvider: Codable, Sendable {
 }
 
 public struct OAuthSession: Sendable {
-    public let provider: String
     public let accessToken: String
     public let tokenType: String
     public let expiry: Date
@@ -216,7 +215,6 @@ public class OAuthDirector {
 
     private func adopt(_ token: TokenResponse, for provider: OAuthProvider) {
         sessions[provider.key] = OAuthSession(
-            provider: provider.key,
             accessToken: token.accessToken,
             tokenType: token.tokenType,
             // expiresIn 为 0（未返回）时按官方示例默认 1 小时
