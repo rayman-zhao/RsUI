@@ -75,6 +75,7 @@ public class OAuthDirector {
 
     @ObservationIgnored private var authOperation: AnyIAsyncOperation<AuthRequestResult?>?
     @ObservationIgnored private var cancellationRequested = false
+    @ObservationIgnored private var refreshInFlight: [String: Task<OAuthSession, any Swift.Error>] = [:]
 
     public init() {
     }
@@ -130,10 +131,12 @@ public class OAuthDirector {
         try? authOperation?.cancel()
     }
 
-    /// 启动恢复：对给定 providers 中 vault 存有凭据的逐个串行静默续期，失败
-    /// （离线/凭据失效）跳过且凭据保留——保持未登录，留待下次 signIn 再试。
+    /// 启动恢复：对给定 providers 中 vault 存有凭据且尚无会话的逐个串行静默
+    /// 续期，失败（离线/凭据失效）跳过且凭据保留——保持未登录，留待下次
+    /// signIn 再试；已有会话不重刷（临期由 validSession 自愈）。
     public func restoreSessions(for providers: [OAuthProvider]) async {
-        for provider in providers where storedRefreshToken(for: provider) != nil {
+        for provider in providers
+        where sessions[provider.key] == nil && storedRefreshToken(for: provider) != nil {
             _ = try? await refresh(provider)
         }
     }
@@ -153,11 +156,23 @@ public class OAuthDirector {
     // MARK: - Private
 
     /// 用该提供方保存的 refresh token 换新 access token（启动恢复同一路径）。
+    /// 同一 provider 的并发请求搭乘同一在飞任务（single-flight）：轮转 refresh
+    /// token 的 IdP 会把同 token 二次使用判为重用并吊销整族凭据，并发去重是
+    /// 正确性需求而非优化——actor 只串行化同步段，网络 await 的挂起窗口内
+    /// 状态检查全部失效。
     @discardableResult
     private func refresh(_ provider: OAuthProvider) async throws -> OAuthSession {
         guard authorizingProvider == nil else {
             throw OAuthError(stage: .authorize, error: "authorization_in_progress", errorDescription: "")
         }
+        if let inFlight = refreshInFlight[provider.key] { return try await inFlight.value }
+        let task = Task { try await performRefresh(provider) }
+        refreshInFlight[provider.key] = task
+        defer { refreshInFlight[provider.key] = nil }
+        return try await task.value
+    }
+
+    private func performRefresh(_ provider: OAuthProvider) async throws -> OAuthSession {
         guard let refreshToken = storedRefreshToken(for: provider) else {
             throw OAuthError(stage: .token, error: "no_refresh_token", errorDescription: "")
         }
