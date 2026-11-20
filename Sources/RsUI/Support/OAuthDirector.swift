@@ -215,7 +215,7 @@ public class OAuthDirector {
             let failure = result?.failure
             throw OAuthError(
                 stage: .token,
-                error: failure?.error ?? "no_response",
+                error: Self.failureCode(failure?.error),
                 errorDescription: failure?.errorDescription ?? "")
         }
 
@@ -237,7 +237,7 @@ public class OAuthDirector {
             let failure = authResult?.failure
             throw OAuthError(
                 stage: .authorize,
-                error: failure?.error ?? "no_response",
+                error: Self.failureCode(failure?.error),
                 errorDescription: failure?.errorDescription ?? "")
         }
 
@@ -249,11 +249,19 @@ public class OAuthDirector {
             let failure = tokenResult?.failure
             throw OAuthError(
                 stage: .token,
-                error: failure?.error ?? "no_response",
+                error: Self.failureCode(failure?.error),
                 errorDescription: failure?.errorDescription ?? "")
         }
 
         return adopt(token, for: provider)
+    }
+
+    /// OAuth2Manager 失败对象的 error 可能为空串（如断网无响应）而非
+    /// nil——空串与 nil 统一落 no_response，保错误码非空（下游展示与
+    /// 判别依赖非空；2026-11-20 断网实测空串产生过全空 OAuthError）
+    private static func failureCode(_ code: String?) -> String {
+        if let code, !code.isEmpty { return code }
+        return "no_response"
     }
 
     @discardableResult
