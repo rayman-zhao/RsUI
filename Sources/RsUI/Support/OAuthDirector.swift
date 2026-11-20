@@ -135,14 +135,24 @@ public class OAuthDirector {
         try? authOperation?.cancel()
     }
 
-    /// 启动恢复：对给定 providers 中 vault 存有凭据且未登录的逐个串行静默续期
-    /// （.failed 会重试），失败保留凭据且状态转 .failed——GUI 显示"登录失败"，
-    /// 留待下次 signIn/restoreSessions 再试；已登录的不重刷（临期由
+    /// 启动恢复：同步把 vault 存有凭据且未登录的 provider 置 .refreshing——
+    /// 深链观察者初始发射即见 pending，勿闪登录入口（vault 条件承重：误置
+    /// 从未登录者会令其经 no_refresh_token 落 .failed，与"恢复失败"混淆）；
+    /// 随后异步逐个串行静默续期（.failed 会重试），失败保留凭据且转
+    /// .failed——GUI 显示"登录失败"，留待再试；已登录不重刷（临期由
     /// validSession 自愈）。
-    public func restoreSessions(for providers: [OAuthProvider]) async {
-        for provider in providers
-        where !isAuthenticated(provider.key) && storedRefreshToken(for: provider) != nil {
-            _ = try? await refresh(provider)
+    public func restoreSessions(for providers: [OAuthProvider]) {
+        let pending = providers.filter {
+            !isAuthenticated($0.key) && storedRefreshToken(for: $0) != nil
+        }
+        guard !pending.isEmpty else { return }
+        for provider in pending {
+            states[provider.key] = .refreshing
+        }
+        Task { [weak self] in
+            for provider in pending {
+                _ = try? await self?.refresh(provider)
+            }
         }
     }
 
