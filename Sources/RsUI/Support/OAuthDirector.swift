@@ -53,25 +53,30 @@ public struct OAuthError: Swift.Error, Equatable, Sendable {
     public let errorDescription: String
 }
 
-public struct ProviderFailure: Equatable, Sendable {
-    public let provider: String
-    public let error: OAuthError
+/// provider 生命周期状态，`states` 的值形态。缺 key = 从未登录；有凭据但
+/// 恢复/续期失败 = .failed，与从未登录区分——GUI 据此显示"登录失败/重新授权"
+/// 而非"登录"。
+public enum ProviderState: Sendable {
+    /// 静默续期中（启动恢复 / signIn 静默路径）；已登录的临期续期不进入此态，
+    /// 维持 .authenticated 不闪"登录中"。
+    case refreshing
+    case authenticated(OAuthSession)
+    case failed(OAuthError)
 }
 
 /// OAuth 2.0 客户端核心（授权码 + PKCE，基于 WinAppSDK OAuth2Manager）。GUI 观察
-/// `authorizingProvider`/`sessions`/`lastFailure`；多提供方各自持有会话，授权
+/// `authorizingProvider`/`states`；多提供方各自持有状态，授权
 /// 串行——同一时刻至多一个授权进行中，完成或取消后方可登录下一个。access token
 /// 内存持有，refresh token 作为长期凭据存 PasswordVault（用户级加密隔离，resource
 /// 按应用身份派生），进程重启后经 `signIn` 的恢复路径或 `restoreSessions` 续用。
 /// 协议激活回调由 `App.onActivated` 统一认领，无需使用方介入。
 @MainActor @Observable
 public class OAuthDirector {
-    /// 进行中的授权（至多一个），nil = 空闲。
+    /// 进行中的授权（至多一个），nil = 空闲。授权串行是 director 级全局互斥，
+    /// 不入 states（per-provider 表达不了"至多一个"）。
     public private(set) var authorizingProvider: String?
-    /// 已建立的会话，key = provider.key。
-    public private(set) var sessions: [String: OAuthSession] = [:]
-    /// 最近一次失败及其归属提供方（主动取消不计入，任一成功即清空），GUI 展示用。
-    public private(set) var lastFailure: ProviderFailure?
+    /// 各 provider 生命周期状态，key = provider.key；缺 key = 从未登录。
+    public private(set) var states: [String: ProviderState] = [:]
 
     @ObservationIgnored private var authOperation: AnyIAsyncOperation<AuthRequestResult?>?
     @ObservationIgnored private var cancellationRequested = false
@@ -89,7 +94,7 @@ public class OAuthDirector {
         guard authorizingProvider == nil else {
             throw OAuthError(stage: .authorize, error: "authorization_in_progress", errorDescription: "")
         }
-        if sessions[provider.key] != nil { return try await refresh(provider) }
+        if isAuthenticated(provider.key) { return try await refresh(provider) }
         if storedRefreshToken(for: provider) != nil, let session = try? await refresh(provider) {
             return session
         }
@@ -102,24 +107,23 @@ public class OAuthDirector {
         }
 
         do {
-            try await authorizeAndExchange(provider, window: window)
+            return try await authorizeAndExchange(provider, window: window)
         } catch {
             if cancellationRequested {
-                // 主动取消：静默收尾，不记 lastFailure
+                // 主动取消：静默收尾，不记状态
                 throw OAuthError(stage: .authorize, error: "cancelled", errorDescription: "")
             }
             let wrapped =
                 error as? OAuthError
                 ?? OAuthError(stage: .authorize, error: "\(error)", errorDescription: "")
-            lastFailure = ProviderFailure(provider: provider.key, error: wrapped)
+            states[provider.key] = .failed(wrapped)
             throw wrapped
         }
-        return sessions[provider.key]!
     }
 
-    /// 本地清理：清会话与保存的 refresh token（不吊销，见框架约定）。
+    /// 本地清理：清状态（含失败记录）与保存的 refresh token（不吊销，见框架约定）。
     public func signOut(of provider: OAuthProvider) {
-        sessions[provider.key] = nil
+        states[provider.key] = nil
         storeRefreshToken(nil, for: provider)
     }
 
@@ -131,12 +135,13 @@ public class OAuthDirector {
         try? authOperation?.cancel()
     }
 
-    /// 启动恢复：对给定 providers 中 vault 存有凭据且尚无会话的逐个串行静默
-    /// 续期，失败（离线/凭据失效）跳过且凭据保留——保持未登录，留待下次
-    /// signIn 再试；已有会话不重刷（临期由 validSession 自愈）。
+    /// 启动恢复：对给定 providers 中 vault 存有凭据且未登录的逐个串行静默续期
+    /// （.failed 会重试），失败保留凭据且状态转 .failed——GUI 显示"登录失败"，
+    /// 留待下次 signIn/restoreSessions 再试；已登录的不重刷（临期由
+    /// validSession 自愈）。
     public func restoreSessions(for providers: [OAuthProvider]) async {
         for provider in providers
-        where sessions[provider.key] == nil && storedRefreshToken(for: provider) != nil {
+        where !isAuthenticated(provider.key) && storedRefreshToken(for: provider) != nil {
             _ = try? await refresh(provider)
         }
     }
@@ -144,7 +149,7 @@ public class OAuthDirector {
     /// 会话取用口：临期（余量 1 分钟）先续期再返回，调用方不感知
     /// expiry/refresh——发请求处逐次经此取用，勿直接读 sessions。
     public func validSession(for provider: OAuthProvider) async throws -> OAuthSession {
-        guard var session = sessions[provider.key] else {
+        guard case .authenticated(var session)? = states[provider.key] else {
             throw OAuthError(stage: .token, error: "not_signed_in", errorDescription: "")
         }
         if session.expiry < Date().addingTimeInterval(60) {
@@ -155,21 +160,35 @@ public class OAuthDirector {
 
     // MARK: - Private
 
+    private func isAuthenticated(_ key: String) -> Bool {
+        if case .authenticated? = states[key] { return true }
+        return false
+    }
+
     /// 用该提供方保存的 refresh token 换新 access token（启动恢复同一路径）。
     /// 同一 provider 的并发请求搭乘同一在飞任务（single-flight）：轮转 refresh
     /// token 的 IdP 会把同 token 二次使用判为重用并吊销整族凭据，并发去重是
     /// 正确性需求而非优化——actor 只串行化同步段，网络 await 的挂起窗口内
-    /// 状态检查全部失效。
+    /// 状态检查全部失效。token 阶段失败统一在此转 .failed 后 rethrow
+    /// （authorize 阶段由 signIn 记录）；进入时非已登录先置 .refreshing。
     @discardableResult
     private func refresh(_ provider: OAuthProvider) async throws -> OAuthSession {
         guard authorizingProvider == nil else {
             throw OAuthError(stage: .authorize, error: "authorization_in_progress", errorDescription: "")
         }
         if let inFlight = refreshInFlight[provider.key] { return try await inFlight.value }
+        if !isAuthenticated(provider.key) { states[provider.key] = .refreshing }
         let task = Task { try await performRefresh(provider) }
         refreshInFlight[provider.key] = task
         defer { refreshInFlight[provider.key] = nil }
-        return try await task.value
+        do {
+            return try await task.value
+        } catch {
+            states[provider.key] = .failed(
+                error as? OAuthError
+                ?? OAuthError(stage: .token, error: "\(error)", errorDescription: ""))
+            throw error
+        }
     }
 
     private func performRefresh(_ provider: OAuthProvider) async throws -> OAuthSession {
@@ -190,13 +209,12 @@ public class OAuthDirector {
                 errorDescription: failure?.errorDescription ?? "")
         }
 
-        adopt(token, for: provider)
-        return sessions[provider.key]!
+        return adopt(token, for: provider)
     }
 
     /// 授权码 + PKCE 全流程：系统浏览器授权 → 换码。code challenge/verifier
     /// 由 OAuth2Manager 内部生成配对，公共客户端不传 ClientAuthentication。
-    private func authorizeAndExchange(_ provider: OAuthProvider, window: WindowId) async throws {
+    private func authorizeAndExchange(_ provider: OAuthProvider, window: WindowId) async throws -> OAuthSession {
         let authParams: AuthRequestParams = try AuthRequestParams.createForAuthorizationCodeRequest(
             provider.clientId, Uri(provider.redirectUri.absoluteString))
         authParams.scope = provider.scopes.joined(separator: " ")
@@ -225,17 +243,19 @@ public class OAuthDirector {
                 errorDescription: failure?.errorDescription ?? "")
         }
 
-        adopt(token, for: provider)
+        return adopt(token, for: provider)
     }
 
-    private func adopt(_ token: TokenResponse, for provider: OAuthProvider) {
-        sessions[provider.key] = OAuthSession(
+    @discardableResult
+    private func adopt(_ token: TokenResponse, for provider: OAuthProvider) -> OAuthSession {
+        let session = OAuthSession(
             accessToken: token.accessToken,
             tokenType: token.tokenType,
             // expiresIn 为 0（未返回）时按官方示例默认 1 小时
             expiry: Self.expiry(fromExpiresIn: token.expiresIn))
-        lastFailure = nil
+        states[provider.key] = .authenticated(session)
         storeRefreshToken(token.refreshToken, for: provider)
+        return session
     }
 
     private static func expiry(fromExpiresIn seconds: Double) -> Date {
