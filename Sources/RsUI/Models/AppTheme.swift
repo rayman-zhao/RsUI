@@ -19,7 +19,7 @@ public enum AppTheme: String, Sendable, RawPreferenceValue {
     var applicationTheme: WinUI.ApplicationTheme {
         return isDark ? .dark : .light
     }
-    var elementTheme: WinUI.ElementTheme {
+    public var elementTheme: WinUI.ElementTheme {
         return isDark ? .dark : .light
     }
     var titleBarTheme: WinAppSDK.TitleBarTheme {
