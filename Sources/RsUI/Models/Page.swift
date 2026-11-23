@@ -5,6 +5,12 @@ import WinUI
 
 // 页面为 UI 线程对象：协议显式 @MainActor（实现者多为 WinUI 子类，隐式继承本隔离）。
 @MainActor public protocol Page: AnyObject {
+    /// 框架持有的视图缓存槽位(nil = 待建):框架发现 nil 时调 makeView
+    /// 构建并回填。页勿直接读写——形态更新走
+    /// WindowContext.updateView(of: self)(失效+按需重挂一步完成),
+    /// 外观失效由框架批量处理
+    var view: UIElement? { get set }
+
     var url: URL { get }
     var title: String { get }
     var header: Any? { get }
@@ -12,15 +18,9 @@ import WinUI
     /// 整页,居中类全页 UI 用)。覆写 makeView 的页无须实现
     var content: UIElement? { get }
 
-    /// 框架持有的视图缓存槽位(nil = 待建):框架发现 nil 时调 makeView
-    /// 构建并回填。页勿直接读写——形态更新走
-    /// WindowContext.updateView(of: self)(失效+按需重挂一步完成),
-    /// 外观失效由框架批量处理
-    var view: UIElement? { get set }
     /// 整页视图构建(框架在 view 为 nil 时调用):默认实现组装
     /// header/content 模板;整页自定义布局的页覆写本定制点
     func makeView() -> UIElement
-
     /// Callback when the page is attached to a window (before its content is
     /// first rendered), when the page is moved to another window (tab tear-out
     /// or merge), or when the window enter/exit fullscreen state.
@@ -37,7 +37,6 @@ import WinUI
 
 extension Page {
     public var header: Any? { nil }
-    public var content: UIElement? { nil }
 
     /// makeView 默认实现:组装 header/content 模板。整页自定义的页覆写
     /// 协议定制点 makeView(),本实现不会被经存在类型调用的覆写遮蔽
@@ -63,9 +62,8 @@ extension Page {
             headerText.fontSize = 28
             headerText.fontWeight = UWP.FontWeights.semiBold
             headerBorder.child = headerText
-        } else {
-            // 协议契约形态是 String/UIElement,其它值为编程错误,强转陷阱
-            headerBorder.child = header as! UIElement
+        } else if let element = header as? UIElement {
+            headerBorder.child = element
         }
         try? Grid.setRow(headerBorder, 0)
         grid.children.append(headerBorder)

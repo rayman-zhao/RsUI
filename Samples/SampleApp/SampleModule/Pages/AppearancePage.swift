@@ -31,6 +31,7 @@ final class AppearancePage: RsUI.Page {
         observingTasks.forEach { $0.cancel() }
     }
 
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/appearance")!
     var title: String { tr("Appearance") }
 
@@ -43,7 +44,7 @@ final class AppearancePage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         observingTasks.forEach { $0.cancel() }
         observingTasks.removeAll()
 

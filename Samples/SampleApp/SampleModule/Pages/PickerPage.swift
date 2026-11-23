@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class PickerPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
     // 主导航项用默认 "/picker"；footer 导航项传 "/footer-picker"，
     // 使其 URL 与导航项匹配（openOrFocus 去重、选中态高亮依赖该 URL）。
@@ -27,7 +28,7 @@ final class PickerPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let resultBlock = makeCaption(tr("No folder selected yet."))
 
         let card = SettingsCard(

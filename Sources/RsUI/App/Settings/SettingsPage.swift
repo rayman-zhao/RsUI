@@ -15,9 +15,9 @@ private let swiftToolchainVersion = "6.4.2"
 
 /// 设置页面类，管理主题和语言偏好设置
 class SettingsPage: Page {
-    public var view: WinUI.UIElement?
     static let url = URL(string: "rs://ui/settings")!
 
+    var view: WinUI.UIElement?
     var url: URL {
         return SettingsPage.url
     }

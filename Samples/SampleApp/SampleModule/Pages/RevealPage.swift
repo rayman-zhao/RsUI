@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class RevealPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/reveal")!
     var title: String { tr("Reveal in File Explorer") }
 
@@ -21,7 +22,7 @@ final class RevealPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let statusBlock = makeCaption(tr("Nothing revealed yet."))
 
         let statusCard = SettingsCard(

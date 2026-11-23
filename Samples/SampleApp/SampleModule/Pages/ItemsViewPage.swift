@@ -6,6 +6,7 @@ import WinUI
 import WindowsFoundation
 
 final class ItemsViewPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/items-view")!
     var title: String { tr("Items View") }
 
@@ -18,7 +19,7 @@ final class ItemsViewPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         var nextNumber = 100
         var useIndexFlavor = false
 
@@ -66,7 +67,8 @@ final class ItemsViewPage: RsUI.Page {
             } else {
                 titles = idList.selectedIds.map(Self.itemTitle(id:))
             }
-            selectionText.text = tr("Selected") + " (" + String(titles.count) + "): "
+            selectionText.text =
+                tr("Selected") + " (" + String(titles.count) + "): "
                 + titles.joined(separator: ", ")
         }
 
@@ -84,12 +86,14 @@ final class ItemsViewPage: RsUI.Page {
             guard let idList, idList.currentItemIndex >= 0,
                 idList.ids.indices.contains(Int(idList.currentItemIndex))
             else { return }
-            tappedText.text = tr("Double-tapped") + ": "
+            tappedText.text =
+                tr("Double-tapped") + ": "
                 + Self.itemTitle(id: idList.ids[Int(idList.currentItemIndex)])
         }
         indexList.doubleTapped.addHandler { [weak indexList] _, _ in
             guard let indexList, indexList.currentItemIndex >= 0 else { return }
-            tappedText.text = tr("Double-tapped") + ": "
+            tappedText.text =
+                tr("Double-tapped") + ": "
                 + Self.indexTitle(Int(indexList.currentItemIndex))
         }
 

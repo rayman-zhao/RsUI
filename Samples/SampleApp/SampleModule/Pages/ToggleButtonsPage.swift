@@ -6,6 +6,7 @@ import WindowsFoundation
 
 final class ToggleButtonsPage: RsUI.Page {
     let url = URL(string: "rs://\(sampleModuleID)/toggle-buttons")!
+    var view: UIElement?
     var title: String { tr("Toggle Buttons") }
 
     var header: Any? {
@@ -17,7 +18,7 @@ final class ToggleButtonsPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         // SettingsCard 的 content 列是 auto 宽，VariableSizedWrapGrid 在其窄测量约束下
         // 会收缩成单列，故这里用 SettingsCard(content:) 全宽形态（同 RangeSliderPage 的
         // 窗宽/窗位卡片），说明文字由面板自带。

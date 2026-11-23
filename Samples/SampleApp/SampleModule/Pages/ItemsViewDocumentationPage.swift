@@ -6,10 +6,11 @@ import WinUI
 /// ItemsView / ItemsIndexView 的工作总结/使用文档页。文档主体以条目列表呈现，
 /// 演示"有限高度父容器 + 组件公开 API"的实际用法；开关切换查看完整源码。
 final class ItemsViewDocumentationPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/items-view-doc")!
     var title: String { tr("Items View Documentation") }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         // 文档小节按索引取（内容静态、位置即身份）——索引味的典型场景。
         let list = RsUI.ItemsIndexView { index in
             Self.makeDocumentRow(section: Self.sections[index])
@@ -193,7 +194,7 @@ final class ItemsViewDocumentationPage: RsUI.Page {
             points: [
                 tr(
                     "This page sets its own StackLayout(spacing: 4) via list.layout — the standard way clients configure layouts; the interactive demo (both flavors, selection modes, add/remove items, UniformGridLayout switch) lives in the Item List View page."
-                ),
+                )
             ]),
     ]
 

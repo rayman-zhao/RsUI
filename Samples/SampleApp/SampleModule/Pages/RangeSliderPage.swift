@@ -5,6 +5,7 @@ import WinUI
 import WindowsFoundation
 
 final class RangeSliderPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/range-slider")!
     var title: String { tr("Range Slider") }
 
@@ -17,7 +18,7 @@ final class RangeSliderPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let basicCard = SettingsCard(
             headerIconGlyph: "\u{E712}",
             header: tr("Basic usage"),

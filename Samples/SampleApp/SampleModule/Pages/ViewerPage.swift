@@ -5,6 +5,7 @@ import UWP
 import WinUI
 
 final class ViewerPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
@@ -14,7 +15,7 @@ final class ViewerPage: RsUI.Page {
     let url = URL(string: "rs://\(sampleModuleID)/viewer")!
     var title: String { tr("Viewer") }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let viewer = Viewer()
 
         let border = Border()

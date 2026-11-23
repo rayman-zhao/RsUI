@@ -5,6 +5,7 @@ import WinUI
 
 final class NewWindowPage: RsUI.Page {
     let url = URL(string: "rs://\(sampleModuleID)/new-window")!
+    var view: UIElement?
     var title: String { tr("New Window") }
 
     var header: Any? {
@@ -16,7 +17,7 @@ final class NewWindowPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let plainCard = makeClickableCard(
             glyph: "\u{E78B}",
             header: tr("App.context.openNewWindow"),

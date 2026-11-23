@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class OpenOrFocusPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
@@ -25,7 +26,7 @@ final class OpenOrFocusPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let targetURL = URL(string: "rs://ui/settings")!
         let card = makeClickableCard(
             glyph: "\u{E8A7}",

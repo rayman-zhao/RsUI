@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class BatchOpenPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
@@ -32,7 +33,7 @@ final class BatchOpenPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let cards: [UIElement] = [
             makeCard(
                 glyph: "\u{ECCD}",

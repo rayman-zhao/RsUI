@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class FullscreenPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     /// 当前挂载中的状态卡。每次 content 重建都新建一张（文案/画刷随之刷新），
@@ -29,7 +30,7 @@ final class FullscreenPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let status = SettingsCard(
             headerIconGlyph: (context?.isInFullscreen ?? false) ? "\u{E922}" : "\u{E93A}",
             header: tr("Fullscreen status"),

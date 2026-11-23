@@ -1,6 +1,6 @@
 import Foundation
-import WinAppSDK
 import RsUI
+import WinAppSDK
 import WinUI
 import WindowsFoundation
 
@@ -16,6 +16,7 @@ import WindowsFoundation
 /// - `detailLabelRequested`（悬停 tooltip）、`scrolling`（kind/offset/cancel）、
 ///   `smallChange`（箭头步进）经 binder 的 detailText / onScrolling 参数驱动。
 final class AnnotatedScrollBarPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/annotated-scroll-bar")!
     var title: String { tr("Annotated ScrollBar") }
 
@@ -28,7 +29,7 @@ final class AnnotatedScrollBarPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         // 事件回显：闭包强捕获这些纯投影控件（无弱引用生命周期，遵守捕获规则），
         // 生命周期与页面视图一致（页面重建即整体重建）。
         var eventCount = 0

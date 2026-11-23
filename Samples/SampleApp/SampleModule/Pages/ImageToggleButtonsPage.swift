@@ -9,6 +9,7 @@ import WindowsFoundation
 /// - `AppBarToggleButton` 有图标槽，同一张位图分别以 `ImageIcon`（原样彩色）与
 ///   `BitmapIcon`（`showAsMonochrome` 重染为前景色）接入。
 final class ImageToggleButtonsPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/image-toggle-buttons")!
     var title: String { tr("Image Toggle Buttons") }
 
@@ -74,7 +75,7 @@ final class ImageToggleButtonsPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let contentCard = SettingsCard(content: makeToggleButtonPanel())
         let iconCard = SettingsCard(content: makeAppBarToggleButtonPanel())
         let cellCard = SettingsCard(content: makeCellIconsPanel())
@@ -240,16 +241,17 @@ final class ImageToggleButtonsPage: RsUI.Page {
         // 不设高度：经典 ScrollViewer 在无限高父容器里按内容全展开（宽度受限时
         // ItemsWrapGrid 换行），整页交给外层页面滚动——这与 ItemsView 的新架构
         // ScrollView 行为相反（后者必须有限高度，见 AGENTS.md 坑清单）。
-        let grid: GridView = App.context.requireXaml(withString: """
-            <GridView SelectionMode="Multiple"
-                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsWrapGrid Orientation="Horizontal" ItemWidth="158" ItemHeight="88"/>
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
-            </GridView>
-            """)
+        let grid: GridView = App.context.requireXaml(
+            withString: """
+                <GridView SelectionMode="Multiple"
+                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsWrapGrid Orientation="Horizontal" ItemWidth="158" ItemHeight="88"/>
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                </GridView>
+                """)
 
         func refreshCell(_ index: Int) {
             try? grid.items.setAt(
@@ -285,7 +287,9 @@ final class ImageToggleButtonsPage: RsUI.Page {
         panel.children.append(makeSectionTitle(tr("Same cells on GridView — multi-select")))
         panel.children.append(
             makeCaption(
-                tr("The native collection control for comparison: GridView (SelectionMode = Multiple, uniform ItemsWrapGrid) over the same rows. Clicks select via the GridViewItem containers; reads go through selectedRanges.")))
+                tr(
+                    "The native collection control for comparison: GridView (SelectionMode = Multiple, uniform ItemsWrapGrid) over the same rows. Clicks select via the GridViewItem containers; reads go through selectedRanges."
+                )))
         panel.children.append(grid)
         panel.children.append(readout)
         return panel
@@ -348,20 +352,32 @@ final class ImageToggleButtonsPage: RsUI.Page {
 
         let menu = MenuFlyout()
         let actions: [(String, () -> Void)] = [
-            (tr("Re-roll staining"), {
-                self.cellStainings[index] = Self.stainingNames.randomElement()!
-            }),
-            (tr("Re-roll marker"), {
-                self.cellMarkers[index] = Self.markerNames.randomElement()!
-            }),
-            (tr("Re-roll bar color"), {
-                self.cellBarColors[index] = Self.barColors.randomElement()!
-            }),
-            (tr("Re-roll all"), {
-                self.cellStainings[index] = Self.stainingNames.randomElement()!
-                self.cellMarkers[index] = Self.markerNames.randomElement()!
-                self.cellBarColors[index] = Self.barColors.randomElement()!
-            }),
+            (
+                tr("Re-roll staining"),
+                {
+                    self.cellStainings[index] = Self.stainingNames.randomElement()!
+                }
+            ),
+            (
+                tr("Re-roll marker"),
+                {
+                    self.cellMarkers[index] = Self.markerNames.randomElement()!
+                }
+            ),
+            (
+                tr("Re-roll bar color"),
+                {
+                    self.cellBarColors[index] = Self.barColors.randomElement()!
+                }
+            ),
+            (
+                tr("Re-roll all"),
+                {
+                    self.cellStainings[index] = Self.stainingNames.randomElement()!
+                    self.cellMarkers[index] = Self.markerNames.randomElement()!
+                    self.cellBarColors[index] = Self.barColors.randomElement()!
+                }
+            ),
         ]
         for (label, action) in actions {
             let item = MenuFlyoutItem()
@@ -389,7 +405,8 @@ final class ImageToggleButtonsPage: RsUI.Page {
                 return TextBlock()
             }
             return self.makeCellRow(
-                index: index, name: self.cells[index].name, tag: id, rebuild: { _ in
+                index: index, name: self.cells[index].name, tag: id,
+                rebuild: { _ in
                     refreshList?()
                 })
         }

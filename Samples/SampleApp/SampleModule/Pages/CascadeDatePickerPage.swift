@@ -4,6 +4,7 @@ import RsUI
 import WinUI
 
 final class CascadeDatePickerPage: RsUI.Page {
+    var view: UIElement?
     let url = URL(string: "rs://\(sampleModuleID)/cascade-date-picker")!
     var title: String { tr("Cascade Date Picker") }
 
@@ -16,7 +17,7 @@ final class CascadeDatePickerPage: RsUI.Page {
             ))
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let sample = Self.makeSampleDates()
 
         // —— 定高宿主：高度不足自动分栏 ——

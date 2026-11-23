@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class OverviewPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
@@ -22,7 +23,7 @@ final class OverviewPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let cards: [UIElement] = [
             makeJumpCard(
                 glyph: "\u{E740}",

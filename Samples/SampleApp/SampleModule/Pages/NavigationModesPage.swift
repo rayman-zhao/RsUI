@@ -4,6 +4,7 @@ import UWP
 import WinUI
 
 final class NavigationModesPage: RsUI.Page {
+    var view: UIElement?
     var context: WindowContext?
 
     func windowContextDidChange(to context: WindowContext) {
@@ -22,7 +23,7 @@ final class NavigationModesPage: RsUI.Page {
         )
     }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         let settingsURL = URL(string: "rs://ui/settings")!
         let cards: [UIElement] = [
             makeClickableCard(
