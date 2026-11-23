@@ -177,13 +177,22 @@ class PageTabView: Grid, PageControl, @unchecked Sendable {
 
         for item in tabView.tabItems {
             if let tabViewItem = item as? TabViewItem, let tag = tabViewItem.tag,
-                let model = tag as? PageModel, let page = model.currentPage
+                let model = tag as? PageModel
             {
-                tabViewItem.header = page.title
+                if let page = model.currentPage {
+                    tabViewItem.header = page.title
+                }
+                // 各 tab 的页视图缓存统一清空,懒重建——否则切回旧 tab
+                // 会看到旧主题/旧语言的缓存视图
+                model.invalidateAllViews()
             }
         }
 
         pageFrame.updateAppearance()
+    }
+
+    func updateView(of page: Page) {
+        pageFrame.updateView(of: page)
     }
 
     func updateWindowContext() {

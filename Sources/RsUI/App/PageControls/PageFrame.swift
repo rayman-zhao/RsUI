@@ -97,12 +97,27 @@ class PageFrame: PageTransitionHost, PageControl, @unchecked Sendable {
         else { return }
         renderedTheme = App.context.theme
         renderedLanguage = App.context.language
-        /// NOTE: A page inplace transition will have problem if some UI Elements been referenced in the Page object.
-        /// So that, must remove the page view from visual tree first, then release COM references in event loop,
-        /// then add to new visual tree node.
+        // 本 model 的页视图缓存清空(其它 tab 的由 PageTabView 清);
+        // 懒重建——被再次访问时才 makeView
+        model.invalidateAllViews()
+        redisplay()
+    }
+
+    /// 页面形态更新请求(失效+按需重挂一步完成):清该页视图缓存,
+    /// 正在展示才重挂,非当前页无视觉动作待下次展示懒重建
+    func updateView(of page: Page) {
+        page.view = nil
+        guard page === currentPage else { return }
+        redisplay()
+    }
+
+    /// NOTE: A page inplace transition will have problem if some UI Elements been referenced in the Page object.
+    /// So that, must remove the page view from visual tree first, then release COM references in event loop,
+    /// then add to new visual tree node.
+    func redisplay() {
         transition(to: nil)
         Task {
-            transition(to: currentPage?.view)
+            transition(to: currentView)
         }
     }
 
@@ -112,11 +127,20 @@ class PageFrame: PageTransitionHost, PageControl, @unchecked Sendable {
         }
     }
 
+    /// 当前页视图:页自身 view 槽位为缓存(nil = 待建,构建后回填)
+    private var currentView: UIElement? {
+        guard let page = currentPage else { return nil }
+        if let view = page.view { return view }
+        let view = page.makeView()
+        page.view = view
+        return view
+    }
+
     /// mutate model 后的统一尾部：渲染当前页 + 异步触发 pageChanged。
     private func render(transitionInfo: NavigationTransitionInfo = SuppressNavigationTransitionInfo()) {
         renderedTheme = App.context.theme
         renderedLanguage = App.context.language
-        transition(to: currentPage?.view, transitionInfo: transitionInfo)
+        transition(to: currentView, transitionInfo: transitionInfo)
         Task {
             pageChanged.invoke(self, currentPage)
         }

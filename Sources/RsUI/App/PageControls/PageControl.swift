@@ -28,4 +28,7 @@ import WinUI
     func updateAppearance()
     /// 重发同一 window context，供页面重查窗口维度状态 (如 isInFullscreen)。
     func updateWindowContext()
+    /// 页面主动请求重读视图(header/content 形态翻转);按页路由——
+    /// 清其所属 model 的缓存,正在展示才重挂
+    func updateView(of page: Page)
 }

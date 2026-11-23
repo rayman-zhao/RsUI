@@ -174,6 +174,13 @@ public enum NavigationOpenMode: Sendable {
         return true
     }
 
+    /// 请求重读指定页视图(header/content 形态翻转后调用,如可选 content 的
+    /// nil 切换——getter 只在视图构建时被读,翻转发生在其后须主动触发。
+    /// 按页路由:清其所属 model 缓存,该页正在展示才重挂,非当前页无视觉动作)
+    public func updateView(of page: Page) {
+        host?.updateView(of: page)
+    }
+
     @discardableResult
     public func open(
         _ urls: [URL],

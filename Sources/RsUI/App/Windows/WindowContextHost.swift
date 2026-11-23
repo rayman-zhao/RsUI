@@ -22,4 +22,7 @@ import WinUI
         transitionInfoOverride: NavigationTransitionInfo
     ) -> Int
     func selectPage(matchingURL url: URL) -> Bool
+
+    /// 页面主动请求重读视图(header/content 形态翻转);按页路由
+    func updateView(of page: Page)
 }

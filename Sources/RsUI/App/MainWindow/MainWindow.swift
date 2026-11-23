@@ -146,4 +146,8 @@ class MainWindow: NavigationViewWindow, WindowContextHost, @unchecked Sendable {
     func selectPage(matchingURL url: URL) -> Bool {
         return pageControl.selectPage(matchingURL: url)
     }
+
+    func updateView(of page: Page) {
+        pageControl.updateView(of: page)
+    }
 }
