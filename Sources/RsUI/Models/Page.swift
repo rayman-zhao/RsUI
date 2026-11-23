@@ -39,8 +39,13 @@ extension Page {
     public var header: Any? { nil }
 
     /// makeView 默认实现:组装 header/content 模板。整页自定义的页覆写
-    /// 协议定制点 makeView(),本实现不会被经存在类型调用的覆写遮蔽
+    /// 协议定制点 makeView();登录态等条件下回到模板组装须显式调
+    /// makeTemplateView()——协议默认实现无法经 super 到达
     public func makeView() -> UIElement {
+        makeTemplateView()
+    }
+
+    public func makeTemplateView() -> UIElement {
         let content = self.content
 
         // 无 header:content 直接作视图根,连容器都省;两者皆无为退化空页
