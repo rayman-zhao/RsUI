@@ -164,6 +164,9 @@ private final class FullSpanScrollControllerBridge: WinUI.IScrollController {
 ///   ——滚轮滚动每帧触发它，重填会销毁重建全部标签、渐入动画反复重启，肉眼即闪烁。
 /// - ItemsView 的内置滚动条需要 loaded + sizeChanged 双重试隐藏（loaded 时内部
 ///   ScrollView 可能还是 nil，一次性 guard 会永久漏掉）。
+/// - ItemsView 的 VerticalScrollController 要到"模板应用后的首次 Loaded"才下发给
+///   内部 ScrollPresenter；宿主随折叠的祖先进树时该 Loaded 早于模板应用，下发落空，
+///   attach 在首个 sizeChanged 清空重设补上。
 /// - 悬停详情默认走自绘 overlay（照片应用风格，平滑无抖动）；`.native` 保留
 ///   原生 ToolTip 行为（内容更新会重新锚定，有轻微抖动）。
 /// - 标签空闲淡出、指针交互时点亮是 Windows 11 自动隐藏滚动条的系统行为，非缺陷。
@@ -277,6 +280,17 @@ open class AnnotatedScrollBar: WinUI.Grid, @unchecked Sendable {
             inner.verticalScrollBarVisibility = .hidden
             hidBuiltInScrollbar = true
         }
+        // ItemsView 只在模板应用后的首次 Loaded 才把 VerticalScrollController 下发给
+        // 内部 ScrollPresenter，而折叠的子树进树时 Loaded 照样触发、早于模板应用——
+        // 这次下发落空且不再重来(宿主随折叠祖先进树即中招：滚动条收不到范围、
+        // 拖动无响应)。模板应用后的首个 sizeChanged 清空重设一次补上
+        var isScrollControllerApplied = false
+        func applyScrollControllerIfNeeded(_ list: WinUI.ItemsView) {
+            guard !isScrollControllerApplied, list.scrollView?.scrollPresenter != nil else { return }
+            isScrollControllerApplied = true
+            list.verticalScrollController = nil
+            list.verticalScrollController = bridge
+        }
         // 处理器挂在 list 自身的事件上，强捕获 list 即成环，必须 weak
         list.loaded.addHandler { [weak self, weak list] _, _ in
             if let list { hideBuiltInScrollbarIfNeeded(list) }
@@ -284,7 +298,10 @@ open class AnnotatedScrollBar: WinUI.Grid, @unchecked Sendable {
             self?.adoptDetailOverlayIfNeeded()
         }
         list.sizeChanged.addHandler { [weak self, weak list] _, _ in
-            if let list { hideBuiltInScrollbarIfNeeded(list) }
+            if let list {
+                hideBuiltInScrollbarIfNeeded(list)
+                applyScrollControllerIfNeeded(list)
+            }
             self?.repopulate()
             self?.syncDetailOverlayMargin()
         }
