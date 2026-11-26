@@ -6,6 +6,7 @@ import WinUI
 
 private final class MockView: RsUI.Page {
     let id: String
+    var view: WinUI.UIElement?
 
     init(id: String = UUID().uuidString) {
         self.id = id
@@ -15,7 +16,7 @@ private final class MockView: RsUI.Page {
 
     var title: String { "Mock \(id)" }
 
-    var content: WinUI.UIElement {
+    var content: WinUI.UIElement? {
         WinUI.Grid()
     }
 }

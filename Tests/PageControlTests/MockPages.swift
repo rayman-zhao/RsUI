@@ -32,6 +32,7 @@ enum HeaderKind { case string, uiElement, nilHeader }
 private final class StringHeaderPage: RsUI.Page {
     let name: String
     let bg: SolidColorBrush
+    var view: UIElement?
 
     init(name: String, bg: SolidColorBrush) {
         self.name = name
@@ -42,7 +43,7 @@ private final class StringHeaderPage: RsUI.Page {
     var title: String { name }
     var header: Any? { "String Header — \(name)" }
 
-    var content: UIElement {
+    var content: UIElement? {
         return make(name: name, subtitle: "header.kind = String", bg: bg)
     }
 }
@@ -50,6 +51,7 @@ private final class StringHeaderPage: RsUI.Page {
 private final class UIElementHeaderPage: RsUI.Page {
     let name: String
     let bg: SolidColorBrush
+    var view: UIElement?
 
     init(name: String, bg: SolidColorBrush) {
         self.name = name
@@ -72,7 +74,7 @@ private final class UIElementHeaderPage: RsUI.Page {
         return (try? XamlReader.load(xaml)) as? UIElement
     }
 
-    var content: UIElement {
+    var content: UIElement? {
         return make(name: name, subtitle: "header.kind = UIElement", bg: bg)
     }
 }
@@ -80,6 +82,7 @@ private final class UIElementHeaderPage: RsUI.Page {
 private final class NilHeaderPage: RsUI.Page {
     let name: String
     let bg: SolidColorBrush
+    var view: UIElement?
 
     init(name: String, bg: SolidColorBrush) {
         self.name = name
@@ -90,7 +93,7 @@ private final class NilHeaderPage: RsUI.Page {
     var title: String { name }
     var header: Any? { nil }
 
-    var content: UIElement {
+    var content: UIElement? {
         return make(name: name, subtitle: "header.kind = nil (content fills)", bg: bg)
     }
 }
