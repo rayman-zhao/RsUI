@@ -120,6 +120,23 @@
         }
       }
     },
+    "A vertical image carousel: the slide nearest the viewport center stays full size while the others shrink with their distance from it. The scrollbar is hidden; a PipsPager beside the viewport indicates the current page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A vertical image carousel: the slide nearest the viewport center stays full size while the others shrink with their distance from it. The scrollbar is hidden; a PipsPager beside the viewport indicates the current page."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "竖向图片轮播：最接近视口中心的那张保持原尺寸，其余随离中心的距离缩小。滚动条隐藏，视口旁的 PipsPager 指示当前页。"
+          }
+        }
+      }
+    },
     "Activated macrophage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -609,6 +626,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圆形"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
           }
         }
       }
@@ -1293,6 +1327,23 @@
         }
       }
     },
+    "Image Carousel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image Carousel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片轮播"
+          }
+        }
+      }
+    },
     "Image files" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1340,6 +1391,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ImageIcon——原样绘制彩色位图，不随选中状态变化。"
+          }
+        }
+      }
+    },
+    "Images load from their URLs (picsum.photos); the last one points to a missing file and shows the failure state. Scrolling is native ScrollView behavior: the mouse wheel or a touch pan scrolls freely and comes to rest on a page, clicking a slide centers it, and the pips jump straight to a page. The spin box changes the slide height live: the shorter the slide relative to the control, the more slides share the screen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images load from their URLs (picsum.photos); the last one points to a missing file and shows the failure state. Scrolling is native ScrollView behavior: the mouse wheel or a touch pan scrolls freely and comes to rest on a page, clicking a slide centers it, and the pips jump straight to a page. The spin box changes the slide height live: the shorter the slide relative to the control, the more slides share the screen."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片按 URL 加载（picsum.photos）；最后一张指向不存在的文件，用来展示失败态。滚动是 ScrollView 的原生行为：鼠标滚轮或触摸平移自由滚动、停下时落在某一页上，点按某张图把它滚到中间，圆点可直接跳页。微调框实时改变图片高度：图片相对控件越矮，同屏的张数越多。"
           }
         }
       }
@@ -1527,6 +1595,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "实时切换 App.context.theme 与 App.context.language。"
+          }
+        }
+      }
+    },
+    "Load 12" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load 12"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加载 12 张"
+          }
+        }
+      }
+    },
+    "Load 6" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load 6"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加载 6 张"
+          }
+        }
+      }
+    },
+    "Local files — neighbor scale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local files — neighbor scale"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地文件 — 相邻缩放"
           }
         }
       }
@@ -1735,6 +1854,23 @@
         }
       }
     },
+    "Neighbor scale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neighbor scale"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相邻缩放"
+          }
+        }
+      }
+    },
     "Neutrophil" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1765,6 +1901,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新建窗口"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一张"
           }
         }
       }
@@ -1833,6 +1986,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未选择文件夹。"
+          }
+        }
+      }
+    },
+    "No images" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无图片"
           }
         }
       }
@@ -2279,6 +2449,23 @@
         }
       }
     },
+    "Previous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一张"
+          }
+        }
+      }
+    },
     "Range Slider" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2360,6 +2547,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新抽染色"
+          }
+        }
+      }
+    },
+    "Remote images" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程图片"
           }
         }
       }
@@ -2670,6 +2874,23 @@
         }
       }
     },
+    "Selected: %d of %d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected: %d of %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前：%d / %d"
+          }
+        }
+      }
+    },
     "selectedIds / selectedIndexes — selection readouts. The index flavor has no id dimension (identity is the index), so selectedIndexes is its native readout; ItemsView exposes no native selection set and its selectionChanged args are an empty shell." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2972,6 +3193,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文本文件"
+          }
+        }
+      }
+    },
+    "The 15 cell icons from the resource bundle as file URLs. Drag the slider to change how much the neighboring slides shrink." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The 15 cell icons from the resource bundle as file URLs. Drag the slider to change how much the neighboring slides shrink."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资源包里的 15 个细胞图标以 file URI 提供。拖动滑块改变相邻图片的缩小幅度。"
           }
         }
       }
@@ -3567,6 +3805,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "单选"
+          }
+        }
+      }
+    },
+    "Slide height" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slide height"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片高度"
           }
         }
       }
