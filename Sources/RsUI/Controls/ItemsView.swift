@@ -1,4 +1,5 @@
 import CppWinRT
+import Foundation
 import RsFoundation
 import WinUI
 import WindowsFoundation
@@ -53,8 +54,11 @@ open class ItemsViewBase: WinUI.ItemsView, @unchecked Sendable {
                 self?.wireRepeater()
             }
             layoutUpdated.addHandler { [weak self] _, _ in
-                self?.wireRepeater()
+                guard let self else { return }
+                self.wireRepeater()
+                self.focusPendingNavigationTarget()
             }
+            interceptHomeEndNavigation()
         }
     }
 
@@ -101,13 +105,16 @@ open class ItemsViewBase: WinUI.ItemsView, @unchecked Sendable {
         }
     }
 
-    /// 内部 ItemsRepeater 的垂直实现缓存长度(视口倍数,视口上下各按此倍数
-    /// 预实现条目;WinUI 默认 2)。repeater 接线前赋值会先暂存,接线时落上。
+    /// 内部 ItemsRepeater 的垂直实现缓存长度(视口高的倍数,WinUI 默认 2)。缓冲在
+    /// 可见区上下平分,每侧上限 = 本值 × 视口高 ÷ 2。repeater 接线前赋值会先暂存,
+    /// 接线时落上。
     ///
-    /// 用途:UniformGridLayout 恒以 index 0 校准条目尺寸——0 离开实现窗口后
-    /// 布局每趟走 ForceCreate(0)→测量→Recycle 的昂贵路径,其记账进出使
-    /// 未实现区估高翻转一行(视口被锚点补偿拨动、贴底时滚动条 thumb 停不到
-    /// 底的根源)。把缓存加宽到盖住整个内容即可让 0 恒在实现窗口内。
+    /// 用途:UniformGridLayout 恒以 index 0 校准条目尺寸——0 离开实现窗口后布局每趟
+    /// 走 ForceCreate(0)→测量→Recycle 的昂贵路径,其记账进出使未实现区估高翻转一行
+    /// (视口被锚点补偿拨动、贴底时滚动条 thumb 停不到底的根源)。要让 0 恒在实现窗口
+    /// 内,每侧缓冲须 ≥ 内容高 − 视口高,即本值 ≥ 2 ×(内容高 − 视口高)÷ 视口高:
+    /// 内容不超过两屏时默认值即够,长列表做不到。缓冲也不是一次到位——大幅跳转后
+    /// 清零,之后每趟布局每侧只长 40px。
     public var verticalCacheLength: Double {
         get { repeater?.verticalCacheLength ?? pendingVerticalCacheLength ?? 2.0 }
         set {
@@ -148,6 +155,57 @@ open class ItemsViewBase: WinUI.ItemsView, @unchecked Sendable {
             index += 1
         }
         return indexes
+    }
+
+    // MARK: - Home / End 导航
+
+    /// 跳转后待获焦的条目：目标容器要等视口变化后的布局趟才建出来。
+    private var pendingFocusIndex: Int32?
+    private var pendingFocusDeadline = Date.distantPast
+
+    /// Home/End 不交给 ItemsView 的原生按键处理，改为"视口瞬时跳到位 + 目标容器获焦"。
+    /// 选区不在这里动：ItemsView 在容器获焦时按修饰键更新选区，与原生按键同一套规则。
+    ///
+    /// 原生是先对目标元素 StartBringIntoView(带动画)、收尾后再移焦点。而 UniformGridLayout
+    /// 每趟 measure 都拿 index 0 校准条目尺寸，index 0 不在实现窗口时就强制建一个、量完即
+    /// 回收——视口离开顶部后这套建/回收每趟布局走一遍，Home 的 bring-into-view 在其中
+    /// 收不了尾，长列表里 End 之后按 Home 卡死。
+    private func interceptHomeEndNavigation() {
+        previewKeyDown.addHandler { [weak self] _, args in
+            guard let self, let args, args.key == .home || args.key == .end else { return }
+            args.handled = self.navigate(toEnd: args.key == .end)
+        }
+    }
+
+    /// 把视口跳到目标端(两个滚动轴都跳)。返回是否已处理，未处理时留给原生路径。
+    private func navigate(toEnd: Bool) -> Bool {
+        let target: Int32 = toEnd ? Int32(count - 1) : 0
+        guard target >= 0, let scrollView = scrollView else { return false }
+
+        _ = try? scrollView.scrollTo(
+            toEnd ? scrollView.scrollableWidth : 0,
+            toEnd ? scrollView.scrollableHeight : 0,
+            ScrollingScrollOptions(.disabled, .ignore))
+        pendingFocusIndex = target
+        pendingFocusDeadline = Date().addingTimeInterval(2)
+        // 目标已经实现时不必等布局趟，当场获焦——视口已在目标端时滚动是空操作，之后
+        // 不会再有布局趟
+        focusPendingNavigationTarget()
+        return true
+    }
+
+    /// 把键盘焦点移到跳转目标，方向键才从那里接着走，选区也由这次获焦带动。容器要等
+    /// 视口变化后的布局趟才建出来，没等到就下一趟再看；超时作废，免得列表变化后聚焦到
+    /// 别的条目上。
+    private func focusPendingNavigationTarget() {
+        guard let index = pendingFocusIndex else { return }
+        guard Date() < pendingFocusDeadline else {
+            pendingFocusIndex = nil
+            return
+        }
+        guard let container = try? repeater?.tryGetElement(index) else { return }
+        pendingFocusIndex = nil
+        _ = try? container.focus(.keyboard)
     }
 
     // MARK: - 内部布线
