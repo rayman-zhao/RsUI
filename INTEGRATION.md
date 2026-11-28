@@ -4,8 +4,8 @@ This guide is for **consumers** of RsUI (apps built on the framework). For worki
 
 ## Requirements
 
-- Swift for Windows toolchain matching `swift-tools-version: 5.10`
-- Windows App SDK 1.8+ runtime
+- Swift for Windows toolchain matching `swift-tools-version: 6.4`
+- Windows App SDK runtime matching the version the `swift-windowsappsdk` projection targets (2.5.x today — see that package's `projections.json`)
 - Dependencies resolve from the `rayman-zhao/*` forks (see `Package.swift`); pin with your own committed `Package.resolved`
 
 ## 1. Package setup
@@ -54,17 +54,23 @@ Without `/SUBSYSTEM:WINDOWS` a release build flashes a console window; without `
 ## 3. Entry point
 
 ```swift
+import Foundation
+import RsUI
+// @main's main() witness lives in WinUI.SwiftApplication; without this import Swift 6.4 warns
+import WinUI
+
 @main
-class MyApp: App {
-    required init() {
-        super.init(
-            group: "MyCompany",              // single-instance key = "\(group)/\(product)"
-            product: "MyApp",
-            resourceBundle: Bundle.module,   // your .xcstrings live here
-            moduleTypes: [HomeModule.self, ...])
-    }
+class MyApp: App, @unchecked Sendable {
+    // Single-instance key = "\(groupName)/\(productName)".
+    override class var groupName: String { "MyCompany" }
+    override class var productName: String { "MyApp" }
+    override class var resourceBundle: Bundle { .module }   // your .xcstrings live here
+
+    override class var modules: [any Module] { [HomeModule(), ...] }
 }
 ```
+
+Leave `modules` out for an app without modules (the default is `[]`; the window then opens the built-in Settings page). If your executable target opts into `.defaultIsolation(MainActor.self)` (as `SampleApp` does), also declare `nonisolated required init() { super.init() }` — otherwise the synthesized `MainActor` override conflicts with the inherited nonisolated required initializer.
 
 Facts your app inherits:
 
@@ -82,6 +88,8 @@ The taskbar JumpList entry uses `App.context.iconAppxUri`, which resolves to **`
 ## 5. Localization key contract
 
 RsUI is a library: **its user-facing strings are looked up in *your app's* `.xcstrings` tables** through `App.context.tr`. Missing keys fall back to the key text itself (English). Your tables must provide:
+
+**`App.xcstrings` table** — your app's display names, keyed by identity: `productName` (the window title and the title of the Settings About card) and `groupName` (the copyright holder on that card). Without these keys the raw identity strings are shown.
 
 **Root table (`Localizable.xcstrings`)** — shell & control strings:
 
