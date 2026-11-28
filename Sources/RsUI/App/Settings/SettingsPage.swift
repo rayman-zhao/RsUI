@@ -45,11 +45,12 @@ class SettingsPage: Page {
 
         // MARK: - 关于
         let year = Calendar.current.component(.year, from: Date())
+        // 应用名与版权方同窗口标题一样走宿主 app 自备的 "App" 表（键为 productName / groupName）。
         let copyright = tr("copyright").replacingOccurrences(of: "%lld", with: "\(year)")
-            .replacingOccurrences(of: "%@", with: App.context.groupName)
+            .replacingOccurrences(of: "%@", with: App.context.tr(App.context.groupName, table: "App"))
         let aboutCard = SettingsExpander(
             App.context.iconPath ?? "",
-            App.context.productName,
+            App.context.tr(App.context.productName, table: "App"),
             copyright,
             Bundle.main.executableURL?.version ?? "",
             [dependenciesCard]

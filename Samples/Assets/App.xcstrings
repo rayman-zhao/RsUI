@@ -17,6 +17,23 @@
           }
         }
       }
+    },
+    "SampleCompany" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SampleCompany"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "示例公司"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
